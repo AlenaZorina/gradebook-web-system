@@ -92,14 +92,15 @@ CREATE TABLE IF NOT EXISTS teaching_assignments (
     id_group INTEGER NOT NULL,
     id_enrollment INTEGER NOT NULL,
     academic_year VARCHAR(20) NOT NULL,
-    module_no INTEGER NOT NULL,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     CONSTRAINT fk_assignment_teacher
         FOREIGN KEY (id_teacher) REFERENCES teachers(id_teacher),
     CONSTRAINT fk_assignment_group
         FOREIGN KEY (id_group) REFERENCES groups(id_group),
     CONSTRAINT fk_assignment_enrollment
-        FOREIGN KEY (id_enrollment) REFERENCES enrollments(id_enrollment)
+        FOREIGN KEY (id_enrollment) REFERENCES enrollments(id_enrollment),
+    CONSTRAINT uq_teaching_assignment
+        UNIQUE (id_teacher, id_group, id_enrollment, academic_year)
 );
 
 CREATE TABLE IF NOT EXISTS grading_formulas (
