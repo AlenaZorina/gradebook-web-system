@@ -32,6 +32,12 @@ CREATE TABLE IF NOT EXISTS groups (
         FOREIGN KEY (id_program) REFERENCES programs(id_program)
 );
 
+CREATE TABLE IF NOT EXISTS disciplines (
+    id_discipline INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    discipline_name VARCHAR(200) NOT NULL,
+    pud_url VARCHAR(500)
+);
+
 CREATE TABLE IF NOT EXISTS enrollments (
     id_enrollment INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     id_program INTEGER NOT NULL,
@@ -42,10 +48,12 @@ CREATE TABLE IF NOT EXISTS enrollments (
     CONSTRAINT fk_enrollment_program
         FOREIGN KEY (id_program) REFERENCES programs(id_program),
     CONSTRAINT fk_enrollment_discipline
-        FOREIGN KEY (id_discipline) REFERENCES disciplines(id_discipline)
+        FOREIGN KEY (id_discipline) REFERENCES disciplines(id_discipline),
+    CONSTRAINT uq_enrollment
+        UNIQUE (id_program, id_discipline, course_no, start_module_no, end_module_no)
 );
 
-CREATE TABLE IF NOT EXISTS "user" (
+CREATE TABLE IF NOT EXISTS users (
     id_user INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     id_role INTEGER NOT NULL,
     name VARCHAR(100) NOT NULL,
@@ -61,7 +69,7 @@ CREATE TABLE IF NOT EXISTS user_auth (
     login VARCHAR(100) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
     CONSTRAINT fk_auth_user
-        FOREIGN KEY (id_user) REFERENCES "user"(id_user)
+        FOREIGN KEY (id_user) REFERENCES users(id_user)
 );
 
 CREATE TABLE IF NOT EXISTS students (
@@ -71,7 +79,7 @@ CREATE TABLE IF NOT EXISTS students (
     record_book_no VARCHAR(50) NOT NULL UNIQUE,
     id_status INTEGER NOT NULL,
     CONSTRAINT fk_student_user
-        FOREIGN KEY (id_user) REFERENCES "user"(id_user),
+        FOREIGN KEY (id_user) REFERENCES users(id_user),
     CONSTRAINT fk_student_group
         FOREIGN KEY (id_group) REFERENCES groups(id_group),
     CONSTRAINT fk_student_status
@@ -84,22 +92,24 @@ CREATE TABLE IF NOT EXISTS teachers (
     department VARCHAR(150),
     position VARCHAR(100),
     CONSTRAINT fk_teacher_user
-        FOREIGN KEY (id_user) REFERENCES "user"(id_user)
+        FOREIGN KEY (id_user) REFERENCES users(id_user)
 );
+
 CREATE TABLE IF NOT EXISTS teaching_assignments (
     id_assignment INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     id_teacher INTEGER NOT NULL,
     id_group INTEGER NOT NULL,
     id_enrollment INTEGER NOT NULL,
     academic_year VARCHAR(20) NOT NULL,
-    module_no INTEGER NOT NULL,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     CONSTRAINT fk_assignment_teacher
         FOREIGN KEY (id_teacher) REFERENCES teachers(id_teacher),
     CONSTRAINT fk_assignment_group
         FOREIGN KEY (id_group) REFERENCES groups(id_group),
     CONSTRAINT fk_assignment_enrollment
-        FOREIGN KEY (id_enrollment) REFERENCES enrollments(id_enrollment)
+        FOREIGN KEY (id_enrollment) REFERENCES enrollments(id_enrollment),
+    CONSTRAINT uq_teaching_assignment
+        UNIQUE (id_teacher, id_group, id_enrollment, academic_year)
 );
 
 CREATE TABLE IF NOT EXISTS grading_formulas (
@@ -133,7 +143,9 @@ CREATE TABLE IF NOT EXISTS grade_sheets (
     CONSTRAINT fk_sheet_assignment
         FOREIGN KEY (id_assignment) REFERENCES teaching_assignments(id_assignment),
     CONSTRAINT fk_sheet_approved_by_user
-        FOREIGN KEY (approved_by_user_id) REFERENCES "user"(id_user)
+        FOREIGN KEY (approved_by_user_id) REFERENCES users(id_user),
+    CONSTRAINT uq_grade_sheet_assignment_type
+        UNIQUE (id_assignment, sheet_type)
 );
 
 CREATE TABLE IF NOT EXISTS grades (
@@ -165,6 +177,7 @@ CREATE TABLE IF NOT EXISTS final_grades (
     CONSTRAINT uq_final_grade_sheet_student
         UNIQUE (id_sheet, id_student)
 );
+
 CREATE TABLE IF NOT EXISTS attendance_sessions (
     id_session INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     id_assignment INTEGER NOT NULL,
@@ -173,7 +186,9 @@ CREATE TABLE IF NOT EXISTS attendance_sessions (
     end_time TIME,
     source VARCHAR(30) NOT NULL,
     CONSTRAINT fk_session_assignment
-        FOREIGN KEY (id_assignment) REFERENCES teaching_assignments(id_assignment)
+        FOREIGN KEY (id_assignment) REFERENCES teaching_assignments(id_assignment),
+    CONSTRAINT uq_attendance_session
+        UNIQUE (id_assignment, lesson_date, start_time)
 );
 
 CREATE TABLE IF NOT EXISTS attendance (
@@ -187,7 +202,7 @@ CREATE TABLE IF NOT EXISTS attendance (
     CONSTRAINT fk_attendance_student
         FOREIGN KEY (id_student) REFERENCES students(id_student),
     CONSTRAINT fk_attendance_updated_by_user
-        FOREIGN KEY (updated_by_user_id) REFERENCES "user"(id_user),
+        FOREIGN KEY (updated_by_user_id) REFERENCES users(id_user),
     CONSTRAINT uq_attendance_session_student
         UNIQUE (id_session, id_student)
 );
@@ -245,5 +260,5 @@ CREATE TABLE IF NOT EXISTS student_status_history (
     CONSTRAINT fk_history_to_group
         FOREIGN KEY (to_group_id) REFERENCES groups(id_group),
     CONSTRAINT fk_history_changed_by_user
-        FOREIGN KEY (changed_by_user_id) REFERENCES "user"(id_user)
+        FOREIGN KEY (changed_by_user_id) REFERENCES users(id_user)
 );
