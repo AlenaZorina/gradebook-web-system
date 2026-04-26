@@ -88,3 +88,54 @@ export type LoginRequest = {
   
     return response.json();
   }
+  export type DisciplineGroupOption = {
+    idGroup: number;
+    groupName: string;
+  };
+  
+  export type TeacherDisciplineDetail = {
+    idAssignment: number;
+    teacherUserId: number;
+  
+    idDiscipline: number;
+    disciplineName: string;
+  
+    courseNo: number;
+    programName: string;
+    academicYear: string;
+  
+    selectedGroupId: number;
+    selectedGroupName: string;
+  
+    startModuleNo: number;
+    endModuleNo: number;
+  
+    formulaText: string;
+    pudUrl?: string | null;
+  
+    groups: DisciplineGroupOption[];
+  };
+  
+  export async function getTeacherDisciplineDetails(
+    idUser: number,
+    disciplineId: number,
+    groupId?: number | null
+  ): Promise<TeacherDisciplineDetail> {
+    const params = new URLSearchParams();
+  
+    if (groupId) {
+      params.set("groupId", String(groupId));
+    }
+  
+    const query = params.toString();
+  
+    const response = await fetch(
+      `${API_URL}/api/users/${idUser}/teacher-disciplines/${disciplineId}/details${query ? `?${query}` : ""}`
+    );
+  
+    if (!response.ok) {
+      throw new Error("Не удалось загрузить детали дисциплины");
+    }
+  
+    return response.json();
+  }

@@ -2,17 +2,57 @@ import { useState } from "react";
 import { LoginPage } from "./pages/LoginPage";
 import { TeacherSchedulePage } from "./pages/TeacherSchedulePage";
 import { TeacherDisciplinesPage } from "./pages/TeacherDisciplinesPage";
+import { TeacherDisciplineDetailsPage } from "./pages/TeacherDisciplineDetailsPage";
 import type { LoginResponse } from "./api";
 
-type TeacherPage = "schedule" | "disciplines";
+type TeacherPage =
+  | "schedule"
+  | "disciplines"
+  | "disciplineDetails"
+  | "attendance"
+  | "gradebook";
 
 function App() {
   const [currentUser, setCurrentUser] = useState<LoginResponse | null>(null);
   const [teacherPage, setTeacherPage] = useState<TeacherPage>("schedule");
+  const [selectedDisciplineId, setSelectedDisciplineId] = useState<number | null>(null);
+  const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
 
   function handleLogout() {
     setCurrentUser(null);
     setTeacherPage("schedule");
+    setSelectedDisciplineId(null);
+    setSelectedGroupId(null);
+  }
+
+  function openDisciplineDetails(disciplineId: number) {
+    setSelectedDisciplineId(disciplineId);
+    setSelectedGroupId(null);
+    setTeacherPage("disciplineDetails");
+  }
+
+  function openAttendance(disciplineId?: number, groupId?: number) {
+    if (disciplineId) {
+      setSelectedDisciplineId(disciplineId);
+    }
+
+    if (groupId) {
+      setSelectedGroupId(groupId);
+    }
+
+    setTeacherPage("attendance");
+  }
+
+  function openGradebook(disciplineId?: number, groupId?: number) {
+    if (disciplineId) {
+      setSelectedDisciplineId(disciplineId);
+    }
+
+    if (groupId) {
+      setSelectedGroupId(groupId);
+    }
+
+    setTeacherPage("gradebook");
   }
 
   if (!currentUser) {
@@ -26,7 +66,123 @@ function App() {
           user={currentUser}
           onLogout={handleLogout}
           onOpenSchedule={() => setTeacherPage("schedule")}
+          onSelectDiscipline={openDisciplineDetails}
         />
+      );
+    }
+
+    if (teacherPage === "disciplineDetails" && selectedDisciplineId) {
+      return (
+        <TeacherDisciplineDetailsPage
+          user={currentUser}
+          disciplineId={selectedDisciplineId}
+          initialGroupId={selectedGroupId}
+          onLogout={handleLogout}
+          onOpenSchedule={() => setTeacherPage("schedule")}
+          onOpenDisciplines={() => setTeacherPage("disciplines")}
+          onOpenAttendance={openAttendance}
+          onOpenGradebook={openGradebook}
+        />
+      );
+    }
+
+    if (teacherPage === "attendance") {
+      return (
+        <main
+          style={{
+            minHeight: "100vh",
+            padding: "48px",
+            background: "#eef2ff",
+            fontFamily: "Manrope, system-ui, sans-serif"
+          }}
+        >
+          <section
+            style={{
+              maxWidth: "960px",
+              margin: "0 auto",
+              background: "#ffffff",
+              borderRadius: "28px",
+              padding: "36px",
+              boxShadow: "0 24px 70px rgba(27, 46, 94, 0.12)"
+            }}
+          >
+            <h1 style={{ margin: "0 0 12px", fontSize: "32px" }}>Посещаемость</h1>
+
+            <p style={{ color: "#64748b", marginBottom: "12px" }}>
+              Экран будет реализован следующим шагом.
+            </p>
+
+            <p style={{ color: "#64748b", marginBottom: "28px" }}>
+              Выбранная дисциплина: <strong>{selectedDisciplineId ?? "не выбрана"}</strong>,
+              группа: <strong>{selectedGroupId ?? "не выбрана"}</strong>
+            </p>
+
+            <button
+              onClick={() => setTeacherPage("disciplineDetails")}
+              style={{
+                border: "none",
+                borderRadius: "16px",
+                padding: "14px 20px",
+                background: "#2563eb",
+                color: "#ffffff",
+                fontWeight: 800,
+                cursor: "pointer"
+              }}
+            >
+              Назад
+            </button>
+          </section>
+        </main>
+      );
+    }
+
+    if (teacherPage === "gradebook") {
+      return (
+        <main
+          style={{
+            minHeight: "100vh",
+            padding: "48px",
+            background: "#eef2ff",
+            fontFamily: "Manrope, system-ui, sans-serif"
+          }}
+        >
+          <section
+            style={{
+              maxWidth: "960px",
+              margin: "0 auto",
+              background: "#ffffff",
+              borderRadius: "28px",
+              padding: "36px",
+              boxShadow: "0 24px 70px rgba(27, 46, 94, 0.12)"
+            }}
+          >
+            <h1 style={{ margin: "0 0 12px", fontSize: "32px" }}>Ведомость</h1>
+
+            <p style={{ color: "#64748b", marginBottom: "12px" }}>
+              Экран будет реализован следующим шагом.
+            </p>
+
+            <p style={{ color: "#64748b", marginBottom: "28px" }}>
+              Выбранная дисциплина: <strong>{selectedDisciplineId ?? "не выбрана"}</strong>,
+              группа: <strong>{selectedGroupId ?? "не выбрана"}</strong>
+            </p>
+
+            <button
+              onClick={() => setTeacherPage("disciplineDetails")}
+              style={{
+                border: "none",
+                borderRadius: "16px",
+                padding: "14px 20px",
+                background: "#2563eb",
+                color: "#ffffff",
+                fontWeight: 800,
+                cursor: "pointer"
+              }}
+            >
+              Назад
+            </button>
+          </section>
+        </main>
       );
     }
 
