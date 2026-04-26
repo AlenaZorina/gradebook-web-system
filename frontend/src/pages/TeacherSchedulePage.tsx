@@ -9,6 +9,7 @@ type TeacherSchedulePageProps = {
   onOpenDisciplines: () => void;
   onOpenAttendance: () => void;
   onOpenGradebook: () => void;
+  onOpenAnalytics: () => void;
 };
 
 const days = [
@@ -51,7 +52,8 @@ export function TeacherSchedulePage({
   onLogout,
   onOpenDisciplines,
   onOpenAttendance,
-  onOpenGradebook
+  onOpenGradebook,
+  onOpenAnalytics
 }: TeacherSchedulePageProps) {
   const [schedule, setSchedule] = useState<TeacherScheduleItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -147,7 +149,7 @@ export function TeacherSchedulePage({
 
         <div className="sidebar-section-title">BI-КОНТУР</div>
 
-        <button className="nav-item">
+        <button className="nav-item" onClick={onOpenAnalytics}>
           <span />
           Модуль аналитики
         </button>
