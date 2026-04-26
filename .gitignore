@@ -25,3 +25,8 @@ obj/
 # Python
 __pycache__/
 *.pyc
+.env
+
+frontend/.env.local
+
+frontend/node_modules/
