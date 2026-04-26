@@ -1,31 +1,40 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { LoginPage } from "./pages/LoginPage";
 import { TeacherSchedulePage } from "./pages/TeacherSchedulePage";
+import { TeacherDisciplinesPage } from "./pages/TeacherDisciplinesPage";
 import type { LoginResponse } from "./api";
+
+type TeacherPage = "schedule" | "disciplines";
 
 function App() {
   const [currentUser, setCurrentUser] = useState<LoginResponse | null>(null);
+  const [teacherPage, setTeacherPage] = useState<TeacherPage>("schedule");
 
-  useEffect(() => {
-    const savedUser = localStorage.getItem("currentUser");
-
-    if (savedUser) {
-      setCurrentUser(JSON.parse(savedUser));
-    }
-  }, []);
+  function handleLogout() {
+    setCurrentUser(null);
+    setTeacherPage("schedule");
+  }
 
   if (!currentUser) {
     return <LoginPage onLogin={setCurrentUser} />;
   }
 
   if (currentUser.role === "teacher") {
+    if (teacherPage === "disciplines") {
+      return (
+        <TeacherDisciplinesPage
+          user={currentUser}
+          onLogout={handleLogout}
+          onOpenSchedule={() => setTeacherPage("schedule")}
+        />
+      );
+    }
+
     return (
       <TeacherSchedulePage
         user={currentUser}
-        onLogout={() => {
-          localStorage.removeItem("currentUser");
-          setCurrentUser(null);
-        }}
+        onLogout={handleLogout}
+        onOpenDisciplines={() => setTeacherPage("disciplines")}
       />
     );
   }
@@ -62,10 +71,7 @@ function App() {
         </p>
 
         <button
-          onClick={() => {
-            localStorage.removeItem("currentUser");
-            setCurrentUser(null);
-          }}
+          onClick={handleLogout}
           style={{
             border: "none",
             borderRadius: "16px",

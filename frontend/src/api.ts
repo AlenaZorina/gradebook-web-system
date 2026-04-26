@@ -64,3 +64,27 @@ export type LoginRequest = {
   
     return response.json();
   }
+  export type TeacherDiscipline = {
+    idAssignment: number;
+    teacherUserId: number;
+    academicYear: string;
+    idDiscipline: number;
+    disciplineName: string;
+    pudUrl?: string | null;
+    idGroup: number;
+    groupName: string;
+    courseNo: number;
+    programName: string;
+    startModuleNo: number;
+    endModuleNo: number;
+  };
+  
+  export async function getTeacherDisciplines(idUser: number): Promise<TeacherDiscipline[]> {
+    const response = await fetch(`${API_URL}/api/users/${idUser}/teacher-disciplines`);
+  
+    if (!response.ok) {
+      throw new Error("Не удалось загрузить дисциплины");
+    }
+  
+    return response.json();
+  }
