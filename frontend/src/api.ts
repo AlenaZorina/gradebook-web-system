@@ -40,3 +40,27 @@ export type LoginRequest = {
   
     return response.json();
   }
+  export type TeacherScheduleItem = {
+    idEntry: number;
+    teacherUserId: number;
+    teacherShortName: string;
+    department?: string | null;
+    position?: string | null;
+    lessonDate: string;
+    startTime?: string | null;
+    endTime?: string | null;
+    weekNo?: number | null;
+    moduleNo?: number | null;
+    disciplineName: string;
+    groupName: string;
+  };
+  
+  export async function getTeacherSchedule(idUser: number): Promise<TeacherScheduleItem[]> {
+    const response = await fetch(`${API_URL}/api/users/${idUser}/teacher-schedule`);
+  
+    if (!response.ok) {
+      throw new Error("Не удалось загрузить расписание");
+    }
+  
+    return response.json();
+  }

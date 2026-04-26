@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { LoginPage } from "./pages/LoginPage";
+import { TeacherSchedulePage } from "./pages/TeacherSchedulePage";
 import type { LoginResponse } from "./api";
 
 function App() {
@@ -15,6 +16,18 @@ function App() {
 
   if (!currentUser) {
     return <LoginPage onLogin={setCurrentUser} />;
+  }
+
+  if (currentUser.role === "teacher") {
+    return (
+      <TeacherSchedulePage
+        user={currentUser}
+        onLogout={() => {
+          localStorage.removeItem("currentUser");
+          setCurrentUser(null);
+        }}
+      />
+    );
   }
 
   return (
@@ -45,24 +58,8 @@ function App() {
         </h1>
 
         <p style={{ color: "#64748b", marginBottom: "28px" }}>
-          Роль пользователя: <strong>{currentUser.role}</strong>
+          Для этой роли экран пока находится в разработке.
         </p>
-
-        <div
-          style={{
-            padding: "24px",
-            borderRadius: "22px",
-            background: "#f4f6ff",
-            marginBottom: "24px"
-          }}
-        >
-          <strong>Следующий экран:</strong>{" "}
-          {currentUser.role === "teacher"
-            ? "Расписание преподавателя"
-            : currentUser.role === "student"
-              ? "Расписание студента"
-              : "Рабочее место учебного офиса"}
-        </div>
 
         <button
           onClick={() => {

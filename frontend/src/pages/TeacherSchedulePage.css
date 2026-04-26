@@ -1,0 +1,327 @@
+.schedule-layout {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 252px 1fr;
+    background:
+      radial-gradient(circle at top left, rgba(37, 99, 235, 0.1), transparent 32%),
+      linear-gradient(135deg, #f8faff 0%, #eef2ff 48%, #f7f9ff 100%);
+    color: #111827;
+    font-family: "Manrope", system-ui, sans-serif;
+  }
+  
+  /* SIDEBAR */
+  
+  .app-sidebar {
+    min-height: 100vh;
+    background: rgba(255, 255, 255, 0.82);
+    border-right: 1px solid rgba(225, 231, 245, 0.9);
+    padding: 40px 24px 28px;
+    display: flex;
+    flex-direction: column;
+    backdrop-filter: blur(18px);
+    box-shadow: 18px 0 50px rgba(27, 46, 94, 0.05);
+  }
+  
+  .user-block {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 38px;
+  }
+  
+  .avatar-placeholder {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background:
+      linear-gradient(135deg, rgba(37, 99, 235, 0.18), rgba(124, 156, 255, 0.3)),
+      #eef2ff;
+    border: 1px solid rgba(37, 99, 235, 0.12);
+    flex: 0 0 auto;
+  }
+  
+  .user-block p {
+    margin: 0;
+    color: #111827;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+  
+  .user-block span {
+    display: block;
+    margin-top: 3px;
+    color: #7b87a5;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.35;
+  }
+  
+  .sidebar-section-title {
+    margin: 0 0 12px;
+    color: #8a96b3;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  
+  .main-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .nav-item {
+    min-height: 46px;
+    border: none;
+    border-radius: 16px;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 0 14px;
+    color: #66728d;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: left;
+    transition: 0.18s ease;
+  }
+  
+  .nav-item:hover {
+    background: rgba(219, 230, 255, 0.55);
+    color: #173ea5;
+  }
+  
+  .nav-item.active {
+    background: #dbe6ff;
+    color: #173ea5;
+    box-shadow: 0 12px 24px rgba(37, 99, 235, 0.12);
+  }
+  
+  .nav-item span {
+    width: 24px;
+    height: 24px;
+    border-radius: 9px;
+    background: #a7b5d8;
+    flex: 0 0 auto;
+    transition: 0.18s ease;
+  }
+  
+  .nav-item.active span {
+    background: linear-gradient(135deg, #2563eb, #6f8fff);
+  }
+  
+  .sidebar-divider {
+    height: 1px;
+    background: #e1e7f5;
+    margin: 34px 0 22px;
+  }
+  
+  .logout-button {
+    margin-top: auto;
+    border: none;
+    background: transparent;
+    color: #7b87a5;
+    cursor: pointer;
+    text-align: left;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 12px 6px;
+    transition: 0.18s ease;
+  }
+  
+  .logout-button:hover {
+    color: #2563eb;
+  }
+  
+  /* CONTENT */
+  
+  .schedule-content {
+    padding: 58px 48px 70px;
+    overflow-x: auto;
+  }
+  
+  .schedule-content h1 {
+    margin: 0 0 22px;
+    color: #111827;
+    font-size: 32px;
+    line-height: 1.15;
+    font-weight: 800;
+    letter-spacing: -0.045em;
+  }
+  
+  .week-block {
+    margin-bottom: 58px;
+    padding: 28px;
+    border-radius: 30px;
+    background: rgba(255, 255, 255, 0.72);
+    border: 1px solid rgba(255, 255, 255, 0.9);
+    box-shadow: 0 22px 60px rgba(27, 46, 94, 0.08);
+    backdrop-filter: blur(14px);
+  }
+  
+  .week-block h2 {
+    margin: 0 0 22px;
+    color: #111827;
+    font-size: 22px;
+    line-height: 1.25;
+    font-weight: 800;
+    letter-spacing: -0.035em;
+  }
+  
+  .week-block h2 span {
+    color: #63718f;
+    font-weight: 600;
+  }
+  
+  .days-header {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(130px, 1fr));
+    gap: 16px;
+    margin-bottom: 14px;
+    color: #6b7692;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 800;
+  }
+  
+  .week-grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(130px, 1fr));
+    gap: 16px;
+  }
+  
+  .day-column {
+    min-height: 270px;
+    border-radius: 22px;
+    background:
+      linear-gradient(180deg, rgba(247, 249, 255, 0.96), rgba(238, 242, 255, 0.78));
+    border: 1px solid #e1e7f5;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .empty-day {
+    flex: 1;
+    border-radius: 18px;
+    background: rgba(219, 230, 255, 0.38);
+    border: 1px dashed rgba(148, 163, 184, 0.28);
+  }
+  
+  /* LESSONS */
+  
+  .lesson-card {
+    display: grid;
+    grid-template-columns: 48px 1fr;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 13px;
+    border-radius: 18px;
+    background: #ffffff;
+    box-shadow: 0 12px 26px rgba(27, 46, 94, 0.08);
+    border: 1px solid rgba(225, 231, 245, 0.9);
+  }
+  
+  .lesson-card time {
+    color: #2563eb;
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1.3;
+  }
+  
+  .lesson-card strong {
+    display: block;
+    color: #111827;
+    font-size: 12px;
+    line-height: 1.35;
+    font-weight: 800;
+  }
+  
+  .lesson-card p {
+    margin: 5px 0 0;
+    color: #7b87a5;
+    font-size: 12px;
+    line-height: 1.3;
+    font-weight: 600;
+  }
+  
+  /* STATES */
+  
+  .schedule-state,
+  .schedule-error {
+    width: fit-content;
+    border-radius: 18px;
+    padding: 14px 18px;
+    font-size: 14px;
+    font-weight: 700;
+  }
+  
+  .schedule-state {
+    background: #ffffff;
+    color: #64748b;
+    box-shadow: 0 14px 32px rgba(27, 46, 94, 0.08);
+  }
+  
+  .schedule-error {
+    background: #fee2e2;
+    color: #b91c1c;
+  }
+  
+  /* RESPONSIVE */
+  
+  @media (max-width: 1180px) {
+    .schedule-layout {
+      grid-template-columns: 220px 1fr;
+    }
+  
+    .schedule-content {
+      padding: 44px 32px 60px;
+    }
+  
+    .week-grid,
+    .days-header {
+      grid-template-columns: repeat(3, minmax(150px, 1fr));
+    }
+  }
+  
+  @media (max-width: 780px) {
+    .schedule-layout {
+      grid-template-columns: 1fr;
+    }
+  
+    .app-sidebar {
+      min-height: auto;
+      border-right: none;
+      border-bottom: 1px solid #e1e7f5;
+    }
+  
+    .schedule-content {
+      padding: 32px 20px 50px;
+    }
+  
+    .week-block {
+      padding: 20px;
+    }
+  
+    .week-grid,
+    .days-header {
+      grid-template-columns: 1fr;
+    }
+  
+    .days-header {
+      display: none;
+    }
+  
+    .day-column::before {
+      content: "День";
+      display: block;
+      margin-bottom: 6px;
+      color: #7b87a5;
+      font-size: 12px;
+      font-weight: 800;
+    }
+  }
