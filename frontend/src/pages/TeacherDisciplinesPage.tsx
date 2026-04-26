@@ -5,10 +5,11 @@ import "./TeacherSchedulePage.css";
 import "./TeacherDisciplinesPage.css";
 
 type TeacherDisciplinesPageProps = {
-  user: LoginResponse;
-  onLogout: () => void;
-  onOpenSchedule: () => void;
-};
+    user: LoginResponse;
+    onLogout: () => void;
+    onOpenSchedule: () => void;
+    onSelectDiscipline: (disciplineId: number) => void;
+  };
 
 function getModuleText(item: TeacherDiscipline) {
   if (item.startModuleNo === item.endModuleNo) {
@@ -19,10 +20,11 @@ function getModuleText(item: TeacherDiscipline) {
 }
 
 export function TeacherDisciplinesPage({
-  user,
-  onLogout,
-  onOpenSchedule
-}: TeacherDisciplinesPageProps) {
+    user,
+    onLogout,
+    onOpenSchedule,
+    onSelectDiscipline
+  }: TeacherDisciplinesPageProps) {
   const [disciplines, setDisciplines] = useState<TeacherDiscipline[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -192,7 +194,11 @@ export function TeacherDisciplinesPage({
 
             <div className="disciplines-grid">
               {items.map((item) => (
-                <article className="discipline-card" key={item.idAssignment}>
+                <article
+                className="discipline-card"
+                key={item.idAssignment}
+                onClick={() => onSelectDiscipline(item.idDiscipline)}
+              >
                   <div className="discipline-cover">
                     <span>{item.disciplineName.slice(0, 1)}</span>
                   </div>
