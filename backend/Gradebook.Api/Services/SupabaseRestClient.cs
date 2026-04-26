@@ -23,6 +23,7 @@ public class SupabaseRestClient
         );
 
         request.Headers.Add("apikey", _secretKey);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _secretKey);
         request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
         var response = await _httpClient.SendAsync(request);
