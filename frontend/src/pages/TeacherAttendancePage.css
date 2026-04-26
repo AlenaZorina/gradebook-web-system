@@ -211,3 +211,8 @@
       margin-bottom: 28px;
     }
   }
+  .primary-button:disabled,
+.secondary-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}

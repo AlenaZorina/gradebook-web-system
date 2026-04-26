@@ -185,3 +185,45 @@ export type LoginRequest = {
   
     return response.json();
   }
+  export type UpdateAttendancePayload = {
+    students: {
+      idStudent: number;
+      marks: {
+        idSession: number;
+        status: AttendanceMark["status"];
+      }[];
+    }[];
+  };
+  
+  export async function updateTeacherAttendance(
+    idUser: number,
+    disciplineId: number,
+    groupId: number,
+    payload: UpdateAttendancePayload
+  ): Promise<{ message: string; updated: number }> {
+    const response = await fetch(
+      `${API_URL}/api/users/${idUser}/attendance?disciplineId=${disciplineId}&groupId=${groupId}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      }
+    );
+  
+    if (!response.ok) {
+      let message = "Не удалось сохранить посещаемость";
+  
+      try {
+        const error = await response.json();
+        message = error.message ?? message;
+      } catch {
+        // оставляем стандартное сообщение
+      }
+  
+      throw new Error(message);
+    }
+  
+    return response.json();
+  }

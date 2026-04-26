@@ -6,9 +6,10 @@ import type {
   TeacherDiscipline
 } from "../api";
 import {
-  getTeacherAttendance,
-  getTeacherDisciplines
-} from "../api";
+    getTeacherAttendance,
+    getTeacherDisciplines,
+    updateTeacherAttendance
+  } from "../api";
 import "./TeacherSchedulePage.css";
 import "./TeacherAttendancePage.css";
 
@@ -45,6 +46,7 @@ export function TeacherAttendancePage({
   const [isAttendanceLoading, setIsAttendanceLoading] = useState(false);
   const [error, setError] = useState("");
   const [saveMessage, setSaveMessage] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     async function loadDisciplines() {
@@ -168,8 +170,47 @@ export function TeacherAttendancePage({
     }
   }
 
-  function handleSave() {
-    setSaveMessage("Изменения сохранены локально. Запись в базу добавим следующим шагом.");
+  async function handleSave() {
+    if (!selectedDisciplineId || !selectedGroupId) {
+      setError("Необходимо выбрать дисциплину и группу");
+      return;
+    }
+  
+    try {
+      setIsSaving(true);
+      setError("");
+      setSaveMessage("");
+  
+      const payload = {
+        students: draftStudents.map((student) => ({
+          idStudent: student.idStudent,
+          marks: student.marks.map((mark) => ({
+            idSession: mark.idSession,
+            status: mark.status
+          }))
+        }))
+      };
+  
+      await updateTeacherAttendance(
+        user.idUser,
+        selectedDisciplineId,
+        selectedGroupId,
+        payload
+      );
+  
+      if (attendance) {
+        setAttendance({
+          ...attendance,
+          students: draftStudents
+        });
+      }
+  
+      setSaveMessage("Изменения сохранены в базе.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Ошибка сохранения посещаемости");
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   return (
@@ -334,9 +375,14 @@ export function TeacherAttendancePage({
                 Отменить
               </button>
 
-              <button className="primary-button" type="button" onClick={handleSave}>
-                Сохранить
-              </button>
+              <button
+                className="primary-button"
+                type="button"
+                onClick={handleSave}
+                disabled={isSaving}
+                >
+                {isSaving ? "Сохраняем..." : "Сохранить"}
+                </button>
             </div>
           </>
         )}
