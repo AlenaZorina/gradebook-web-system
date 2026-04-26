@@ -9,6 +9,8 @@ type TeacherDisciplinesPageProps = {
     onLogout: () => void;
     onOpenSchedule: () => void;
     onSelectDiscipline: (disciplineId: number) => void;
+    onOpenAttendance: () => void;
+    onOpenGradebook: () => void;
   };
 
 function getModuleText(item: TeacherDiscipline) {
@@ -23,7 +25,9 @@ export function TeacherDisciplinesPage({
     user,
     onLogout,
     onOpenSchedule,
-    onSelectDiscipline
+    onSelectDiscipline,
+    onOpenAttendance,
+    onOpenGradebook
   }: TeacherDisciplinesPageProps) {
   const [disciplines, setDisciplines] = useState<TeacherDiscipline[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -119,15 +123,15 @@ export function TeacherDisciplinesPage({
             Дисциплины
           </button>
 
-          <button className="nav-item">
+          <button className="nav-item" onClick={onOpenAttendance}>
             <span />
             Посещаемость
-          </button>
+            </button>
 
-          <button className="nav-item">
+            <button className="nav-item" onClick={onOpenGradebook}>
             <span />
             Ведомость
-          </button>
+            </button>
         </nav>
 
         <div className="sidebar-divider" />

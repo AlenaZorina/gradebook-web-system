@@ -139,3 +139,49 @@ export type LoginRequest = {
   
     return response.json();
   }
+  export type AttendanceSession = {
+    idSession: number;
+    lessonDate: string;
+    dateLabel: string;
+    startTime?: string | null;
+    endTime?: string | null;
+  };
+  
+  export type AttendanceMark = {
+    idSession: number;
+    status: "present" | "absent" | "unknown";
+  };
+  
+  export type AttendanceStudent = {
+    idStudent: number;
+    fullName: string;
+    recordBookNo: string;
+    marks: AttendanceMark[];
+  };
+  
+  export type TeacherAttendance = {
+    teacherUserId: number;
+    idDiscipline: number;
+    disciplineName: string;
+    idGroup: number;
+    groupName: string;
+    courseNo: number;
+    sessions: AttendanceSession[];
+    students: AttendanceStudent[];
+  };
+  
+  export async function getTeacherAttendance(
+    idUser: number,
+    disciplineId: number,
+    groupId: number
+  ): Promise<TeacherAttendance> {
+    const response = await fetch(
+      `${API_URL}/api/users/${idUser}/attendance?disciplineId=${disciplineId}&groupId=${groupId}`
+    );
+  
+    if (!response.ok) {
+      throw new Error("Не удалось загрузить посещаемость");
+    }
+  
+    return response.json();
+  }

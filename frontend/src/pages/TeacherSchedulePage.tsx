@@ -7,6 +7,8 @@ type TeacherSchedulePageProps = {
   user: LoginResponse;
   onLogout: () => void;
   onOpenDisciplines: () => void;
+  onOpenAttendance: () => void;
+  onOpenGradebook: () => void;
 };
 
 const days = [
@@ -47,7 +49,9 @@ function formatDateRange(items: TeacherScheduleItem[]) {
 export function TeacherSchedulePage({
   user,
   onLogout,
-  onOpenDisciplines
+  onOpenDisciplines,
+  onOpenAttendance,
+  onOpenGradebook
 }: TeacherSchedulePageProps) {
   const [schedule, setSchedule] = useState<TeacherScheduleItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -128,12 +132,12 @@ export function TeacherSchedulePage({
             Дисциплины
           </button>
 
-          <button className="nav-item">
+          <button className="nav-item" onClick={onOpenAttendance}>
             <span />
             Посещаемость
           </button>
 
-          <button className="nav-item">
+          <button className="nav-item" onClick={onOpenGradebook}>
             <span />
             Ведомость
           </button>
