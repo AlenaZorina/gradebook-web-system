@@ -4,6 +4,7 @@ import { TeacherSchedulePage } from "./pages/TeacherSchedulePage";
 import { TeacherDisciplinesPage } from "./pages/TeacherDisciplinesPage";
 import { TeacherDisciplineDetailsPage } from "./pages/TeacherDisciplineDetailsPage";
 import type { LoginResponse } from "./api";
+import { TeacherAttendancePage } from "./pages/TeacherAttendancePage";
 
 type TeacherPage =
   | "schedule"
@@ -67,6 +68,8 @@ function App() {
           onLogout={handleLogout}
           onOpenSchedule={() => setTeacherPage("schedule")}
           onSelectDiscipline={openDisciplineDetails}
+          onOpenAttendance={() => openAttendance()}
+          onOpenGradebook={() => openGradebook()}
         />
       );
     }
@@ -88,51 +91,15 @@ function App() {
 
     if (teacherPage === "attendance") {
       return (
-        <main
-          style={{
-            minHeight: "100vh",
-            padding: "48px",
-            background: "#eef2ff",
-            fontFamily: "Manrope, system-ui, sans-serif"
-          }}
-        >
-          <section
-            style={{
-              maxWidth: "960px",
-              margin: "0 auto",
-              background: "#ffffff",
-              borderRadius: "28px",
-              padding: "36px",
-              boxShadow: "0 24px 70px rgba(27, 46, 94, 0.12)"
-            }}
-          >
-            <h1 style={{ margin: "0 0 12px", fontSize: "32px" }}>Посещаемость</h1>
-
-            <p style={{ color: "#64748b", marginBottom: "12px" }}>
-              Экран будет реализован следующим шагом.
-            </p>
-
-            <p style={{ color: "#64748b", marginBottom: "28px" }}>
-              Выбранная дисциплина: <strong>{selectedDisciplineId ?? "не выбрана"}</strong>,
-              группа: <strong>{selectedGroupId ?? "не выбрана"}</strong>
-            </p>
-
-            <button
-              onClick={() => setTeacherPage("disciplineDetails")}
-              style={{
-                border: "none",
-                borderRadius: "16px",
-                padding: "14px 20px",
-                background: "#2563eb",
-                color: "#ffffff",
-                fontWeight: 800,
-                cursor: "pointer"
-              }}
-            >
-              Назад
-            </button>
-          </section>
-        </main>
+        <TeacherAttendancePage
+          user={currentUser}
+          initialDisciplineId={selectedDisciplineId}
+          initialGroupId={selectedGroupId}
+          onLogout={handleLogout}
+          onOpenSchedule={() => setTeacherPage("schedule")}
+          onOpenDisciplines={() => setTeacherPage("disciplines")}
+          onOpenGradebook={openGradebook}
+        />
       );
     }
 
@@ -191,6 +158,8 @@ function App() {
         user={currentUser}
         onLogout={handleLogout}
         onOpenDisciplines={() => setTeacherPage("disciplines")}
+        onOpenAttendance={() => openAttendance()}
+        onOpenGradebook={() => openGradebook()}
       />
     );
   }
