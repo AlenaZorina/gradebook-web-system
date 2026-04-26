@@ -200,4 +200,138 @@ public class TeacherAttendanceController : ControllerBase
         [JsonPropertyName("status")]
         public string Status { get; set; } = string.Empty;
     }
+
+        [HttpPut("{idUser:int}/attendance")]
+    public async Task<IActionResult> UpdateAttendance(
+        int idUser,
+        [FromQuery] int? disciplineId,
+        [FromQuery] int? groupId,
+        [FromBody] UpdateTeacherAttendanceRequestDto request)
+    {
+        if (!disciplineId.HasValue || !groupId.HasValue)
+        {
+            return BadRequest(new
+            {
+                message = "Необходимо выбрать дисциплину и группу"
+            });
+        }
+
+        if (request.Students.Count == 0)
+        {
+            return BadRequest(new
+            {
+                message = "Нет данных для сохранения"
+            });
+        }
+
+        var allowedQuery =
+            "teacher_attendance_view" +
+            "?select=id_session,id_student" +
+            $"&teacher_user_id=eq.{idUser}" +
+            $"&id_discipline=eq.{disciplineId.Value}" +
+            $"&id_group=eq.{groupId.Value}";
+
+        var allowedResult = await _supabase.GetAsync(allowedQuery);
+
+        if (!allowedResult.Success)
+        {
+            return StatusCode(allowedResult.StatusCode, new
+            {
+                message = "Ошибка проверки данных посещаемости",
+                details = allowedResult.Body
+            });
+        }
+
+        var options = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        };
+
+        var allowedRows = JsonSerializer.Deserialize<List<AttendanceAllowedRecord>>(
+            allowedResult.Body,
+            options
+        ) ?? new List<AttendanceAllowedRecord>();
+
+        if (allowedRows.Count == 0)
+        {
+            return NotFound(new
+            {
+                message = "Посещаемость для выбранной дисциплины и группы не найдена"
+            });
+        }
+
+        var allowedKeys = allowedRows
+            .Select(item => $"{item.IdSession}:{item.IdStudent}")
+            .ToHashSet();
+
+        var allowedStatuses = new HashSet<string>
+        {
+            "present",
+            "absent",
+            "unknown"
+        };
+
+        var updatedCount = 0;
+
+        foreach (var student in request.Students)
+        {
+            foreach (var mark in student.Marks)
+            {
+                var key = $"{mark.IdSession}:{student.IdStudent}";
+
+                if (!allowedKeys.Contains(key))
+                {
+                    return BadRequest(new
+                    {
+                        message = "Попытка изменить посещаемость вне выбранной дисциплины или группы"
+                    });
+                }
+
+                if (!allowedStatuses.Contains(mark.Status))
+                {
+                    return BadRequest(new
+                    {
+                        message = $"Недопустимый статус посещаемости: {mark.Status}"
+                    });
+                }
+
+                var updatePath =
+                    "attendance" +
+                    $"?id_session=eq.{mark.IdSession}" +
+                    $"&id_student=eq.{student.IdStudent}";
+
+                var updateResult = await _supabase.PatchAsync(updatePath, new
+                {
+                    status = mark.Status,
+                    updated_by_user_id = idUser
+                });
+
+                if (!updateResult.Success)
+                {
+                    return StatusCode(updateResult.StatusCode, new
+                    {
+                        message = "Ошибка сохранения посещаемости",
+                        details = updateResult.Body
+                    });
+                }
+
+                updatedCount++;
+            }
+        }
+
+        return Ok(new
+        {
+            message = "Посещаемость сохранена",
+            updated = updatedCount
+        });
+    }
+
+    private class AttendanceAllowedRecord
+    {
+        [JsonPropertyName("id_session")]
+        public int IdSession { get; set; }
+
+        [JsonPropertyName("id_student")]
+        public int IdStudent { get; set; }
+    }
 }
