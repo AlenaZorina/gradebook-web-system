@@ -6,6 +6,7 @@ import "./TeacherSchedulePage.css";
 type TeacherSchedulePageProps = {
   user: LoginResponse;
   onLogout: () => void;
+  onOpenDisciplines: () => void;
 };
 
 const days = [
@@ -43,7 +44,11 @@ function formatDateRange(items: TeacherScheduleItem[]) {
   return `с ${format(first)} по ${format(last)}`;
 }
 
-export function TeacherSchedulePage({ user, onLogout }: TeacherSchedulePageProps) {
+export function TeacherSchedulePage({
+  user,
+  onLogout,
+  onOpenDisciplines
+}: TeacherSchedulePageProps) {
   const [schedule, setSchedule] = useState<TeacherScheduleItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -118,7 +123,7 @@ export function TeacherSchedulePage({ user, onLogout }: TeacherSchedulePageProps
             Расписание
           </button>
 
-          <button className="nav-item">
+          <button className="nav-item" onClick={onOpenDisciplines}>
             <span />
             Дисциплины
           </button>

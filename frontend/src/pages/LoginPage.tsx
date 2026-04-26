@@ -112,7 +112,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
         password
       });
 
-      localStorage.setItem("currentUser", JSON.stringify(user));
+      
       onLogin(user);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Ошибка входа");
