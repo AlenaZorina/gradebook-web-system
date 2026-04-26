@@ -3,16 +3,18 @@ import { LoginPage } from "./pages/LoginPage";
 import { TeacherSchedulePage } from "./pages/TeacherSchedulePage";
 import { TeacherDisciplinesPage } from "./pages/TeacherDisciplinesPage";
 import { TeacherDisciplineDetailsPage } from "./pages/TeacherDisciplineDetailsPage";
-import type { LoginResponse } from "./api";
 import { TeacherAttendancePage } from "./pages/TeacherAttendancePage";
 import { TeacherGradebookPage } from "./pages/TeacherGradebookPage";
+import { TeacherAnalyticsPage } from "./pages/TeacherAnalyticsPage";
+import type { LoginResponse } from "./api";
 
 type TeacherPage =
   | "schedule"
   | "disciplines"
   | "disciplineDetails"
   | "attendance"
-  | "gradebook";
+  | "gradebook"
+  | "analytics";
 
 function App() {
   const [currentUser, setCurrentUser] = useState<LoginResponse | null>(null);
@@ -57,6 +59,18 @@ function App() {
     setTeacherPage("gradebook");
   }
 
+  function openAnalytics(disciplineId?: number, groupId?: number) {
+    if (disciplineId) {
+      setSelectedDisciplineId(disciplineId);
+    }
+
+    if (groupId) {
+      setSelectedGroupId(groupId);
+    }
+
+    setTeacherPage("analytics");
+  }
+
   if (!currentUser) {
     return <LoginPage onLogin={setCurrentUser} />;
   }
@@ -71,6 +85,7 @@ function App() {
           onSelectDiscipline={openDisciplineDetails}
           onOpenAttendance={() => openAttendance()}
           onOpenGradebook={() => openGradebook()}
+          onOpenAnalytics={() => openAnalytics()}
         />
       );
     }
@@ -86,6 +101,9 @@ function App() {
           onOpenDisciplines={() => setTeacherPage("disciplines")}
           onOpenAttendance={openAttendance}
           onOpenGradebook={openGradebook}
+          onOpenAnalytics={() =>
+            openAnalytics(selectedDisciplineId ?? undefined, selectedGroupId ?? undefined)
+          }
         />
       );
     }
@@ -100,6 +118,9 @@ function App() {
           onOpenSchedule={() => setTeacherPage("schedule")}
           onOpenDisciplines={() => setTeacherPage("disciplines")}
           onOpenGradebook={openGradebook}
+          onOpenAnalytics={() =>
+            openAnalytics(selectedDisciplineId ?? undefined, selectedGroupId ?? undefined)
+          }
         />
       );
     }
@@ -114,6 +135,24 @@ function App() {
           onOpenSchedule={() => setTeacherPage("schedule")}
           onOpenDisciplines={() => setTeacherPage("disciplines")}
           onOpenAttendance={openAttendance}
+          onOpenAnalytics={() =>
+            openAnalytics(selectedDisciplineId ?? undefined, selectedGroupId ?? undefined)
+          }
+        />
+      );
+    }
+
+    if (teacherPage === "analytics") {
+      return (
+        <TeacherAnalyticsPage
+          user={currentUser}
+          initialDisciplineId={selectedDisciplineId}
+          initialGroupId={selectedGroupId}
+          onLogout={handleLogout}
+          onOpenSchedule={() => setTeacherPage("schedule")}
+          onOpenDisciplines={() => setTeacherPage("disciplines")}
+          onOpenAttendance={openAttendance}
+          onOpenGradebook={openGradebook}
         />
       );
     }
@@ -125,6 +164,7 @@ function App() {
         onOpenDisciplines={() => setTeacherPage("disciplines")}
         onOpenAttendance={() => openAttendance()}
         onOpenGradebook={() => openGradebook()}
+        onOpenAnalytics={() => openAnalytics()}
       />
     );
   }

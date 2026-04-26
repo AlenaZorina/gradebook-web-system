@@ -352,3 +352,87 @@ export type LoginRequest = {
   
     return response.json();
   }
+  export type AnalyticsAttendancePoint = {
+    lessonDate: string;
+    dateLabel: string;
+    presentCount: number;
+    absentCount: number;
+    totalStudents: number;
+    attendancePercent: number | null;
+  };
+  
+  export type AnalyticsGradeDistribution = {
+    label: string;
+    count: number;
+  };
+  
+  export type AnalyticsDisciplineComparison = {
+    idDiscipline: number;
+    disciplineName: string;
+    idGroup: number;
+    groupName: string;
+    courseNo: number;
+    studentsCount: number;
+    averageAttendancePercent: number | null;
+    averageFinalGrade: number | null;
+    atRiskStudentsCount: number;
+  };
+  
+  export type AnalyticsRiskStudent = {
+    idStudent: number;
+    fullName: string;
+    idDiscipline: number;
+    disciplineName: string;
+    idGroup: number;
+    groupName: string;
+    attendancePercent: number | null;
+    finalGrade: number | null;
+    missingGradesCount: number;
+    riskReason: string;
+  };
+  
+  export type TeacherAnalytics = {
+    teacherUserId: number;
+    disciplinesCount: number;
+    groupsCount: number;
+    studentsCount: number;
+    totalLessons: number;
+    averageAttendancePercent: number | null;
+    averageFinalGrade: number | null;
+    atRiskStudentsCount: number;
+    filledFinalGradesCount: number;
+    submittedSheetsCount: number;
+    draftSheetsCount: number;
+    attendanceByDate: AnalyticsAttendancePoint[];
+    gradeDistribution: AnalyticsGradeDistribution[];
+    disciplineComparison: AnalyticsDisciplineComparison[];
+    riskStudents: AnalyticsRiskStudent[];
+  };
+  
+  export async function getTeacherAnalytics(
+    idUser: number,
+    disciplineId?: number | null,
+    groupId?: number | null
+  ): Promise<TeacherAnalytics> {
+    const params = new URLSearchParams();
+  
+    if (disciplineId) {
+      params.set("disciplineId", String(disciplineId));
+    }
+  
+    if (groupId) {
+      params.set("groupId", String(groupId));
+    }
+  
+    const query = params.toString();
+  
+    const response = await fetch(
+      `${API_URL}/api/users/${idUser}/teacher-analytics${query ? `?${query}` : ""}`
+    );
+  
+    if (!response.ok) {
+      throw new Error("Не удалось загрузить BI-аналитику");
+    }
+  
+    return response.json();
+  }
