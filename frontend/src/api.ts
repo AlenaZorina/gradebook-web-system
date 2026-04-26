@@ -227,3 +227,128 @@ export type LoginRequest = {
   
     return response.json();
   }
+  export type GradebookElement = {
+    idElement: number;
+    elementName: string;
+    orderNo: number;
+  };
+  
+  export type GradebookGrade = {
+    idGrade: number;
+    idElement: number;
+    gradeValue: number | null;
+  };
+  
+  export type GradebookStudent = {
+    idStudent: number;
+    fullName: string;
+    recordBookNo: string;
+    grades: GradebookGrade[];
+    idFinalGrade: number;
+    finalGrade: number | null;
+  };
+  
+  export type TeacherGradebook = {
+    teacherUserId: number;
+    idSheet: number;
+    sheetStatus: string;
+    idDiscipline: number;
+    disciplineName: string;
+    idGroup: number;
+    groupName: string;
+    courseNo: number;
+    elements: GradebookElement[];
+    students: GradebookStudent[];
+  };
+  
+  export type UpdateGradebookPayload = {
+    idSheet: number;
+    students: {
+      idStudent: number;
+      grades: {
+        idGrade: number;
+        idElement: number;
+        gradeValue: number | null;
+      }[];
+      idFinalGrade: number;
+      finalGrade: number | null;
+    }[];
+  };
+  
+  export async function getTeacherGradebook(
+    idUser: number,
+    disciplineId: number,
+    groupId: number
+  ): Promise<TeacherGradebook> {
+    const response = await fetch(
+      `${API_URL}/api/users/${idUser}/gradebook?disciplineId=${disciplineId}&groupId=${groupId}`
+    );
+  
+    if (!response.ok) {
+      throw new Error("Не удалось загрузить ведомость");
+    }
+  
+    return response.json();
+  }
+  
+  export async function updateTeacherGradebook(
+    idUser: number,
+    disciplineId: number,
+    groupId: number,
+    payload: UpdateGradebookPayload
+  ): Promise<{ message: string; updated: number }> {
+    const response = await fetch(
+      `${API_URL}/api/users/${idUser}/gradebook?disciplineId=${disciplineId}&groupId=${groupId}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      }
+    );
+  
+    if (!response.ok) {
+      let message = "Не удалось сохранить ведомость";
+  
+      try {
+        const error = await response.json();
+        message = error.message ?? message;
+      } catch {
+        // оставляем стандартное сообщение
+      }
+  
+      throw new Error(message);
+    }
+  
+    return response.json();
+  }
+  
+  export async function submitTeacherGradebook(
+    idUser: number,
+    idSheet: number,
+    disciplineId: number,
+    groupId: number
+  ): Promise<{ message: string }> {
+    const response = await fetch(
+      `${API_URL}/api/users/${idUser}/gradebook/${idSheet}/submit?disciplineId=${disciplineId}&groupId=${groupId}`,
+      {
+        method: "POST"
+      }
+    );
+  
+    if (!response.ok) {
+      let message = "Не удалось отправить ведомость на утверждение";
+  
+      try {
+        const error = await response.json();
+        message = error.message ?? message;
+      } catch {
+        // оставляем стандартное сообщение
+      }
+  
+      throw new Error(message);
+    }
+  
+    return response.json();
+  }
