@@ -1,0 +1,140 @@
+.student-schedule-content {
+    padding-top: 52px;
+  }
+  
+  .student-schedule-header {
+    width: min(100%, 1360px);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 28px;
+    margin-bottom: 26px;
+  }
+  
+  .student-schedule-header h1 {
+    margin: 0 0 12px;
+    color: #111827;
+    font-size: 34px;
+    line-height: 1.12;
+    font-weight: 900;
+    letter-spacing: -0.05em;
+  }
+  
+  .student-schedule-subtitle {
+    margin: 0;
+    color: #4b5a78;
+    font-size: 18px;
+    line-height: 1.35;
+    font-weight: 900;
+  }
+  
+  .student-program-card {
+    width: min(100%, 390px);
+    border-radius: 26px;
+    background: rgba(255, 255, 255, 0.82);
+    border: 1px solid rgba(255, 255, 255, 0.94);
+    box-shadow: 0 18px 46px rgba(27, 46, 94, 0.08);
+    padding: 18px 20px;
+    box-sizing: border-box;
+  }
+  
+  .student-program-card span {
+    display: block;
+    margin-bottom: 7px;
+    color: #7b87a5;
+    font-size: 12px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  
+  .student-program-card strong {
+    display: block;
+    color: #111827;
+    font-size: 15px;
+    line-height: 1.35;
+    font-weight: 900;
+  }
+  
+  .student-schedule-content .week-block {
+    width: min(100%, 1360px);
+  }
+  
+  .student-schedule-content .days-header,
+  .student-schedule-content .week-grid {
+    grid-template-columns: repeat(6, minmax(170px, 1fr));
+    gap: 18px;
+  }
+  
+  .student-schedule-content .day-column {
+    min-height: 360px;
+    padding: 14px;
+  }
+  
+  .student-lesson-card {
+    min-height: 112px;
+    grid-template-columns: 48px minmax(0, 1fr);
+    padding: 13px 12px;
+  }
+  
+  .student-lesson-card time {
+    font-size: 13px;
+  }
+  
+  .student-lesson-card strong {
+    display: block;
+    max-height: none;
+    overflow: visible;
+    color: #111827;
+    font-size: 12px;
+    line-height: 1.22;
+    font-weight: 900;
+    letter-spacing: -0.015em;
+    word-break: normal;
+    overflow-wrap: anywhere;
+  }
+  
+  .student-lesson-card p {
+    margin: 8px 0 0;
+    color: #7b87a5;
+    font-size: 12px;
+    line-height: 1.25;
+    font-weight: 900;
+  }
+  
+  .student-lesson-position {
+    display: block;
+    margin-top: 4px;
+    color: #1f2937;
+    font-size: 15px;
+    line-height: 1.25;
+    font-weight: 500;
+  }
+  
+  @media (max-width: 1280px) {
+    .student-schedule-content .days-header,
+    .student-schedule-content .week-grid {
+      grid-template-columns: repeat(3, minmax(180px, 1fr));
+    }
+  }
+  
+  @media (max-width: 980px) {
+    .student-schedule-header {
+      flex-direction: column;
+    }
+  
+    .student-program-card {
+      width: 100%;
+    }
+  }
+  
+  @media (max-width: 780px) {
+    .student-schedule-content {
+      padding-top: 32px;
+    }
+  
+    .student-schedule-content .days-header,
+    .student-schedule-content .week-grid {
+      grid-template-columns: 1fr;
+    }
+  }

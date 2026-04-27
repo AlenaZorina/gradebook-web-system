@@ -111,17 +111,13 @@ function GradesIcon() {
   );
 }
 
-function ReportIcon() {
+function AnalyticsIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M12 4.5L19 8.2V15.8L12 19.5L5 15.8V8.2L12 4.5Z"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinejoin="round"
-      />
-      <path d="M12 8V12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <path d="M12 15.5H12.01" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+      <path d="M5 18.5V11" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M12 18.5V5.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M19 18.5V14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M4 19H20" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
     </svg>
   );
 }
@@ -210,9 +206,7 @@ export function StudentSchedulePage({ user, onLogout }: StudentSchedulePageProps
             <div>
               <p>{getStudentShortName(user)}</p>
               <span>
-                {studentInfo
-                  ? `Студент · ${studentInfo.groupName}`
-                  : "Студент"}
+                {studentInfo ? `Студент · ${studentInfo.groupName}` : "Студент"}
               </span>
             </div>
           </div>
@@ -251,13 +245,13 @@ export function StudentSchedulePage({ user, onLogout }: StudentSchedulePageProps
 
           <div className="sidebar-divider" />
 
-          <div className="sidebar-section-title">ОБРАЩЕНИЯ</div>
+          <div className="sidebar-section-title">BI-КОНТУР</div>
 
           <button className="nav-item" type="button">
             <span className="nav-icon">
-              <ReportIcon />
+              <AnalyticsIcon />
             </span>
-            Сообщить об ошибке
+            Модуль аналитики
           </button>
         </div>
 
@@ -270,11 +264,12 @@ export function StudentSchedulePage({ user, onLogout }: StudentSchedulePageProps
       </aside>
 
       <section className="schedule-content student-schedule-content">
-        <div className="student-schedule-header">
+        <header className="student-schedule-header">
           <div>
             <h1>Расписание</h1>
+
             {studentInfo && (
-              <p>
+              <p className="student-schedule-subtitle">
                 {studentInfo.courseNo} курс · {studentInfo.groupName}
               </p>
             )}
@@ -286,7 +281,7 @@ export function StudentSchedulePage({ user, onLogout }: StudentSchedulePageProps
               <strong>{studentInfo.programName}</strong>
             </div>
           )}
-        </div>
+        </header>
 
         {isLoading && <div className="schedule-state">Загружаем расписание...</div>}
 

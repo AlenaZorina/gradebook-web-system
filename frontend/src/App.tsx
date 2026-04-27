@@ -7,6 +7,7 @@ import { TeacherAttendancePage } from "./pages/TeacherAttendancePage";
 import { TeacherGradebookPage } from "./pages/TeacherGradebookPage";
 import { TeacherAnalyticsPage } from "./pages/TeacherAnalyticsPage";
 import type { LoginResponse } from "./api";
+import { StudentSchedulePage } from "./pages/StudentSchedulePage";
 
 type TeacherPage =
   | "schedule"
@@ -74,8 +75,17 @@ function App() {
   if (!currentUser) {
     return <LoginPage onLogin={setCurrentUser} />;
   }
+  const normalizedRole = currentUser.role?.trim().toLowerCase();
 
-  if (currentUser.role === "teacher") {
+  if (normalizedRole === "student") {
+    return (
+      <StudentSchedulePage
+        user={currentUser}
+        onLogout={handleLogout}
+      />
+    );
+  }
+  if (normalizedRole === "teacher") {
     if (teacherPage === "disciplines") {
       return (
         <TeacherDisciplinesPage
