@@ -118,8 +118,8 @@ function SearchIcon() {
   );
 }
 
-function getDisciplineLetter(name: string) {
-  return name.trim()[0]?.toUpperCase() ?? "Д";
+function getDisciplineLetter(name?: string | null) {
+    return name?.trim()?.[0]?.toUpperCase() ?? "Д";
 }
 
 function getModuleText(item: StudentDiscipline) {
@@ -168,33 +168,36 @@ export function StudentDisciplinesPage({
 
   const filteredDisciplines = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
-
+  
     let result = disciplines.filter((item) => {
+      const disciplineName = item.disciplineName ?? "";
+      const teachersShortNames = item.teachersShortNames ?? "";
+  
       const matchesSearch =
-        item.disciplineName.toLowerCase().includes(normalizedSearch) ||
-        item.teachersShortNames.toLowerCase().includes(normalizedSearch);
-
-      if (!matchesSearch) {
-        return false;
-      }
-
-      return statusFilter === "current";
-    });
-
-    if (sortMode === "name") {
-      result = [...result].sort((a, b) =>
-        a.disciplineName.localeCompare(b.disciplineName, "ru")
-      );
-    }
-
-    if (sortMode === "module") {
-      result = [...result].sort((a, b) =>
-        (a.startModuleNo ?? 999) - (b.startModuleNo ?? 999)
-      );
-    }
-
-    return result;
-  }, [disciplines, search, sortMode, statusFilter]);
+        disciplineName.toLowerCase().includes(normalizedSearch) ||
+        teachersShortNames.toLowerCase().includes(normalizedSearch);
+  
+        if (!matchesSearch) {
+            return false;
+        }
+    
+        return statusFilter === "current";
+        });
+    
+        if (sortMode === "name") {
+        result = [...result].sort((a, b) =>
+            (a.disciplineName ?? "").localeCompare(b.disciplineName ?? "", "ru")
+        );
+        }
+    
+        if (sortMode === "module") {
+        result = [...result].sort((a, b) =>
+            (a.startModuleNo ?? 999) - (b.startModuleNo ?? 999)
+        );
+        }
+    
+        return result;
+    }, [disciplines, search, sortMode, statusFilter]);
 
   const groupedByCourse = useMemo(() => {
     const grouped = new Map<number, StudentDiscipline[]>();
@@ -278,23 +281,16 @@ export function StudentDisciplinesPage({
       </aside>
 
       <section className="student-disciplines-content">
-        <header className="student-disciplines-header">
-          <div>
+      <header className="student-disciplines-header">
+        <div>
             <h1>Дисциплины</h1>
 
             {studentInfo && (
-              <p>
-                {studentInfo.courseNo} курс · {studentInfo.groupName}
-              </p>
+            <p>
+                {studentInfo.courseNo} курс • {studentInfo.groupName}
+            </p>
             )}
-          </div>
-
-          {studentInfo && (
-            <div className="student-disciplines-program">
-              <span>Образовательная программа</span>
-              <strong>{studentInfo.programName}</strong>
-            </div>
-          )}
+        </div>
         </header>
 
         <div className="student-disciplines-toolbar">
@@ -348,7 +344,9 @@ export function StudentDisciplinesPage({
                     </div>
 
                     <div className="student-discipline-card-body">
-                      <h3 title={item.disciplineName}>{item.disciplineName}</h3>
+                    <h3 title={item.disciplineName ?? "Дисциплина"}>
+                    {item.disciplineName ?? "Дисциплина"}
+                    </h3>
 
                       <div className="student-discipline-meta">
                         <span>{item.groupName}</span>
@@ -357,7 +355,7 @@ export function StudentDisciplinesPage({
 
                       <p>
                         Преподаватели:{" "}
-                        <strong>{item.teachersShortNames || "не указаны"}</strong>
+                        <strong>{item.teachersShortNames ?? "не указаны"}</strong>
                       </p>
                     </div>
                   </article>
