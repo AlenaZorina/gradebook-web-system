@@ -436,3 +436,39 @@ export type LoginRequest = {
   
     return response.json();
   }
+  export type StudentScheduleItem = {
+    idEntry: number;
+  
+    studentUserId: number;
+    idStudent: number;
+  
+    idGroup: number;
+    groupName: string;
+    courseNo: number;
+  
+    programName: string;
+  
+    idDiscipline: number;
+    disciplineName: string;
+  
+    teacherShortName: string;
+    department?: string | null;
+    position?: string | null;
+  
+    lessonDate: string;
+    startTime?: string | null;
+    endTime?: string | null;
+  
+    moduleNo?: number | null;
+    weekNo?: number | null;
+  };
+  
+  export async function getStudentSchedule(idUser: number): Promise<StudentScheduleItem[]> {
+    const response = await fetch(`${API_URL}/api/users/${idUser}/student-schedule`);
+  
+    if (!response.ok) {
+      throw new Error("Не удалось загрузить расписание студента");
+    }
+  
+    return response.json();
+  }
