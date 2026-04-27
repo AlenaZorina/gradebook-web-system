@@ -8,6 +8,7 @@ import { TeacherGradebookPage } from "./pages/TeacherGradebookPage";
 import { TeacherAnalyticsPage } from "./pages/TeacherAnalyticsPage";
 import type { LoginResponse } from "./api";
 import { StudentSchedulePage } from "./pages/StudentSchedulePage";
+import { StudentDisciplinesPage } from "./pages/StudentDisciplinesPage";
 
 type TeacherPage =
   | "schedule"
@@ -22,12 +23,14 @@ function App() {
   const [teacherPage, setTeacherPage] = useState<TeacherPage>("schedule");
   const [selectedDisciplineId, setSelectedDisciplineId] = useState<number | null>(null);
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
+  const [studentPage, setStudentPage] = useState<"schedule" | "disciplines">("schedule");
 
   function handleLogout() {
     setCurrentUser(null);
     setTeacherPage("schedule");
     setSelectedDisciplineId(null);
     setSelectedGroupId(null);
+    setStudentPage("schedule");
   }
 
   function openDisciplineDetails(disciplineId: number) {
@@ -78,10 +81,21 @@ function App() {
   const normalizedRole = currentUser.role?.trim().toLowerCase();
 
   if (normalizedRole === "student") {
+    if (studentPage === "disciplines") {
+      return (
+        <StudentDisciplinesPage
+          user={currentUser}
+          onLogout={handleLogout}
+          onOpenSchedule={() => setStudentPage("schedule")}
+        />
+      );
+    }
+  
     return (
       <StudentSchedulePage
         user={currentUser}
         onLogout={handleLogout}
+        onOpenDisciplines={() => setStudentPage("disciplines")}
       />
     );
   }
