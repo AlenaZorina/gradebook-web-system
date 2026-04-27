@@ -1,207 +1,246 @@
 .disciplines-content {
-    padding: 58px 48px 70px;
-    overflow-y: auto;
-    font-family: "Manrope", system-ui, sans-serif;
+  height: 100vh;
+  padding: 52px 48px 70px;
+  overflow-y: auto;
+  box-sizing: border-box;
+  font-family: "Manrope", system-ui, sans-serif;
+}
+
+.disciplines-header {
+  margin-bottom: 28px;
+}
+
+.disciplines-header h1 {
+  margin: 0 0 20px;
+  color: #111827;
+  font-size: 32px;
+  line-height: 1.15;
+  font-weight: 900;
+  letter-spacing: -0.045em;
+}
+
+.disciplines-toolbar {
+  display: grid;
+  grid-template-columns: 180px 250px minmax(280px, 420px);
+  gap: 14px;
+  align-items: center;
+  max-width: 880px;
+}
+
+.disciplines-toolbar select,
+.disciplines-search {
+  height: 44px;
+  border: 1px solid #dce4f5;
+  border-radius: 999px;
+  background-color: rgba(255, 255, 255, 0.9);
+  color: #111827;
+  box-shadow: 0 12px 28px rgba(27, 46, 94, 0.05);
+  box-sizing: border-box;
+}
+
+.disciplines-toolbar select {
+  width: 100%;
+  padding: 0 42px 0 20px;
+  outline: none;
+  font-family: "Manrope", system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, #2563eb 50%),
+    linear-gradient(135deg, #2563eb 50%, transparent 50%);
+  background-position:
+    calc(100% - 23px) 18px,
+    calc(100% - 17px) 18px;
+  background-size:
+    6px 6px,
+    6px 6px;
+  background-repeat: no-repeat;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.disciplines-toolbar select:focus,
+.disciplines-search:focus-within {
+  border-color: #6f8fff;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
+}
+
+.disciplines-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 17px 0 20px;
+}
+
+.disciplines-search input {
+  width: 100%;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  outline: none;
+  color: #111827;
+  font-family: "Manrope", system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.disciplines-search input::placeholder {
+  color: #9aa6c0;
+}
+
+.disciplines-search span {
+  width: 18px;
+  height: 18px;
+  color: #2563eb;
+  font-size: 18px;
+  line-height: 18px;
+  font-weight: 900;
+  display: grid;
+  place-items: center;
+}
+
+.course-section {
+  margin-bottom: 36px;
+}
+
+.course-section h2 {
+  margin: 0 0 18px;
+  color: #111827;
+  font-size: 22px;
+  line-height: 1.2;
+  font-weight: 900;
+  letter-spacing: -0.035em;
+}
+
+.disciplines-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(230px, 280px));
+  gap: 22px;
+  align-items: start;
+}
+
+.discipline-card {
+  min-height: 236px;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.92);
+  box-shadow: 0 22px 60px rgba(27, 46, 94, 0.08);
+  padding: 14px;
+  transition: 0.18s ease;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.discipline-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 26px 70px rgba(27, 46, 94, 0.13);
+}
+
+.discipline-cover {
+  height: 96px;
+  border-radius: 21px;
+  background:
+    radial-gradient(circle at top right, rgba(255, 255, 255, 0.58), transparent 36%),
+    linear-gradient(135deg, #dbe6ff, #7c9cff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.discipline-cover span {
+  width: 48px;
+  height: 48px;
+  border-radius: 17px;
+  background: rgba(255, 255, 255, 0.78);
+  color: #2563eb;
+  display: grid;
+  place-items: center;
+  font-size: 24px;
+  font-weight: 900;
+}
+
+.discipline-card-body h3 {
+  margin: 0 0 12px;
+  color: #111827;
+  font-size: 16px;
+  line-height: 1.25;
+  font-weight: 900;
+  letter-spacing: -0.025em;
+  max-height: 2.5em;
+  overflow: hidden;
+}
+
+.discipline-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.discipline-meta span {
+  border-radius: 999px;
+  background: #edf3ff;
+  color: #2563eb;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.discipline-card-body p {
+  margin: 0;
+  color: #7b87a5;
+  font-size: 13px;
+  line-height: 1.4;
+  font-weight: 700;
+  max-height: 2.8em;
+  overflow: hidden;
+}
+
+.disciplines-state,
+.disciplines-error {
+  width: fit-content;
+  border-radius: 18px;
+  padding: 14px 18px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.disciplines-state {
+  background: #ffffff;
+  color: #64748b;
+  box-shadow: 0 14px 32px rgba(27, 46, 94, 0.08);
+}
+
+.disciplines-error {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+@media (max-width: 1180px) {
+  .disciplines-content {
+    padding: 44px 32px 60px;
   }
-  
-  .disciplines-header {
-    margin-bottom: 28px;
-  }
-  
-  .disciplines-header h1 {
-    margin: 0 0 18px;
-    color: #111827;
-    font-size: 32px;
-    line-height: 1.15;
-    font-weight: 800;
-    letter-spacing: -0.045em;
-  }
-  
+
   .disciplines-toolbar {
-    display: grid;
-    grid-template-columns: 180px 230px minmax(260px, 1fr);
-    gap: 14px;
-    max-width: 780px;
-    align-items: center;
+    grid-template-columns: 1fr;
+    max-width: 100%;
   }
-  
-  .disciplines-toolbar select,
-  .disciplines-search {
-    height: 42px;
-    border: 1px solid #dce4f5;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.86);
-    color: #334155;
-    box-shadow: 0 12px 28px rgba(27, 46, 94, 0.05);
-  }
-  
-  .disciplines-toolbar select {
-    padding: 0 18px;
-    outline: none;
-    font-size: 14px;
-    font-weight: 700;
-    cursor: pointer;
-  }
-  
-  .disciplines-search {
-    display: flex;
-    align-items: center;
-    padding: 0 16px;
-  }
-  
-  .disciplines-search input {
-    width: 100%;
-    border: none;
-    background: transparent;
-    outline: none;
-    color: #111827;
-    font-size: 14px;
-    font-weight: 600;
-  }
-  
-  .disciplines-search input::placeholder {
-    color: #9aa6c0;
-  }
-  
-  .disciplines-search span {
-    color: #2563eb;
-    font-weight: 800;
-    font-size: 18px;
-  }
-  
-  .course-section {
-    margin-bottom: 34px;
-  }
-  
-  .course-section h2 {
-    margin: 0 0 18px;
-    color: #111827;
-    font-size: 22px;
-    line-height: 1.2;
-    font-weight: 800;
-    letter-spacing: -0.035em;
-  }
-  
+
   .disciplines-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(210px, 280px));
-    gap: 22px;
+    grid-template-columns: repeat(2, minmax(210px, 1fr));
   }
-  
-  .discipline-card {
-    min-height: 210px;
-    border-radius: 26px;
-    background: rgba(255, 255, 255, 0.78);
-    border: 1px solid rgba(255, 255, 255, 0.92);
-    box-shadow: 0 22px 60px rgba(27, 46, 94, 0.08);
-    padding: 14px;
-    transition: 0.18s ease;
-    cursor: pointer;
+}
+
+@media (max-width: 780px) {
+  .disciplines-content {
+    height: auto;
+    padding: 32px 20px 50px;
   }
-  
-  .discipline-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 26px 70px rgba(27, 46, 94, 0.13);
+
+  .disciplines-grid {
+    grid-template-columns: 1fr;
   }
-  
-  .discipline-cover {
-    height: 96px;
-    border-radius: 20px;
-    background:
-      radial-gradient(circle at top right, rgba(255, 255, 255, 0.56), transparent 36%),
-      linear-gradient(135deg, #dbe6ff, #7c9cff);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 16px;
-  }
-  
-  .discipline-cover span {
-    width: 48px;
-    height: 48px;
-    border-radius: 17px;
-    background: rgba(255, 255, 255, 0.78);
-    color: #2563eb;
-    display: grid;
-    place-items: center;
-    font-size: 24px;
-    font-weight: 800;
-  }
-  
-  .discipline-card-body h3 {
-    margin: 0 0 12px;
-    color: #111827;
-    font-size: 16px;
-    line-height: 1.25;
-    font-weight: 800;
-    letter-spacing: -0.025em;
-  }
-  
-  .discipline-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 10px;
-  }
-  
-  .discipline-meta span {
-    border-radius: 999px;
-    background: #edf3ff;
-    color: #2563eb;
-    padding: 6px 10px;
-    font-size: 12px;
-    font-weight: 800;
-  }
-  
-  .discipline-card-body p {
-    margin: 0;
-    color: #7b87a5;
-    font-size: 13px;
-    line-height: 1.4;
-    font-weight: 600;
-  }
-  
-  .disciplines-state,
-  .disciplines-error {
-    width: fit-content;
-    border-radius: 18px;
-    padding: 14px 18px;
-    font-size: 14px;
-    font-weight: 700;
-  }
-  
-  .disciplines-state {
-    background: #ffffff;
-    color: #64748b;
-    box-shadow: 0 14px 32px rgba(27, 46, 94, 0.08);
-  }
-  
-  .disciplines-error {
-    background: #fee2e2;
-    color: #b91c1c;
-  }
-  
-  @media (max-width: 1180px) {
-    .disciplines-content {
-      padding: 44px 32px 60px;
-    }
-  
-    .disciplines-toolbar {
-      grid-template-columns: 1fr;
-      max-width: 100%;
-    }
-  
-    .disciplines-grid {
-      grid-template-columns: repeat(2, minmax(210px, 1fr));
-    }
-  }
-  
-  @media (max-width: 780px) {
-    .disciplines-content {
-      padding: 32px 20px 50px;
-    }
-  
-    .disciplines-grid {
-      grid-template-columns: 1fr;
-    }
-  }
+}
