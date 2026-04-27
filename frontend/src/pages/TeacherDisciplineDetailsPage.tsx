@@ -13,7 +13,107 @@ type TeacherDisciplineDetailsPageProps = {
   onOpenDisciplines: () => void;
   onOpenAttendance: (disciplineId?: number, groupId?: number) => void;
   onOpenGradebook: (disciplineId?: number, groupId?: number) => void;
+  onOpenAnalytics: () => void;
 };
+
+function getTeacherInitials(user: LoginResponse) {
+  const surnameInitial = user.surname?.trim()?.[0] ?? "";
+  const nameInitial = user.name?.trim()?.[0] ?? "";
+
+  return `${surnameInitial}${nameInitial}`.toUpperCase();
+}
+
+function getTeacherShortName(user: LoginResponse) {
+  const nameInitial = user.name?.trim()?.[0] ? `${user.name.trim()[0]}.` : "";
+  const fathernameInitial = user.fathername?.trim()?.[0]
+    ? `${user.fathername.trim()[0]}.`
+    : "";
+
+  return `${user.surname} ${nameInitial}${fathernameInitial}`;
+}
+
+function ScheduleIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect x="4" y="5" width="16" height="15" rx="3" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M8 3.5V7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M16 3.5V7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M4 9.5H20" stroke="currentColor" strokeWidth="1.8" />
+    </svg>
+  );
+}
+
+function DisciplineIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M6.5 4.5H17.5A2.5 2.5 0 0 1 20 7V18.5A1.5 1.5 0 0 1 18.5 20H6.5A2.5 2.5 0 0 1 4 17.5V7A2.5 2.5 0 0 1 6.5 4.5Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      />
+      <path d="M8 9H16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M8 13H14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function AttendanceIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect x="4" y="5" width="16" height="15" rx="3" stroke="currentColor" strokeWidth="1.8" />
+      <path
+        d="M8 12L10.4 14.4L16.2 8.6"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function GradebookIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect x="5" y="4" width="14" height="16" rx="3" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M8 9H16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M8 12.5H16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M8 16H12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function AnalyticsIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M5 18.5V11" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M12 18.5V5.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M19 18.5V14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M4 19H20" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function LogoutIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M10 5H8A3 3 0 0 0 5 8V16A3 3 0 0 0 8 19H10"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      <path
+        d="M14 8L18 12L14 16"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path d="M18 12H10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
 
 function getCourseText(courseNo: number) {
   return `${courseNo} курс`;
@@ -27,7 +127,8 @@ export function TeacherDisciplineDetailsPage({
   onOpenSchedule,
   onOpenDisciplines,
   onOpenAttendance,
-  onOpenGradebook
+  onOpenGradebook,
+  onOpenAnalytics
 }: TeacherDisciplineDetailsPageProps) {
   const [details, setDetails] = useState<TeacherDisciplineDetail | null>(null);
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(
@@ -69,57 +170,74 @@ export function TeacherDisciplineDetailsPage({
   return (
     <main className="schedule-layout">
       <aside className="app-sidebar">
-        <div className="user-block">
-          <div className="avatar-placeholder" />
-          <div>
-            <p>
-              {user.surname} {user.name[0]}.
-              {user.fathername ? `${user.fathername[0]}.` : ""}
-            </p>
-            <span>Преподаватель кафедры</span>
+        <div className="sidebar-main">
+          <div className="user-block">
+            <div className="avatar-placeholder avatar-initials">
+              {getTeacherInitials(user)}
+            </div>
+
+            <div>
+              <p>{getTeacherShortName(user)}</p>
+              <span>Преподаватель кафедры</span>
+            </div>
           </div>
+
+          <div className="sidebar-section-title">ОБЩЕЕ</div>
+
+          <nav className="main-nav">
+            <button className="nav-item" type="button" onClick={onOpenSchedule}>
+              <span className="nav-icon">
+                <ScheduleIcon />
+              </span>
+              Расписание
+            </button>
+
+            <button className="nav-item active" type="button" onClick={onOpenDisciplines}>
+              <span className="nav-icon">
+                <DisciplineIcon />
+              </span>
+              Дисциплины
+            </button>
+
+            <button
+              className="nav-item"
+              type="button"
+              onClick={() => onOpenAttendance(details?.idDiscipline, selectedGroup ?? undefined)}
+            >
+              <span className="nav-icon">
+                <AttendanceIcon />
+              </span>
+              Посещаемость
+            </button>
+
+            <button
+              className="nav-item"
+              type="button"
+              onClick={() => onOpenGradebook(details?.idDiscipline, selectedGroup ?? undefined)}
+            >
+              <span className="nav-icon">
+                <GradebookIcon />
+              </span>
+              Ведомость
+            </button>
+          </nav>
+
+          <div className="sidebar-divider" />
+
+          <div className="sidebar-section-title">BI-КОНТУР</div>
+
+          <button className="nav-item" type="button" onClick={onOpenAnalytics}>
+            <span className="nav-icon">
+              <AnalyticsIcon />
+            </span>
+            Модуль аналитики
+          </button>
         </div>
 
-        <div className="sidebar-section-title">ОБЩЕЕ</div>
-
-        <nav className="main-nav">
-          <button className="nav-item" onClick={onOpenSchedule}>
-            <span />
-            Расписание
-          </button>
-
-          <button className="nav-item active" onClick={onOpenDisciplines}>
-            <span />
-            Дисциплины
-          </button>
-
-          <button
-            className="nav-item"
-            onClick={() => onOpenAttendance(details?.idDiscipline, selectedGroup ?? undefined)}
-          >
-            <span />
-            Посещаемость
-          </button>
-
-          <button
-            className="nav-item"
-            onClick={() => onOpenGradebook(details?.idDiscipline, selectedGroup ?? undefined)}
-          >
-            <span />
-            Ведомость
-          </button>
-        </nav>
-
-        <div className="sidebar-divider" />
-
-        <div className="sidebar-section-title">BI-КОНТУР</div>
-
-        <button className="nav-item">
-          <span />
-          Модуль аналитики
-        </button>
-
-        <button className="logout-button" onClick={onLogout}>
+        <button className="logout-button" type="button" onClick={onLogout}>
+          <span className="nav-icon">
+            <LogoutIcon />
+          </span>
           Выйти
         </button>
       </aside>
@@ -131,13 +249,20 @@ export function TeacherDisciplineDetailsPage({
 
         {!isLoading && !error && details && (
           <>
-            <button className="back-link" onClick={onOpenDisciplines}>
+            <button className="back-link" type="button" onClick={onOpenDisciplines}>
               ← Назад к дисциплинам
             </button>
 
-            <h1>{details.disciplineName}</h1>
+            <header className="discipline-detail-header">
+              <div>
+                <h1>{details.disciplineName}</h1>
+                <p>{getCourseText(details.courseNo)}</p>
+              </div>
 
-            <p className="discipline-course">{getCourseText(details.courseNo)}</p>
+              <div className="discipline-detail-badge">
+                {details.academicYear}
+              </div>
+            </header>
 
             <div className="group-select-row">
               <label htmlFor="group-select">Группа:</label>
@@ -156,7 +281,7 @@ export function TeacherDisciplineDetailsPage({
             </div>
 
             <div className="discipline-actions">
-              <section className={`detail-accordion ${isFormulaOpen ? "open" : ""}`}>
+              <section className={`detail-card detail-accordion ${isFormulaOpen ? "open" : ""}`}>
                 <button
                   className="detail-row"
                   type="button"
@@ -189,7 +314,7 @@ export function TeacherDisciplineDetailsPage({
               </section>
 
               <button
-                className="detail-row action-row"
+                className="detail-card detail-row action-row"
                 type="button"
                 onClick={() => onOpenAttendance(details.idDiscipline, selectedGroup ?? details.selectedGroupId)}
               >
@@ -202,7 +327,7 @@ export function TeacherDisciplineDetailsPage({
               </button>
 
               <button
-                className="detail-row action-row"
+                className="detail-card detail-row action-row"
                 type="button"
                 onClick={() => onOpenGradebook(details.idDiscipline, selectedGroup ?? details.selectedGroupId)}
               >
