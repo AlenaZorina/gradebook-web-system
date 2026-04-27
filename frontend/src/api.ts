@@ -472,3 +472,35 @@ export type LoginRequest = {
   
     return response.json();
   }
+  export type StudentDiscipline = {
+    studentUserId: number;
+    idStudent: number;
+  
+    idGroup: number;
+    groupName: string;
+    courseNo: number;
+  
+    idProgram: number;
+    programName: string;
+  
+    idDiscipline: number;
+    disciplineName: string;
+  
+    startModuleNo?: number | null;
+    endModuleNo?: number | null;
+  
+    academicYear: string;
+  
+    teachersCount: number;
+    teachersShortNames: string;
+  };
+  
+  export async function getStudentDisciplines(idUser: number): Promise<StudentDiscipline[]> {
+    const response = await fetch(`${API_URL}/api/users/${idUser}/student-disciplines`);
+  
+    if (!response.ok) {
+      throw new Error("Не удалось загрузить дисциплины студента");
+    }
+  
+    return response.json();
+  }

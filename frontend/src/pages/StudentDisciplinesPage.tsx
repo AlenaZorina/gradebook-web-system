@@ -1,49 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
-import type { LoginResponse, StudentScheduleItem } from "../api";
-import { getStudentSchedule } from "../api";
+import type { LoginResponse, StudentDiscipline } from "../api";
+import { getStudentDisciplines } from "../api";
 import "./TeacherSchedulePage.css";
-import "./StudentSchedulePage.css";
+import "./StudentDisciplinesPage.css";
 
-type StudentSchedulePageProps = {
+type StudentDisciplinesPageProps = {
   user: LoginResponse;
   onLogout: () => void;
-  onOpenDisciplines: () => void;
+  onOpenSchedule: () => void;
 };
-
-const days = [
-  { key: 1, title: "П" },
-  { key: 2, title: "ВТ" },
-  { key: 3, title: "СР" },
-  { key: 4, title: "ЧТ" },
-  { key: 5, title: "ПТ" },
-  { key: 6, title: "СБ" }
-];
-
-function getDayKey(date: string) {
-  const day = new Date(date).getDay();
-  return day === 0 ? 7 : day;
-}
-
-function formatDateRange(items: StudentScheduleItem[]) {
-  if (items.length === 0) return "";
-
-  const dates = items
-    .map((item) => new Date(item.lessonDate))
-    .sort((a, b) => a.getTime() - b.getTime());
-
-  const first = dates[0];
-  const last = new Date(first);
-  last.setDate(first.getDate() + 5);
-
-  const format = (date: Date) =>
-    date.toLocaleDateString("ru-RU", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric"
-    });
-
-  return `с ${format(first)} по ${format(last)}`;
-}
 
 function getStudentInitials(user: LoginResponse) {
   const surnameInitial = user.surname?.trim()?.[0] ?? "";
@@ -144,60 +109,106 @@ function LogoutIcon() {
   );
 }
 
-export function StudentSchedulePage({
+function SearchIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="10.8" cy="10.8" r="5.8" stroke="currentColor" strokeWidth="1.9" />
+      <path d="M15.2 15.2L20 20" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function getDisciplineLetter(name: string) {
+  return name.trim()[0]?.toUpperCase() ?? "Д";
+}
+
+function getModuleText(item: StudentDiscipline) {
+  if (item.startModuleNo && item.endModuleNo && item.startModuleNo !== item.endModuleNo) {
+    return `${item.startModuleNo}–${item.endModuleNo} модули`;
+  }
+
+  if (item.startModuleNo) {
+    return `${item.startModuleNo} модуль`;
+  }
+
+  return "модуль не указан";
+}
+
+export function StudentDisciplinesPage({
   user,
   onLogout,
-  onOpenDisciplines
-}: StudentSchedulePageProps) {
-  const [schedule, setSchedule] = useState<StudentScheduleItem[]>([]);
+  onOpenSchedule
+}: StudentDisciplinesPageProps) {
+  const [disciplines, setDisciplines] = useState<StudentDiscipline[]>([]);
+  const [statusFilter, setStatusFilter] = useState("current");
+  const [sortMode, setSortMode] = useState("name");
+  const [search, setSearch] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    async function loadSchedule() {
+    async function loadDisciplines() {
       try {
         setIsLoading(true);
         setError("");
 
-        const data = await getStudentSchedule(user.idUser);
-        setSchedule(data);
+        const data = await getStudentDisciplines(user.idUser);
+        setDisciplines(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Ошибка загрузки расписания");
+        setError(err instanceof Error ? err.message : "Ошибка загрузки дисциплин");
       } finally {
         setIsLoading(false);
       }
     }
 
-    loadSchedule();
+    loadDisciplines();
   }, [user.idUser]);
 
-  const weeks = useMemo(() => {
-    const grouped = new Map<string, StudentScheduleItem[]>();
+  const studentInfo = disciplines[0];
 
-    schedule.forEach((item) => {
-      const key = `${item.moduleNo ?? "-"}-${item.weekNo ?? "-"}`;
+  const filteredDisciplines = useMemo(() => {
+    const normalizedSearch = search.trim().toLowerCase();
 
-      if (!grouped.has(key)) {
-        grouped.set(key, []);
+    let result = disciplines.filter((item) => {
+      const matchesSearch =
+        item.disciplineName.toLowerCase().includes(normalizedSearch) ||
+        item.teachersShortNames.toLowerCase().includes(normalizedSearch);
+
+      if (!matchesSearch) {
+        return false;
       }
 
-      grouped.get(key)!.push(item);
+      return statusFilter === "current";
     });
 
-    return Array.from(grouped.entries()).map(([key, items]) => {
-      const first = items[0];
+    if (sortMode === "name") {
+      result = [...result].sort((a, b) =>
+        a.disciplineName.localeCompare(b.disciplineName, "ru")
+      );
+    }
 
-      return {
-        key,
-        moduleNo: first.moduleNo,
-        weekNo: first.weekNo,
-        dateRange: formatDateRange(items),
-        items
-      };
+    if (sortMode === "module") {
+      result = [...result].sort((a, b) =>
+        (a.startModuleNo ?? 999) - (b.startModuleNo ?? 999)
+      );
+    }
+
+    return result;
+  }, [disciplines, search, sortMode, statusFilter]);
+
+  const groupedByCourse = useMemo(() => {
+    const grouped = new Map<number, StudentDiscipline[]>();
+
+    filteredDisciplines.forEach((item) => {
+      if (!grouped.has(item.courseNo)) {
+        grouped.set(item.courseNo, []);
+      }
+
+      grouped.get(item.courseNo)!.push(item);
     });
-  }, [schedule]);
 
-  const studentInfo = schedule[0];
+    return Array.from(grouped.entries()).sort(([a], [b]) => a - b);
+  }, [filteredDisciplines]);
 
   return (
     <main className="schedule-layout">
@@ -210,27 +221,25 @@ export function StudentSchedulePage({
 
             <div>
               <p>{getStudentShortName(user)}</p>
-              <span>
-                {studentInfo ? `Студент · ${studentInfo.groupName}` : "Студент"}
-              </span>
+              <span>{studentInfo ? `Студент · ${studentInfo.groupName}` : "Студент"}</span>
             </div>
           </div>
 
           <div className="sidebar-section-title">ОБЩЕЕ</div>
 
           <nav className="main-nav">
-            <button className="nav-item active" type="button">
+            <button className="nav-item" type="button" onClick={onOpenSchedule}>
               <span className="nav-icon">
                 <ScheduleIcon />
               </span>
               Расписание
             </button>
 
-            <button className="nav-item" type="button" onClick={onOpenDisciplines}>
-            <span className="nav-icon">
+            <button className="nav-item active" type="button">
+              <span className="nav-icon">
                 <DisciplineIcon />
-            </span>
-            Дисциплины
+              </span>
+              Дисциплины
             </button>
 
             <button className="nav-item" type="button">
@@ -268,81 +277,91 @@ export function StudentSchedulePage({
         </button>
       </aside>
 
-      <section className="schedule-content student-schedule-content">
-        <header className="student-schedule-header">
+      <section className="student-disciplines-content">
+        <header className="student-disciplines-header">
           <div>
-            <h1>Расписание</h1>
+            <h1>Дисциплины</h1>
 
             {studentInfo && (
-              <p className="student-schedule-subtitle">
+              <p>
                 {studentInfo.courseNo} курс · {studentInfo.groupName}
               </p>
             )}
           </div>
 
           {studentInfo && (
-            <div className="student-program-card">
+            <div className="student-disciplines-program">
               <span>Образовательная программа</span>
               <strong>{studentInfo.programName}</strong>
             </div>
           )}
         </header>
 
-        {isLoading && <div className="schedule-state">Загружаем расписание...</div>}
+        <div className="student-disciplines-toolbar">
+          <select
+            value={statusFilter}
+            onChange={(event) => setStatusFilter(event.target.value)}
+          >
+            <option value="current">Текущие</option>
+          </select>
 
-        {error && <div className="schedule-error">{error}</div>}
+          <select
+            value={sortMode}
+            onChange={(event) => setSortMode(event.target.value)}
+          >
+            <option value="name">Сортировать по названию</option>
+            <option value="module">Сортировать по модулю</option>
+          </select>
 
-        {!isLoading && !error && weeks.length === 0 && (
-          <div className="schedule-state">Расписание пока не найдено</div>
+          <label className="student-disciplines-search">
+            <input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Поиск"
+            />
+
+            <span>
+              <SearchIcon />
+            </span>
+          </label>
+        </div>
+
+        {isLoading && <div className="disciplines-state">Загружаем дисциплины...</div>}
+
+        {error && <div className="disciplines-error">{error}</div>}
+
+        {!isLoading && !error && filteredDisciplines.length === 0 && (
+          <div className="disciplines-state">Дисциплины не найдены</div>
         )}
 
         {!isLoading &&
           !error &&
-          weeks.map((week) => (
-            <section className="week-block" key={week.key}>
-              <h2>
-                Модуль {week.moduleNo ?? "—"} неделя {week.weekNo ?? "—"}{" "}
-                <span>({week.dateRange})</span>
-              </h2>
+          groupedByCourse.map(([courseNo, items]) => (
+            <section className="student-course-section" key={courseNo}>
+              <h2>{courseNo} курс</h2>
 
-              <div className="days-header">
-                {days.map((day) => (
-                  <div key={day.key}>{day.title}</div>
-                ))}
-              </div>
-
-              <div className="week-grid">
-                {days.map((day) => {
-                  const dayItems = week.items.filter(
-                    (item) => getDayKey(item.lessonDate) === day.key
-                  );
-
-                  return (
-                    <div className="day-column" key={day.key}>
-                      {dayItems.length === 0 && <div className="empty-day" />}
-
-                      {dayItems.map((item) => (
-                        <article className="lesson-card student-lesson-card" key={item.idEntry}>
-                          <time>{item.startTime?.slice(0, 5)}</time>
-
-                          <div className="lesson-card-content">
-                            <strong title={item.disciplineName}>
-                              {item.disciplineName}
-                            </strong>
-
-                            <p>{item.teacherShortName}</p>
-
-                            {item.position && (
-                              <span className="student-lesson-position">
-                                {item.position}
-                              </span>
-                            )}
-                          </div>
-                        </article>
-                      ))}
+              <div className="student-disciplines-grid">
+                {items.map((item) => (
+                  <article className="student-discipline-card" key={item.idDiscipline}>
+                    <div className="student-discipline-cover">
+                      <span>{getDisciplineLetter(item.disciplineName)}</span>
                     </div>
-                  );
-                })}
+
+                    <div className="student-discipline-card-body">
+                      <h3 title={item.disciplineName}>{item.disciplineName}</h3>
+
+                      <div className="student-discipline-meta">
+                        <span>{item.groupName}</span>
+                        <span>{getModuleText(item)}</span>
+                      </div>
+
+                      <p>
+                        Преподаватели:{" "}
+                        <strong>{item.teachersShortNames || "не указаны"}</strong>
+                      </p>
+                    </div>
+                  </article>
+                ))}
               </div>
             </section>
           ))}
