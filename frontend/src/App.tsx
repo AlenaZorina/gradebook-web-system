@@ -16,6 +16,8 @@ import { OfficeResitsPage } from "./pages/OfficeResitsPage";
 import { OfficeResitGroupsPage } from "./pages/OfficeResitGroupsPage";
 import { OfficeResitStudentsPage } from "./pages/OfficeResitStudentsPage";
 import { OfficeAttendanceDisciplinesPage } from "./pages/OfficeAttendanceDisciplinesPage";
+import { OfficeAttendanceGroupsPage } from "./pages/OfficeAttendanceGroupsPage";
+import { OfficeAttendanceSheetPage } from "./pages/OfficeAttendanceSheetPage";
 import type { LoginResponse } from "./api";
 
 type TeacherPage =
@@ -39,7 +41,8 @@ type OfficePage =
   | "resitGroups"
   | "resitStudents"
   | "attendanceDisciplines"
-  | "attendanceDetails"
+  | "attendanceGroups"
+  | "attendanceSheet"
   | "finalSheets"
   | "students"
   | "analytics";
@@ -60,7 +63,10 @@ function App() {
     useState<number | null>(null);
   const [selectedOfficeGroupId, setSelectedOfficeGroupId] =
     useState<number | null>(null);
+
   const [selectedOfficeAttendanceDisciplineId, setSelectedOfficeAttendanceDisciplineId] =
+    useState<number | null>(null);
+  const [selectedOfficeAttendanceGroupId, setSelectedOfficeAttendanceGroupId] =
     useState<number | null>(null);
 
   function handleLogout() {
@@ -73,6 +79,7 @@ function App() {
     setSelectedOfficeDisciplineId(null);
     setSelectedOfficeGroupId(null);
     setSelectedOfficeAttendanceDisciplineId(null);
+    setSelectedOfficeAttendanceGroupId(null);
   }
 
   function openTeacherDisciplineDetails(disciplineId: number) {
@@ -166,9 +173,15 @@ function App() {
     setOfficePage("resitStudents");
   }
 
-  function openOfficeAttendanceDetails(disciplineId: number) {
+  function openOfficeAttendanceGroups(disciplineId: number) {
     setSelectedOfficeAttendanceDisciplineId(disciplineId);
-    setOfficePage("attendanceDetails");
+    setSelectedOfficeAttendanceGroupId(null);
+    setOfficePage("attendanceGroups");
+  }
+
+  function openOfficeAttendanceSheet(groupId: number) {
+    setSelectedOfficeAttendanceGroupId(groupId);
+    setOfficePage("attendanceSheet");
   }
 
   if (!currentUser) {
@@ -220,7 +233,7 @@ function App() {
         <OfficeAttendanceDisciplinesPage
           user={currentUser}
           onLogout={handleLogout}
-          onSelectDiscipline={openOfficeAttendanceDetails}
+          onSelectDiscipline={openOfficeAttendanceGroups}
           onOpenResits={() => setOfficePage("resits")}
           onOpenFinalSheets={() => setOfficePage("finalSheets")}
           onOpenStudents={() => setOfficePage("students")}
@@ -229,26 +242,40 @@ function App() {
       );
     }
 
-    if (officePage === "attendanceDetails") {
+    if (officePage === "attendanceGroups" && selectedOfficeAttendanceDisciplineId) {
       return (
-        <div className="schedule-layout">
-          <main className="schedule-content">
-            <button
-              className="details-back-button"
-              type="button"
-              onClick={() => setOfficePage("attendanceDisciplines")}
-            >
-              ← Назад к дисциплинам
-            </button>
+        <OfficeAttendanceGroupsPage
+          user={currentUser}
+          disciplineId={selectedOfficeAttendanceDisciplineId}
+          onLogout={handleLogout}
+          onBack={() => setOfficePage("attendanceDisciplines")}
+          onSelectGroup={openOfficeAttendanceSheet}
+          onOpenResits={() => setOfficePage("resits")}
+          onOpenFinalSheets={() => setOfficePage("finalSheets")}
+          onOpenStudents={() => setOfficePage("students")}
+          onOpenAnalytics={() => setOfficePage("analytics")}
+        />
+      );
+    }
 
-            <h1>Посещаемость по дисциплине</h1>
-
-            <div className="schedule-state">
-              Экран просмотра посещаемости по дисциплине №
-              {selectedOfficeAttendanceDisciplineId} подключим следующим шагом.
-            </div>
-          </main>
-        </div>
+    if (
+      officePage === "attendanceSheet" &&
+      selectedOfficeAttendanceDisciplineId &&
+      selectedOfficeAttendanceGroupId
+    ) {
+      return (
+        <OfficeAttendanceSheetPage
+          user={currentUser}
+          disciplineId={selectedOfficeAttendanceDisciplineId}
+          groupId={selectedOfficeAttendanceGroupId}
+          onLogout={handleLogout}
+          onBack={() => setOfficePage("attendanceGroups")}
+          onOpenResits={() => setOfficePage("resits")}
+          onOpenAttendance={() => setOfficePage("attendanceDisciplines")}
+          onOpenFinalSheets={() => setOfficePage("finalSheets")}
+          onOpenStudents={() => setOfficePage("students")}
+          onOpenAnalytics={() => setOfficePage("analytics")}
+        />
       );
     }
 

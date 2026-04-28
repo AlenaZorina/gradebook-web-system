@@ -841,3 +841,90 @@ export type LoginRequest = {
   
     return response.json();
   }
+  export type OfficeAttendanceGroup = {
+    idDiscipline: number;
+    disciplineName: string;
+    idGroup: number;
+    groupName: string;
+    courseNo: number;
+    idProgram: number;
+    programName: string;
+    startModuleNo: number;
+    endModuleNo: number;
+    idAssignment: number;
+    academicYear: string;
+    teacherShortName: string;
+    studentsCount: number;
+    sessionsCount: number;
+    markedAttendanceCount: number;
+    presentAttendanceCount: number;
+    absentAttendanceCount: number;
+    attendancePercent: number | null;
+  };
+  
+  export type OfficeAttendanceSession = {
+    idSession: number;
+    lessonDate: string;
+    dateLabel: string;
+    startTime?: string | null;
+    endTime?: string | null;
+  };
+  
+  export type OfficeAttendanceStudentStatus = {
+    idSession: number;
+    status: "present" | "absent" | "unknown";
+  };
+  
+  export type OfficeAttendanceStudent = {
+    idStudent: number;
+    fullName: string;
+    recordBookNo: string;
+    attendance: OfficeAttendanceStudentStatus[];
+  };
+  
+  export type OfficeAttendanceSheet = {
+    idDiscipline: number;
+    disciplineName: string;
+    idGroup: number;
+    groupName: string;
+    courseNo: number;
+    idProgram: number;
+    programName: string;
+    idAssignment: number;
+    academicYear: string;
+    teacherShortName: string;
+    attendancePercent: number | null;
+    sessions: OfficeAttendanceSession[];
+    students: OfficeAttendanceStudent[];
+  };
+  
+  export async function getOfficeAttendanceGroups(
+    idUser: number,
+    disciplineId: number
+  ): Promise<OfficeAttendanceGroup[]> {
+    const response = await fetch(
+      `${API_URL}/api/users/${idUser}/office/attendance-disciplines/${disciplineId}/groups`
+    );
+  
+    if (!response.ok) {
+      throw new Error("Не удалось загрузить группы по дисциплине");
+    }
+  
+    return response.json();
+  }
+  
+  export async function getOfficeAttendanceSheet(
+    idUser: number,
+    disciplineId: number,
+    groupId: number
+  ): Promise<OfficeAttendanceSheet> {
+    const response = await fetch(
+      `${API_URL}/api/users/${idUser}/office/attendance-disciplines/${disciplineId}/groups/${groupId}/sheet`
+    );
+  
+    if (!response.ok) {
+      throw new Error("Не удалось загрузить ведомость посещаемости");
+    }
+  
+    return response.json();
+  }
