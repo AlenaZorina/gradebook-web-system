@@ -963,3 +963,95 @@ export type LoginRequest = {
   
     return response.json();
   }
+  export type OfficeFinalSheetGroup = {
+    idDiscipline: number;
+    disciplineName: string;
+    idGroup: number;
+    groupName: string;
+    courseNo: number;
+    idProgram: number;
+    programName: string;
+    startModuleNo: number;
+    endModuleNo: number;
+    idAssignment: number;
+    academicYear: string;
+    teacherShortName: string;
+    idSheet?: number | null;
+    sheetStatus: string;
+    studentsCount: number;
+    filledFinalGradesCount: number;
+    failedStudentsCount: number;
+    filledPercent: number | null;
+  };
+  
+  export type OfficeFinalSheetElement = {
+    idElement: number;
+    elementName: string;
+    controlType?: string | null;
+    weight?: number | null;
+    orderNo: number;
+  };
+  
+  export type OfficeFinalSheetStudentGrade = {
+    idElement: number;
+    gradeValue?: number | null;
+  };
+  
+  export type OfficeFinalSheetStudent = {
+    idStudent: number;
+    fullName: string;
+    recordBookNo: string;
+    accumulatedGrade?: number | null;
+    examGrade?: number | null;
+    finalGrade?: number | null;
+    grades: OfficeFinalSheetStudentGrade[];
+  };
+  
+  export type OfficeFinalSheet = {
+    idDiscipline: number;
+    disciplineName: string;
+    idGroup: number;
+    groupName: string;
+    courseNo: number;
+    idProgram: number;
+    programName: string;
+    idAssignment: number;
+    academicYear: string;
+    teacherShortName: string;
+    idSheet?: number | null;
+    sheetStatus: string;
+    formulaText: string;
+    elements: OfficeFinalSheetElement[];
+    students: OfficeFinalSheetStudent[];
+  };
+  
+  export async function getOfficeFinalSheetGroups(
+    idUser: number,
+    disciplineId: number
+  ): Promise<OfficeFinalSheetGroup[]> {
+    const response = await fetch(
+      `${API_URL}/api/users/${idUser}/office/final-sheet-disciplines/${disciplineId}/groups`
+    );
+  
+    if (!response.ok) {
+      throw new Error("Не удалось загрузить группы для итоговых ведомостей");
+    }
+  
+    return response.json();
+  }
+  
+  export async function getOfficeFinalSheet(
+    idUser: number,
+    disciplineId: number,
+    groupId: number
+  ): Promise<OfficeFinalSheet> {
+    const response = await fetch(
+      `${API_URL}/api/users/${idUser}/office/final-sheet-disciplines/${disciplineId}/groups/${groupId}/sheet`
+    );
+  
+    if (!response.ok) {
+      throw new Error("Не удалось загрузить итоговую ведомость");
+    }
+  
+    return response.json();
+  }
