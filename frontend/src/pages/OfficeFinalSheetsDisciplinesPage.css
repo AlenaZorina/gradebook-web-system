@@ -1,0 +1,229 @@
+.office-final-disciplines-content {
+    height: 100vh;
+    padding: 52px 48px 70px;
+    overflow: auto;
+    box-sizing: border-box;
+  }
+  
+  .office-final-disciplines-hero {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 24px;
+    margin-bottom: 22px;
+  }
+  
+  .office-final-disciplines-hero h1 {
+    margin: 0;
+    color: #111827;
+    font-size: 36px;
+    line-height: 1.1;
+    font-weight: 900;
+    letter-spacing: -0.05em;
+  }
+  
+  .office-final-disciplines-hero p {
+    max-width: 720px;
+    margin: 10px 0 0;
+    color: #6b7692;
+    font-size: 15px;
+    line-height: 1.45;
+    font-weight: 750;
+  }
+  
+  .office-final-disciplines-filters {
+    display: grid;
+    grid-template-columns: 130px 150px 170px minmax(280px, 1fr);
+    gap: 14px;
+    max-width: 940px;
+    margin-bottom: 34px;
+  }
+  
+  .office-final-disciplines-filters select,
+  .office-final-disciplines-search {
+    min-height: 46px;
+    border: 1px solid #dce4f5;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 12px 28px rgba(27, 46, 94, 0.06);
+  }
+  
+  .office-final-disciplines-filters select {
+    padding: 0 42px 0 18px;
+    color: #111827;
+    font-family: "Manrope", system-ui, sans-serif;
+    font-size: 14px;
+    font-weight: 850;
+    outline: none;
+    appearance: none;
+    background-image: linear-gradient(45deg, transparent 50%, #64748b 50%),
+      linear-gradient(135deg, #64748b 50%, transparent 50%);
+    background-position: calc(100% - 22px) 19px, calc(100% - 16px) 19px;
+    background-size: 6px 6px, 6px 6px;
+    background-repeat: no-repeat;
+  }
+  
+  .office-final-disciplines-search {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 18px;
+    box-sizing: border-box;
+  }
+  
+  .office-final-disciplines-search svg {
+    width: 20px;
+    height: 20px;
+    color: #111827;
+    flex: 0 0 auto;
+  }
+  
+  .office-final-disciplines-search input {
+    width: 100%;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: #111827;
+    font-family: "Manrope", system-ui, sans-serif;
+    font-size: 14px;
+    font-weight: 850;
+  }
+  
+  .office-final-disciplines-search input::placeholder {
+    color: #9aa6bd;
+  }
+  
+  .office-final-disciplines-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(260px, 1fr));
+    gap: 22px;
+    max-width: 1080px;
+    padding-bottom: 40px;
+  }
+  
+  .office-final-discipline-card {
+    min-height: 255px;
+    border: 1px solid rgba(225, 231, 245, 0.95);
+    border-radius: 30px;
+    background: rgba(255, 255, 255, 0.86);
+    box-shadow: 0 22px 60px rgba(27, 46, 94, 0.08);
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  }
+  
+  .office-final-discipline-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(37, 99, 235, 0.22);
+    box-shadow: 0 28px 70px rgba(27, 46, 94, 0.12);
+  }
+  
+  .office-final-discipline-card:focus-visible {
+    outline: 3px solid rgba(37, 99, 235, 0.24);
+    outline-offset: 4px;
+  }
+  
+  .office-final-discipline-cover {
+    height: 108px;
+    display: grid;
+    place-items: center;
+    background:
+      radial-gradient(circle at top left, rgba(255, 255, 255, 0.45), transparent 38%),
+      linear-gradient(135deg, #4f74ff 0%, #8da6ff 100%);
+    color: #ffffff;
+    font-size: 40px;
+    font-weight: 950;
+    letter-spacing: -0.04em;
+  }
+  
+  .office-final-discipline-body {
+    padding: 20px 22px 22px;
+  }
+  
+  .office-final-discipline-body h2 {
+    min-height: 54px;
+    margin: 0 0 14px;
+    color: #111827;
+    font-size: 20px;
+    line-height: 1.25;
+    font-weight: 900;
+    letter-spacing: -0.035em;
+  }
+  
+  .office-final-discipline-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  
+  .office-final-discipline-tags span {
+    border-radius: 999px;
+    background: #eef2ff;
+    color: #3353b8;
+    padding: 7px 11px;
+    font-size: 12px;
+    font-weight: 900;
+  }
+  
+  .office-final-discipline-body p {
+    margin: 0 0 16px;
+    color: #7b87a5;
+    font-size: 13px;
+    line-height: 1.45;
+    font-weight: 700;
+  }
+  
+  .office-final-discipline-body strong {
+    color: #39445c;
+    font-weight: 900;
+  }
+  
+  .office-final-discipline-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .office-final-discipline-stats span {
+    border-radius: 14px;
+    background: #f8faff;
+    border: 1px solid #e1e7f5;
+    color: #5b6578;
+    padding: 8px 10px;
+    font-size: 12px;
+    font-weight: 900;
+  }
+  
+  @media (max-width: 1180px) {
+    .office-final-disciplines-grid {
+      grid-template-columns: repeat(2, minmax(260px, 1fr));
+    }
+  
+    .office-final-disciplines-filters {
+      grid-template-columns: repeat(3, minmax(120px, 1fr));
+    }
+  
+    .office-final-disciplines-search {
+      grid-column: 1 / -1;
+    }
+  }
+  
+  @media (max-width: 780px) {
+    .office-final-disciplines-content {
+      height: auto;
+      padding: 32px 20px 50px;
+    }
+  
+    .office-final-disciplines-hero h1 {
+      font-size: 30px;
+    }
+  
+    .office-final-disciplines-filters {
+      grid-template-columns: 1fr;
+    }
+  
+    .office-final-disciplines-grid {
+      grid-template-columns: 1fr;
+    }
+  }

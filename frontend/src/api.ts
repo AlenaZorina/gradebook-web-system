@@ -928,3 +928,38 @@ export type LoginRequest = {
   
     return response.json();
   }
+  export type OfficeFinalSheetProgramOption = {
+    idProgram: number;
+    programName: string;
+  };
+  
+  export type OfficeFinalSheetDiscipline = {
+    idDiscipline: number;
+    disciplineName: string;
+    pudUrl?: string | null;
+    programs: OfficeFinalSheetProgramOption[];
+    courseNos: number[];
+    moduleNos: number[];
+    groupsCount: number;
+    studentsCount: number;
+    finalSheetsCount: number;
+    submittedSheetsCount: number;
+    approvedSheetsCount: number;
+    filledFinalGradesCount: number;
+    failedStudentsCount: number;
+    filledPercent: number | null;
+  };
+  
+  export async function getOfficeFinalSheetDisciplines(
+    idUser: number
+  ): Promise<OfficeFinalSheetDiscipline[]> {
+    const response = await fetch(
+      `${API_URL}/api/users/${idUser}/office/final-sheet-disciplines`
+    );
+  
+    if (!response.ok) {
+      throw new Error("Не удалось загрузить дисциплины для итоговых ведомостей");
+    }
+  
+    return response.json();
+  }

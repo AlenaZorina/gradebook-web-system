@@ -18,6 +18,7 @@ import { OfficeResitStudentsPage } from "./pages/OfficeResitStudentsPage";
 import { OfficeAttendanceDisciplinesPage } from "./pages/OfficeAttendanceDisciplinesPage";
 import { OfficeAttendanceGroupsPage } from "./pages/OfficeAttendanceGroupsPage";
 import { OfficeAttendanceSheetPage } from "./pages/OfficeAttendanceSheetPage";
+import { OfficeFinalSheetsDisciplinesPage } from "./pages/OfficeFinalSheetsDisciplinesPage";
 import type { LoginResponse } from "./api";
 
 type TeacherPage =
@@ -43,7 +44,8 @@ type OfficePage =
   | "attendanceDisciplines"
   | "attendanceGroups"
   | "attendanceSheet"
-  | "finalSheets"
+  | "finalSheetsDisciplines"
+  | "finalSheetsDetails"
   | "students"
   | "analytics";
 
@@ -69,6 +71,9 @@ function App() {
   const [selectedOfficeAttendanceGroupId, setSelectedOfficeAttendanceGroupId] =
     useState<number | null>(null);
 
+  const [selectedOfficeFinalSheetDisciplineId, setSelectedOfficeFinalSheetDisciplineId] =
+    useState<number | null>(null);
+
   function handleLogout() {
     setCurrentUser(null);
     setTeacherPage("schedule");
@@ -80,6 +85,7 @@ function App() {
     setSelectedOfficeGroupId(null);
     setSelectedOfficeAttendanceDisciplineId(null);
     setSelectedOfficeAttendanceGroupId(null);
+    setSelectedOfficeFinalSheetDisciplineId(null);
   }
 
   function openTeacherDisciplineDetails(disciplineId: number) {
@@ -184,6 +190,11 @@ function App() {
     setOfficePage("attendanceSheet");
   }
 
+  function openOfficeFinalSheetDetails(disciplineId: number) {
+    setSelectedOfficeFinalSheetDisciplineId(disciplineId);
+    setOfficePage("finalSheetsDetails");
+  }
+
   if (!currentUser) {
     return <LoginPage onLogin={setCurrentUser} />;
   }
@@ -200,7 +211,7 @@ function App() {
           onBack={() => setOfficePage("resits")}
           onSelectGroup={openOfficeResitStudents}
           onOpenAttendance={() => setOfficePage("attendanceDisciplines")}
-          onOpenFinalSheets={() => setOfficePage("finalSheets")}
+          onOpenFinalSheets={() => setOfficePage("finalSheetsDisciplines")}
           onOpenStudents={() => setOfficePage("students")}
           onOpenAnalytics={() => setOfficePage("analytics")}
         />
@@ -221,7 +232,7 @@ function App() {
           onBack={() => setOfficePage("resitGroups")}
           onOpenResits={() => setOfficePage("resits")}
           onOpenAttendance={() => setOfficePage("attendanceDisciplines")}
-          onOpenFinalSheets={() => setOfficePage("finalSheets")}
+          onOpenFinalSheets={() => setOfficePage("finalSheetsDisciplines")}
           onOpenStudents={() => setOfficePage("students")}
           onOpenAnalytics={() => setOfficePage("analytics")}
         />
@@ -235,7 +246,7 @@ function App() {
           onLogout={handleLogout}
           onSelectDiscipline={openOfficeAttendanceGroups}
           onOpenResits={() => setOfficePage("resits")}
-          onOpenFinalSheets={() => setOfficePage("finalSheets")}
+          onOpenFinalSheets={() => setOfficePage("finalSheetsDisciplines")}
           onOpenStudents={() => setOfficePage("students")}
           onOpenAnalytics={() => setOfficePage("analytics")}
         />
@@ -251,7 +262,7 @@ function App() {
           onBack={() => setOfficePage("attendanceDisciplines")}
           onSelectGroup={openOfficeAttendanceSheet}
           onOpenResits={() => setOfficePage("resits")}
-          onOpenFinalSheets={() => setOfficePage("finalSheets")}
+          onOpenFinalSheets={() => setOfficePage("finalSheetsDisciplines")}
           onOpenStudents={() => setOfficePage("students")}
           onOpenAnalytics={() => setOfficePage("analytics")}
         />
@@ -272,29 +283,44 @@ function App() {
           onBack={() => setOfficePage("attendanceGroups")}
           onOpenResits={() => setOfficePage("resits")}
           onOpenAttendance={() => setOfficePage("attendanceDisciplines")}
-          onOpenFinalSheets={() => setOfficePage("finalSheets")}
+          onOpenFinalSheets={() => setOfficePage("finalSheetsDisciplines")}
           onOpenStudents={() => setOfficePage("students")}
           onOpenAnalytics={() => setOfficePage("analytics")}
         />
       );
     }
 
-    if (officePage === "finalSheets") {
+    if (officePage === "finalSheetsDisciplines") {
+      return (
+        <OfficeFinalSheetsDisciplinesPage
+          user={currentUser}
+          onLogout={handleLogout}
+          onSelectDiscipline={openOfficeFinalSheetDetails}
+          onOpenResits={() => setOfficePage("resits")}
+          onOpenAttendance={() => setOfficePage("attendanceDisciplines")}
+          onOpenStudents={() => setOfficePage("students")}
+          onOpenAnalytics={() => setOfficePage("analytics")}
+        />
+      );
+    }
+
+    if (officePage === "finalSheetsDetails") {
       return (
         <div className="schedule-layout">
           <main className="schedule-content">
             <button
               className="details-back-button"
               type="button"
-              onClick={() => setOfficePage("resits")}
+              onClick={() => setOfficePage("finalSheetsDisciplines")}
             >
-              ← Назад
+              ← Назад к дисциплинам
             </button>
 
-            <h1>Итоговые ведомости</h1>
+            <h1>Итоговые ведомости по дисциплине</h1>
 
             <div className="schedule-state">
-              Экран итоговых ведомостей учебного офиса подключим позже.
+              Экран итоговых ведомостей по дисциплине №
+              {selectedOfficeFinalSheetDisciplineId} подключим следующим шагом.
             </div>
           </main>
         </div>
@@ -351,7 +377,7 @@ function App() {
         onLogout={handleLogout}
         onSelectDiscipline={openOfficeResitGroups}
         onOpenAttendance={() => setOfficePage("attendanceDisciplines")}
-        onOpenFinalSheets={() => setOfficePage("finalSheets")}
+        onOpenFinalSheets={() => setOfficePage("finalSheetsDisciplines")}
         onOpenStudents={() => setOfficePage("students")}
         onOpenAnalytics={() => setOfficePage("analytics")}
       />
