@@ -39,7 +39,7 @@ public class OfficeStudentsController : ControllerBase
             );
         }
 
-        var rows = Deserialize<List<SupabaseOfficeStudentRow>>(result.Body);
+        var rows = Deserialize<List<SupabaseOfficeStudentRow>>(result.Body) ?? new();
 
         var response = rows
             .Select(row => new OfficeStudentDto
@@ -95,7 +95,7 @@ public class OfficeStudentsController : ControllerBase
             );
         }
 
-        var rows = Deserialize<List<SupabaseOfficeStudentDetailsRow>>(result.Body);
+        var rows = Deserialize<List<SupabaseOfficeStudentDetailsRow>>(result.Body) ?? new();
         var row = rows.FirstOrDefault();
 
         if (row is null)
@@ -155,14 +155,17 @@ public class OfficeStudentsController : ControllerBase
             );
         }
 
-        var rows = Deserialize<List<SupabaseOfficeStudentAttendanceRow>>(result.Body);
+        var rows = Deserialize<List<SupabaseOfficeStudentAttendanceRow>>(result.Body) ?? new();
 
         var response = rows
             .Select(row =>
             {
                 decimal? attendancePercent = row.SessionsCount == 0
                     ? null
-                    : Math.Round((decimal)row.PresentAttendanceCount / row.SessionsCount * 100m, 1);
+                    : Math.Round(
+                        (decimal)row.PresentAttendanceCount / row.SessionsCount * 100m,
+                        1
+                    );
 
                 return new OfficeStudentAttendanceDisciplineDto
                 {
@@ -188,14 +191,64 @@ public class OfficeStudentsController : ControllerBase
         return Ok(response);
     }
 
-    private static T Deserialize<T>(string body)
+    [HttpGet("{idUser:int}/office/students/{studentId:int}/gradebook-summary")]
+    public async Task<ActionResult<List<OfficeStudentGradebookDisciplineDto>>> GetStudentGradebookSummary(
+        int idUser,
+        int studentId
+    )
+    {
+        var query =
+            "office_student_gradebook_summary_view"
+            + "?select=id_student,id_discipline,discipline_name,pud_url,id_enrollment,course_no,start_module_no,end_module_no,id_assignment,academic_year,id_sheet,sheet_status,final_grade"
+            + $"&id_student=eq.{studentId}"
+            + "&order=discipline_name.asc";
+
+        var result = await _supabase.GetAsync(query);
+
+        if (!result.Success)
+        {
+            return StatusCode(
+                result.StatusCode,
+                new
+                {
+                    message = "Ошибка получения ведомости студента из Supabase",
+                    details = result.Body
+                }
+            );
+        }
+
+        var rows = Deserialize<List<SupabaseOfficeStudentGradebookRow>>(result.Body) ?? new();
+
+        var response = rows
+            .Select(row => new OfficeStudentGradebookDisciplineDto
+            {
+                IdStudent = row.IdStudent,
+                IdDiscipline = row.IdDiscipline,
+                DisciplineName = row.DisciplineName,
+                PudUrl = row.PudUrl,
+                IdEnrollment = row.IdEnrollment,
+                CourseNo = row.CourseNo,
+                ModuleNos = ExpandModules(row.StartModuleNo, row.EndModuleNo).ToList(),
+                IdAssignment = row.IdAssignment,
+                AcademicYear = row.AcademicYear,
+                IdSheet = row.IdSheet,
+                SheetStatus = row.SheetStatus ?? string.Empty,
+                FinalGrade = row.FinalGrade
+            })
+            .OrderBy(item => item.DisciplineName)
+            .ToList();
+
+        return Ok(response);
+    }
+
+    private static T? Deserialize<T>(string body)
     {
         var options = new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
         };
 
-        return JsonSerializer.Deserialize<T>(body, options)!;
+        return JsonSerializer.Deserialize<T>(body, options);
     }
 
     private static string BuildFullName(string surname, string name, string? fathername)
@@ -314,5 +367,47 @@ public class OfficeStudentsController : ControllerBase
 
         [JsonPropertyName("absent_attendance_count")]
         public int AbsentAttendanceCount { get; set; }
+    }
+
+    private class SupabaseOfficeStudentGradebookRow
+    {
+        [JsonPropertyName("id_student")]
+        public int IdStudent { get; set; }
+
+        [JsonPropertyName("id_discipline")]
+        public int IdDiscipline { get; set; }
+
+        [JsonPropertyName("discipline_name")]
+        public string DisciplineName { get; set; } = string.Empty;
+
+        [JsonPropertyName("pud_url")]
+        public string? PudUrl { get; set; }
+
+        [JsonPropertyName("id_enrollment")]
+        public int IdEnrollment { get; set; }
+
+        [JsonPropertyName("course_no")]
+        public int CourseNo { get; set; }
+
+        [JsonPropertyName("start_module_no")]
+        public int? StartModuleNo { get; set; }
+
+        [JsonPropertyName("end_module_no")]
+        public int? EndModuleNo { get; set; }
+
+        [JsonPropertyName("id_assignment")]
+        public int IdAssignment { get; set; }
+
+        [JsonPropertyName("academic_year")]
+        public string AcademicYear { get; set; } = string.Empty;
+
+        [JsonPropertyName("id_sheet")]
+        public int? IdSheet { get; set; }
+
+        [JsonPropertyName("sheet_status")]
+        public string? SheetStatus { get; set; }
+
+        [JsonPropertyName("final_grade")]
+        public decimal? FinalGrade { get; set; }
     }
 }

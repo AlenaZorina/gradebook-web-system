@@ -94,3 +94,30 @@ public class OfficeStudentAttendanceDisciplineDto
 
     public decimal? AttendancePercent { get; set; }
 }
+
+public class OfficeStudentGradebookDisciplineDto
+{
+    public int IdStudent { get; set; }
+
+    public int IdDiscipline { get; set; }
+
+    public string DisciplineName { get; set; } = string.Empty;
+
+    public string? PudUrl { get; set; }
+
+    public int IdEnrollment { get; set; }
+
+    public int CourseNo { get; set; }
+
+    public List<int> ModuleNos { get; set; } = new();
+
+    public int IdAssignment { get; set; }
+
+    public string AcademicYear { get; set; } = string.Empty;
+
+    public int? IdSheet { get; set; }
+
+    public string SheetStatus { get; set; } = string.Empty;
+
+    public decimal? FinalGrade { get; set; }
+}
