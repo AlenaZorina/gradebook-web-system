@@ -1055,3 +1055,31 @@ export type LoginRequest = {
   
     return response.json();
   }
+  export type OfficeStudent = {
+    idStudent: number;
+    idUser: number;
+    fullName: string;
+    surname: string;
+    name: string;
+    fathername?: string | null;
+    recordBookNo: string;
+    idGroup: number;
+    groupName: string;
+    courseNo: number;
+    idProgram: number;
+    programName: string;
+    idStatus?: number | null;
+    studentStatus?: string | null;
+  };
+  
+  export async function getOfficeStudents(
+    idUser: number
+  ): Promise<OfficeStudent[]> {
+    const response = await fetch(`${API_URL}/api/users/${idUser}/office/students`);
+  
+    if (!response.ok) {
+      throw new Error("Не удалось загрузить список студентов");
+    }
+  
+    return response.json();
+  }

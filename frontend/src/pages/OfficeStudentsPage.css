@@ -1,0 +1,169 @@
+.office-students-content {
+    height: 100vh;
+    padding: 52px 48px 70px;
+    overflow: auto;
+    box-sizing: border-box;
+  }
+  
+  .office-students-hero {
+    margin-bottom: 18px;
+  }
+  
+  .office-students-hero h1 {
+    margin: 0;
+    color: #111827;
+    font-size: 34px;
+    line-height: 1.1;
+    font-weight: 900;
+    letter-spacing: -0.05em;
+  }
+  
+  .office-students-filters {
+    display: grid;
+    grid-template-columns: 130px 150px minmax(280px, 1fr);
+    gap: 14px;
+    width: min(100%, 520px);
+    margin-bottom: 34px;
+  }
+  
+  .office-students-filters select,
+  .office-students-search {
+    min-height: 46px;
+    border: 1px solid #dce4f5;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 12px 28px rgba(27, 46, 94, 0.06);
+  }
+  
+  .office-students-filters select {
+    padding: 0 42px 0 18px;
+    color: #111827;
+    font-family: "Manrope", system-ui, sans-serif;
+    font-size: 14px;
+    font-weight: 850;
+    outline: none;
+    appearance: none;
+    background-image: linear-gradient(45deg, transparent 50%, #64748b 50%),
+      linear-gradient(135deg, #64748b 50%, transparent 50%);
+    background-position: calc(100% - 22px) 19px, calc(100% - 16px) 19px;
+    background-size: 6px 6px, 6px 6px;
+    background-repeat: no-repeat;
+  }
+  
+  .office-students-search {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 18px;
+    box-sizing: border-box;
+  }
+  
+  .office-students-search svg {
+    width: 20px;
+    height: 20px;
+    color: #111827;
+    flex: 0 0 auto;
+  }
+  
+  .office-students-search input {
+    width: 100%;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: #111827;
+    font-family: "Manrope", system-ui, sans-serif;
+    font-size: 14px;
+    font-weight: 850;
+  }
+  
+  .office-students-search input::placeholder {
+    color: #9aa6bd;
+  }
+  
+  .office-students-list {
+    width: min(100%, 860px);
+    display: grid;
+    gap: 12px;
+    padding-bottom: 40px;
+  }
+  
+  .office-student-card {
+    width: 100%;
+    min-height: 76px;
+    border: 1px solid rgba(197, 204, 216, 0.95);
+    border-radius: 22px;
+    background: rgba(255, 255, 255, 0.92);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 14px 24px;
+    text-align: left;
+    cursor: pointer;
+    font-family: "Manrope", system-ui, sans-serif;
+    box-shadow: 0 14px 36px rgba(27, 46, 94, 0.045);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  }
+  
+  .office-student-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(37, 99, 235, 0.22);
+    box-shadow: 0 20px 52px rgba(27, 46, 94, 0.09);
+  }
+  
+  .office-student-card h2 {
+    margin: 0 0 4px;
+    color: #111827;
+    font-size: 16px;
+    line-height: 1.2;
+    font-weight: 900;
+    letter-spacing: -0.03em;
+  }
+  
+  .office-student-card p {
+    margin: 0;
+    color: #39445c;
+    font-size: 13px;
+    font-weight: 800;
+  }
+  
+  .office-student-card small {
+    display: block;
+    margin-top: 4px;
+    color: #7b87a5;
+    font-size: 12px;
+    font-weight: 800;
+  }
+  
+  .office-student-card strong {
+    color: #5b6578;
+    font-size: 36px;
+    line-height: 1;
+    font-weight: 650;
+  }
+  
+  @media (max-width: 900px) {
+    .office-students-filters {
+      width: 100%;
+      grid-template-columns: 130px 150px minmax(220px, 1fr);
+    }
+  }
+  
+  @media (max-width: 780px) {
+    .office-students-content {
+      height: auto;
+      padding: 32px 20px 50px;
+    }
+  
+    .office-students-hero h1 {
+      font-size: 30px;
+    }
+  
+    .office-students-filters {
+      grid-template-columns: 1fr;
+    }
+  
+    .office-students-list {
+      width: 100%;
+    }
+  }

@@ -20,7 +20,8 @@ import { OfficeAttendanceGroupsPage } from "./pages/OfficeAttendanceGroupsPage";
 import { OfficeAttendanceSheetPage } from "./pages/OfficeAttendanceSheetPage";
 import { OfficeFinalSheetsDisciplinesPage } from "./pages/OfficeFinalSheetsDisciplinesPage";
 import { OfficeFinalSheetGroupsPage } from "./pages/OfficeFinalSheetGroupsPage";
-import { OfficeFinalSheetPage } from "./pages/OfficeFinalSheetPage";
+import { OfficeFinalSheetPage } from "./pages/OfficeFinalSheetPage"
+import { OfficeStudentsPage } from "./pages/OfficeStudentsPage";;
 import type { LoginResponse } from "./api";
 
 type TeacherPage =
@@ -39,7 +40,7 @@ type StudentPage =
   | "gradebook"
   | "analytics";
 
-type OfficePage =
+  type OfficePage =
   | "resits"
   | "resitGroups"
   | "resitStudents"
@@ -50,6 +51,7 @@ type OfficePage =
   | "finalSheetGroups"
   | "finalSheet"
   | "students"
+  | "studentDetails"
   | "analytics";
 
 function App() {
@@ -58,6 +60,8 @@ function App() {
   const [teacherPage, setTeacherPage] = useState<TeacherPage>("schedule");
   const [studentPage, setStudentPage] = useState<StudentPage>("schedule");
   const [officePage, setOfficePage] = useState<OfficePage>("resits");
+  const [selectedOfficeStudentId, setSelectedOfficeStudentId] =
+  useState<number | null>(null);
 
   const [selectedDisciplineId, setSelectedDisciplineId] = useState<number | null>(
     null
@@ -92,6 +96,7 @@ function App() {
     setSelectedOfficeAttendanceGroupId(null);
     setSelectedOfficeFinalSheetDisciplineId(null);
     setSelectedOfficeFinalSheetGroupId(null);
+    setSelectedOfficeStudentId(null);
   }
 
   function openTeacherDisciplineDetails(disciplineId: number) {
@@ -205,6 +210,10 @@ function App() {
   function openOfficeFinalSheet(groupId: number) {
     setSelectedOfficeFinalSheetGroupId(groupId);
     setOfficePage("finalSheet");
+  }
+  function openOfficeStudentDetails(studentId: number) {
+    setSelectedOfficeStudentId(studentId);
+    setOfficePage("studentDetails");
   }
 
   if (!currentUser) {
@@ -358,20 +367,33 @@ function App() {
 
     if (officePage === "students") {
       return (
+        <OfficeStudentsPage
+          user={currentUser}
+          onLogout={handleLogout}
+          onSelectStudent={openOfficeStudentDetails}
+          onOpenResits={() => setOfficePage("resits")}
+          onOpenAttendance={() => setOfficePage("attendanceDisciplines")}
+          onOpenFinalSheets={() => setOfficePage("finalSheetsDisciplines")}
+          onOpenAnalytics={() => setOfficePage("analytics")}
+        />
+      );
+    }
+    if (officePage === "studentDetails") {
+      return (
         <div className="schedule-layout">
           <main className="schedule-content">
             <button
               className="details-back-button"
               type="button"
-              onClick={() => setOfficePage("resits")}
+              onClick={() => setOfficePage("students")}
             >
-              ← Назад
+              ← Назад к студентам
             </button>
-
-            <h1>Студенты</h1>
-
+    
+            <h1>Карточка студента</h1>
+    
             <div className="schedule-state">
-              Экран списка студентов учебного офиса подключим позже.
+              Экран карточки студента №{selectedOfficeStudentId} подключим следующим шагом.
             </div>
           </main>
         </div>
