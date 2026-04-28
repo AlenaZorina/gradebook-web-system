@@ -1147,3 +1147,32 @@ export type LoginRequest = {
   
     return response.json();
   }
+  export type OfficeStudentGradebookDiscipline = {
+    idStudent: number;
+    idDiscipline: number;
+    disciplineName: string;
+    pudUrl?: string | null;
+    idEnrollment: number;
+    courseNo: number;
+    moduleNos: number[];
+    idAssignment: number;
+    academicYear: string;
+    idSheet?: number | null;
+    sheetStatus: string;
+    finalGrade?: number | null;
+  };
+  
+  export async function getOfficeStudentGradebookSummary(
+    idUser: number,
+    studentId: number
+  ): Promise<OfficeStudentGradebookDiscipline[]> {
+    const response = await fetch(
+      `${API_URL}/api/users/${idUser}/office/students/${studentId}/gradebook-summary`
+    );
+  
+    if (!response.ok) {
+      throw new Error("Не удалось загрузить ведомость студента");
+    }
+  
+    return response.json();
+  }

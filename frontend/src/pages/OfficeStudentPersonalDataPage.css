@@ -1,0 +1,182 @@
+.office-student-personal-content {
+    height: 100vh;
+    padding: 52px 48px 70px;
+    overflow: auto;
+    box-sizing: border-box;
+  }
+  
+  .office-student-personal-content h1 {
+    margin: 0 0 42px;
+    color: #111827;
+    font-size: 34px;
+    line-height: 1.1;
+    font-weight: 900;
+    letter-spacing: -0.05em;
+  }
+  
+  .office-student-personal-profile {
+    width: min(100%, 420px);
+    margin: 0 auto 44px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .office-student-personal-avatar {
+    width: 112px;
+    height: 112px;
+    border-radius: 999px;
+    background: #d9d9d9;
+    margin-bottom: 24px;
+  }
+  
+  .office-student-personal-profile h2 {
+    margin: 0 0 6px;
+    color: #111827;
+    font-size: 25px;
+    line-height: 1.15;
+    font-weight: 900;
+    letter-spacing: -0.04em;
+  }
+  
+  .office-student-personal-profile p {
+    margin: 0 0 4px;
+    color: #111827;
+    font-size: 16px;
+    font-weight: 750;
+  }
+  
+  .office-student-personal-profile span {
+    color: #111827;
+    font-size: 15px;
+    font-weight: 650;
+  }
+  
+  .office-student-personal-grid {
+    width: min(100%, 980px);
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(260px, 1fr));
+    gap: 18px;
+  }
+  
+  .office-student-personal-card {
+    border: 1px solid rgba(197, 204, 216, 0.95);
+    border-radius: 28px;
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 18px 46px rgba(27, 46, 94, 0.06);
+    padding: 24px 28px;
+    box-sizing: border-box;
+  }
+  
+  .office-student-personal-card.actions {
+    grid-column: 1 / -1;
+  }
+  
+  .office-student-personal-card h3 {
+    margin: 0 0 20px;
+    color: #111827;
+    font-size: 21px;
+    line-height: 1.2;
+    font-weight: 900;
+    letter-spacing: -0.035em;
+  }
+  
+  .office-student-personal-card dl {
+    display: grid;
+    gap: 14px;
+    margin: 0;
+  }
+  
+  .office-student-personal-card dl div {
+    display: grid;
+    gap: 4px;
+  }
+  
+  .office-student-personal-card dt {
+    color: #7b87a5;
+    font-size: 13px;
+    font-weight: 800;
+  }
+  
+  .office-student-personal-card dd {
+    margin: 0;
+    color: #111827;
+    font-size: 16px;
+    font-weight: 850;
+  }
+  
+  .office-student-personal-card.actions p {
+    max-width: 720px;
+    margin: 0 0 20px;
+    color: #6b7692;
+    font-size: 14px;
+    line-height: 1.45;
+    font-weight: 750;
+  }
+  
+  .office-student-personal-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  
+  .office-student-personal-actions button {
+    min-height: 42px;
+    border: none;
+    border-radius: 999px;
+    padding: 0 20px;
+    color: #ffffff;
+    font-family: "Manrope", system-ui, sans-serif;
+    font-size: 14px;
+    font-weight: 850;
+    cursor: pointer;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+  }
+  
+  .office-student-personal-actions button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 34px rgba(64, 64, 64, 0.16);
+  }
+  
+  .office-student-personal-actions .secondary {
+    background: #6f6a6a;
+  }
+  
+  .office-student-personal-actions .danger {
+    background: #c75f5f;
+  }
+  
+  .office-student-personal-actions .success {
+    background: #4f8f63;
+  }
+  
+  .office-student-personal-message {
+    margin-top: 18px;
+    border-radius: 18px;
+    background: #f8faff;
+    border: 1px solid #e1e7f5;
+    color: #39445c;
+    padding: 14px 16px;
+    font-size: 14px;
+    line-height: 1.45;
+    font-weight: 750;
+  }
+  
+  @media (max-width: 900px) {
+    .office-student-personal-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  @media (max-width: 780px) {
+    .office-student-personal-content {
+      height: auto;
+      padding: 32px 20px 50px;
+    }
+  
+    .office-student-personal-content h1 {
+      font-size: 30px;
+    }
+  }
