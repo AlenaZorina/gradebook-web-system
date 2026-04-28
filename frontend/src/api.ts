@@ -1176,3 +1176,136 @@ export type LoginRequest = {
   
     return response.json();
   }
+  export type OfficeAnalyticsProgramOption = {
+    idProgram: number;
+    programName: string;
+  };
+  
+  export type OfficeAnalyticsFilterOptions = {
+    programs: OfficeAnalyticsProgramOption[];
+    courseNos: number[];
+    moduleNos: number[];
+  };
+  
+  export type OfficeAnalyticsAttendancePoint = {
+    lessonDate: string;
+    dateLabel: string;
+    presentCount: number;
+    absentCount: number;
+    totalStudents: number;
+    attendancePercent: number | null;
+  };
+  
+  export type OfficeAnalyticsGradeDistribution = {
+    label: string;
+    count: number;
+  };
+  
+  export type OfficeAnalyticsProgramComparison = {
+    idProgram: number;
+    programName: string;
+    studentsCount: number;
+    groupsCount: number;
+    averageAttendancePercent: number | null;
+    averageFinalGrade: number | null;
+    atRiskStudentsCount: number;
+  };
+  
+  export type OfficeAnalyticsDisciplineComparison = {
+    idDiscipline: number;
+    disciplineName: string;
+    groupsCount: number;
+    studentsCount: number;
+    averageAttendancePercent: number | null;
+    averageFinalGrade: number | null;
+    failedStudentsCount: number;
+    atRiskStudentsCount: number;
+  };
+  
+  export type OfficeAnalyticsGroupComparison = {
+    idGroup: number;
+    groupName: string;
+    courseNo: number;
+    programName: string;
+    studentsCount: number;
+    averageAttendancePercent: number | null;
+    averageFinalGrade: number | null;
+    atRiskStudentsCount: number;
+  };
+  
+  export type OfficeAnalyticsStatusDistribution = {
+    statusName: string;
+    count: number;
+  };
+  
+  export type OfficeAnalyticsRiskStudent = {
+    idStudent: number;
+    fullName: string;
+    idDiscipline: number;
+    disciplineName: string;
+    idGroup: number;
+    groupName: string;
+    courseNo: number;
+    programName: string;
+    attendancePercent: number | null;
+    finalGrade: number | null;
+    missingGradesCount: number;
+    riskReason: string;
+  };
+  
+  export type OfficeAnalytics = {
+    programsCount: number;
+    disciplinesCount: number;
+    groupsCount: number;
+    studentsCount: number;
+    activeStudentsCount: number;
+    totalLessons: number;
+    averageAttendancePercent: number | null;
+    averageFinalGrade: number | null;
+    failedStudentsCount: number;
+    atRiskStudentsCount: number;
+    filledFinalGradesCount: number;
+    approvedSheetsCount: number;
+    submittedSheetsCount: number;
+    draftSheetsCount: number;
+    filterOptions: OfficeAnalyticsFilterOptions;
+    attendanceByDate: OfficeAnalyticsAttendancePoint[];
+    gradeDistribution: OfficeAnalyticsGradeDistribution[];
+    programComparison: OfficeAnalyticsProgramComparison[];
+    disciplineComparison: OfficeAnalyticsDisciplineComparison[];
+    groupComparison: OfficeAnalyticsGroupComparison[];
+    studentStatusDistribution: OfficeAnalyticsStatusDistribution[];
+    riskStudents: OfficeAnalyticsRiskStudent[];
+  };
+  
+  export async function getOfficeAnalytics(
+    idUser: number,
+    programId?: number | null,
+    courseNo?: number | null,
+    moduleNo?: number | null
+  ): Promise<OfficeAnalytics> {
+    const params = new URLSearchParams();
+  
+    if (programId) {
+      params.set("programId", String(programId));
+    }
+  
+    if (courseNo) {
+      params.set("courseNo", String(courseNo));
+    }
+  
+    if (moduleNo) {
+      params.set("moduleNo", String(moduleNo));
+    }
+  
+    const query = params.toString();
+    const response = await fetch(
+      `${API_URL}/api/users/${idUser}/office-analytics${query ? `?${query}` : ""}`
+    );
+  
+    if (!response.ok) {
+      throw new Error("Не удалось загрузить аналитику учебного офиса");
+    }
+  
+    return response.json();
+  }

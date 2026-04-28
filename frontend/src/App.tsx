@@ -26,6 +26,7 @@ import { OfficeStudentDetailsPage } from "./pages/OfficeStudentDetailsPage";
 import { OfficeStudentAttendanceSummaryPage } from "./pages/OfficeStudentAttendanceSummaryPage";
 import { OfficeStudentGradebookSummaryPage } from "./pages/OfficeStudentGradebookSummaryPage";
 import { OfficeStudentPersonalDataPage } from "./pages/OfficeStudentPersonalDataPage";
+import { OfficeAnalyticsPage } from "./pages/OfficeAnalyticsPage";
 import type { LoginResponse } from "./api";
 
 type TeacherPage =
@@ -485,23 +486,14 @@ function App() {
 
     if (officePage === "analytics") {
       return (
-        <div className="schedule-layout">
-          <main className="schedule-content">
-            <button
-              className="details-back-button"
-              type="button"
-              onClick={() => setOfficePage("resits")}
-            >
-              ← Назад
-            </button>
-
-            <h1>Модуль аналитики</h1>
-
-            <div className="schedule-state">
-              BI-модуль учебного офиса подключим позже.
-            </div>
-          </main>
-        </div>
+        <OfficeAnalyticsPage
+          user={currentUser}
+          onLogout={handleLogout}
+          onOpenResits={() => setOfficePage("resits")}
+          onOpenAttendance={() => setOfficePage("attendanceDisciplines")}
+          onOpenFinalSheets={() => setOfficePage("finalSheetsDisciplines")}
+          onOpenStudents={() => setOfficePage("students")}
+        />
       );
     }
 
