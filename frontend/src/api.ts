@@ -630,3 +630,77 @@ export type LoginRequest = {
   
     return response.json();
   }
+  export type StudentAnalyticsAttendancePoint = {
+    lessonDate: string;
+    dateLabel: string;
+    attendancePercent: number | null;
+  };
+  
+  export type StudentAnalyticsGradePoint = {
+    idDiscipline: number;
+    disciplineName: string;
+    elementName: string;
+    gradeValue: number | null;
+    orderNo: number;
+  };
+  
+  export type StudentAnalyticsGradeDistribution = {
+    label: string;
+    count: number;
+  };
+  
+  export type StudentAnalyticsDisciplineSummary = {
+    idDiscipline: number;
+    disciplineName: string;
+    attendancePercent: number | null;
+    averageGrade: number | null;
+    finalGrade: number | null;
+    missingGradesCount: number;
+    hasRisk: boolean;
+    riskReason: string;
+  };
+  
+  export type StudentAnalytics = {
+    studentUserId: number;
+    idStudent: number;
+    studentFullName: string;
+    groupName: string;
+    courseNo: number;
+    programName: string;
+    disciplinesCount: number;
+    totalLessons: number;
+    averageAttendancePercent: number | null;
+    averageGrade: number | null;
+    preliminaryFinalGrade: number | null;
+    filledGradesCount: number;
+    totalGradesCount: number;
+    missingGradesCount: number;
+    hasRisk: boolean;
+    riskReason: string;
+    attendanceByDate: StudentAnalyticsAttendancePoint[];
+    gradeProgress: StudentAnalyticsGradePoint[];
+    gradeDistribution: StudentAnalyticsGradeDistribution[];
+    disciplineSummary: StudentAnalyticsDisciplineSummary[];
+  };
+  
+  export async function getStudentAnalytics(
+    idUser: number,
+    disciplineId?: number | null
+  ): Promise<StudentAnalytics> {
+    const params = new URLSearchParams();
+  
+    if (disciplineId) {
+      params.set("disciplineId", String(disciplineId));
+    }
+  
+    const query = params.toString();
+    const response = await fetch(
+      `${API_URL}/api/users/${idUser}/student-analytics${query ? `?${query}` : ""}`
+    );
+  
+    if (!response.ok) {
+      throw new Error("Не удалось загрузить аналитику студента");
+    }
+  
+    return response.json();
+  }

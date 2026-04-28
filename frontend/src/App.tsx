@@ -11,6 +11,7 @@ import { StudentDisciplinesPage } from "./pages/StudentDisciplinesPage";
 import { StudentDisciplineDetailsPage } from "./pages/StudentDisciplineDetailsPage";
 import { StudentAttendancePage } from "./pages/StudentAttendancePage";
 import { StudentGradebookPage } from "./pages/StudentGradebookPage";
+import { StudentAnalyticsPage } from "./pages/StudentAnalyticsPage";
 import type { LoginResponse } from "./api";
 
 type TeacherPage =
@@ -120,7 +121,11 @@ function App() {
     setStudentPage("gradebook");
   }
 
-  function openStudentAnalytics() {
+  function openStudentAnalytics(disciplineId?: number) {
+    if (disciplineId) {
+      setSelectedDisciplineId(disciplineId);
+    }
+
     setStudentPage("analytics");
   }
 
@@ -140,7 +145,7 @@ function App() {
           onSelectDiscipline={openStudentDisciplineDetails}
           onOpenAttendance={() => openStudentAttendance()}
           onOpenGradebook={() => openStudentGradebook()}
-          onOpenAnalytics={openStudentAnalytics}
+          onOpenAnalytics={() => openStudentAnalytics()}
         />
       );
     }
@@ -155,7 +160,7 @@ function App() {
           onOpenDisciplines={() => setStudentPage("disciplines")}
           onOpenAttendance={openStudentAttendance}
           onOpenGradebook={openStudentGradebook}
-          onOpenAnalytics={openStudentAnalytics}
+          onOpenAnalytics={() => openStudentAnalytics(selectedDisciplineId)}
         />
       );
     }
@@ -169,7 +174,7 @@ function App() {
           onOpenSchedule={() => setStudentPage("schedule")}
           onOpenDisciplines={() => setStudentPage("disciplines")}
           onOpenGradebook={openStudentGradebook}
-          onOpenAnalytics={openStudentAnalytics}
+          onOpenAnalytics={() => openStudentAnalytics(selectedDisciplineId ?? undefined)}
         />
       );
     }
@@ -183,29 +188,22 @@ function App() {
           onOpenSchedule={() => setStudentPage("schedule")}
           onOpenDisciplines={() => setStudentPage("disciplines")}
           onOpenAttendance={openStudentAttendance}
-          onOpenAnalytics={openStudentAnalytics}
+          onOpenAnalytics={() => openStudentAnalytics(selectedDisciplineId ?? undefined)}
         />
       );
     }
 
     if (studentPage === "analytics") {
       return (
-        <div className="schedule-layout">
-          <main className="schedule-content">
-            <button
-              className="details-back-button"
-              type="button"
-              onClick={() => setStudentPage("schedule")}
-            >
-              ← Назад
-            </button>
-            <h1>Модуль аналитики</h1>
-            <div className="schedule-state">
-              Студенческий BI-модуль подключим после экранов посещаемости и
-              ведомости.
-            </div>
-          </main>
-        </div>
+        <StudentAnalyticsPage
+          user={currentUser}
+          initialDisciplineId={selectedDisciplineId}
+          onLogout={handleLogout}
+          onOpenSchedule={() => setStudentPage("schedule")}
+          onOpenDisciplines={() => setStudentPage("disciplines")}
+          onOpenAttendance={openStudentAttendance}
+          onOpenGradebook={openStudentGradebook}
+        />
       );
     }
 
@@ -216,7 +214,7 @@ function App() {
         onOpenDisciplines={() => setStudentPage("disciplines")}
         onOpenAttendance={() => openStudentAttendance()}
         onOpenGradebook={() => openStudentGradebook()}
-        onOpenAnalytics={openStudentAnalytics}
+        onOpenAnalytics={() => openStudentAnalytics()}
       />
     );
   }

@@ -1,0 +1,117 @@
+.student-analytics-content {
+    min-height: 100vh;
+  }
+  
+  .student-analytics-hero {
+    background:
+      radial-gradient(circle at top right, rgba(111, 143, 255, 0.24), transparent 34%),
+      radial-gradient(circle at bottom left, rgba(226, 243, 77, 0.16), transparent 32%),
+      rgba(255, 255, 255, 0.78);
+  }
+  
+  .student-analytics-filters {
+    margin-bottom: 24px;
+  }
+  
+  .student-analytics-kpi-grid {
+    grid-template-columns: repeat(4, minmax(160px, 1fr));
+  }
+  
+  .student-grade-progress-chart {
+    height: 260px;
+    display: flex;
+    align-items: flex-end;
+    gap: 14px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+  
+  .student-grade-progress-item {
+    min-width: 62px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    color: #6b7692;
+    font-size: 12px;
+    font-weight: 800;
+  }
+  
+  .student-grade-progress-item > span {
+    color: #111827;
+    font-size: 12px;
+    font-weight: 900;
+  }
+  
+  .student-grade-progress-track {
+    width: 34px;
+    height: 170px;
+    border-radius: 999px;
+    background: #edf3ff;
+    display: flex;
+    align-items: flex-end;
+    overflow: hidden;
+  }
+  
+  .student-grade-progress-bar {
+    width: 100%;
+    min-height: 6px;
+    border-radius: 999px;
+    background: linear-gradient(180deg, #e4f34d, #6f8fff);
+  }
+  
+  .student-grade-progress-item p {
+    width: 64px;
+    margin: 0;
+    color: #7b87a5;
+    font-size: 11px;
+    line-height: 1.25;
+    font-weight: 800;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  
+  .student-analytics-empty {
+    padding: 18px;
+    border-radius: 18px;
+    background: #f8faff;
+    border: 1px solid #e1e7f5;
+    color: #64748b;
+    font-size: 14px;
+    font-weight: 800;
+  }
+  
+  .student-analytics-content .comparison-row {
+    align-items: center;
+  }
+  
+  .student-analytics-content .comparison-row strong {
+    max-width: 420px;
+  }
+  
+  .student-analytics-content .comparison-metrics span {
+    white-space: nowrap;
+  }
+  
+  @media (max-width: 1180px) {
+    .student-analytics-kpi-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  
+  @media (max-width: 780px) {
+    .student-analytics-kpi-grid {
+      grid-template-columns: 1fr;
+    }
+  
+    .student-analytics-content .comparison-row {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  
+    .student-analytics-content .comparison-metrics {
+      justify-content: flex-start;
+    }
+  }
