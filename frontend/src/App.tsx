@@ -6,11 +6,20 @@ import { TeacherDisciplineDetailsPage } from "./pages/TeacherDisciplineDetailsPa
 import { TeacherAttendancePage } from "./pages/TeacherAttendancePage";
 import { TeacherGradebookPage } from "./pages/TeacherGradebookPage";
 import { TeacherAnalyticsPage } from "./pages/TeacherAnalyticsPage";
-import type { LoginResponse } from "./api";
 import { StudentSchedulePage } from "./pages/StudentSchedulePage";
 import { StudentDisciplinesPage } from "./pages/StudentDisciplinesPage";
+import { StudentDisciplineDetailsPage } from "./pages/StudentDisciplineDetailsPage";
+import type { LoginResponse } from "./api";
 
 type TeacherPage =
+  | "schedule"
+  | "disciplines"
+  | "disciplineDetails"
+  | "attendance"
+  | "gradebook"
+  | "analytics";
+
+type StudentPage =
   | "schedule"
   | "disciplines"
   | "disciplineDetails"
@@ -21,25 +30,28 @@ type TeacherPage =
 function App() {
   const [currentUser, setCurrentUser] = useState<LoginResponse | null>(null);
   const [teacherPage, setTeacherPage] = useState<TeacherPage>("schedule");
-  const [selectedDisciplineId, setSelectedDisciplineId] = useState<number | null>(null);
+  const [studentPage, setStudentPage] = useState<StudentPage>("schedule");
+
+  const [selectedDisciplineId, setSelectedDisciplineId] = useState<number | null>(
+    null
+  );
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
-  const [studentPage, setStudentPage] = useState<"schedule" | "disciplines">("schedule");
 
   function handleLogout() {
     setCurrentUser(null);
     setTeacherPage("schedule");
+    setStudentPage("schedule");
     setSelectedDisciplineId(null);
     setSelectedGroupId(null);
-    setStudentPage("schedule");
   }
 
-  function openDisciplineDetails(disciplineId: number) {
+  function openTeacherDisciplineDetails(disciplineId: number) {
     setSelectedDisciplineId(disciplineId);
     setSelectedGroupId(null);
     setTeacherPage("disciplineDetails");
   }
 
-  function openAttendance(disciplineId?: number, groupId?: number) {
+  function openTeacherAttendance(disciplineId?: number, groupId?: number) {
     if (disciplineId) {
       setSelectedDisciplineId(disciplineId);
     }
@@ -51,7 +63,7 @@ function App() {
     setTeacherPage("attendance");
   }
 
-  function openGradebook(disciplineId?: number, groupId?: number) {
+  function openTeacherGradebook(disciplineId?: number, groupId?: number) {
     if (disciplineId) {
       setSelectedDisciplineId(disciplineId);
     }
@@ -63,7 +75,7 @@ function App() {
     setTeacherPage("gradebook");
   }
 
-  function openAnalytics(disciplineId?: number, groupId?: number) {
+  function openTeacherAnalytics(disciplineId?: number, groupId?: number) {
     if (disciplineId) {
       setSelectedDisciplineId(disciplineId);
     }
@@ -75,9 +87,44 @@ function App() {
     setTeacherPage("analytics");
   }
 
+  function openStudentDisciplineDetails(disciplineId: number) {
+    setSelectedDisciplineId(disciplineId);
+    setSelectedGroupId(null);
+    setStudentPage("disciplineDetails");
+  }
+
+  function openStudentAttendance(disciplineId?: number, groupId?: number) {
+    if (disciplineId) {
+      setSelectedDisciplineId(disciplineId);
+    }
+
+    if (groupId) {
+      setSelectedGroupId(groupId);
+    }
+
+    setStudentPage("attendance");
+  }
+
+  function openStudentGradebook(disciplineId?: number, groupId?: number) {
+    if (disciplineId) {
+      setSelectedDisciplineId(disciplineId);
+    }
+
+    if (groupId) {
+      setSelectedGroupId(groupId);
+    }
+
+    setStudentPage("gradebook");
+  }
+
+  function openStudentAnalytics() {
+    setStudentPage("analytics");
+  }
+
   if (!currentUser) {
     return <LoginPage onLogin={setCurrentUser} />;
   }
+
   const normalizedRole = currentUser.role?.trim().toLowerCase();
 
   if (normalizedRole === "student") {
@@ -87,10 +134,102 @@ function App() {
           user={currentUser}
           onLogout={handleLogout}
           onOpenSchedule={() => setStudentPage("schedule")}
+          onSelectDiscipline={openStudentDisciplineDetails}
+          onOpenAttendance={() => setStudentPage("attendance")}
+          onOpenGradebook={() => setStudentPage("gradebook")}
+          onOpenAnalytics={openStudentAnalytics}
         />
       );
     }
-  
+
+    if (studentPage === "disciplineDetails" && selectedDisciplineId) {
+      return (
+        <StudentDisciplineDetailsPage
+          user={currentUser}
+          disciplineId={selectedDisciplineId}
+          onLogout={handleLogout}
+          onOpenSchedule={() => setStudentPage("schedule")}
+          onOpenDisciplines={() => setStudentPage("disciplines")}
+          onOpenAttendance={openStudentAttendance}
+          onOpenGradebook={openStudentGradebook}
+          onOpenAnalytics={openStudentAnalytics}
+        />
+      );
+    }
+
+    if (studentPage === "attendance") {
+      return (
+        <div className="schedule-layout">
+          <main className="schedule-content">
+            <button
+              className="details-back-button"
+              type="button"
+              onClick={() => {
+                if (selectedDisciplineId) {
+                  setStudentPage("disciplineDetails");
+                } else {
+                  setStudentPage("disciplines");
+                }
+              }}
+            >
+              ← Назад
+            </button>
+            <h1>Посещаемость</h1>
+            <div className="schedule-state">
+              Экран посещаемости студента подключим следующим шагом.
+            </div>
+          </main>
+        </div>
+      );
+    }
+
+    if (studentPage === "gradebook") {
+      return (
+        <div className="schedule-layout">
+          <main className="schedule-content">
+            <button
+              className="details-back-button"
+              type="button"
+              onClick={() => {
+                if (selectedDisciplineId) {
+                  setStudentPage("disciplineDetails");
+                } else {
+                  setStudentPage("disciplines");
+                }
+              }}
+            >
+              ← Назад
+            </button>
+            <h1>Ведомость</h1>
+            <div className="schedule-state">
+              Экран ведомости студента подключим следующим шагом.
+            </div>
+          </main>
+        </div>
+      );
+    }
+
+    if (studentPage === "analytics") {
+      return (
+        <div className="schedule-layout">
+          <main className="schedule-content">
+            <button
+              className="details-back-button"
+              type="button"
+              onClick={() => setStudentPage("schedule")}
+            >
+              ← Назад
+            </button>
+            <h1>Модуль аналитики</h1>
+            <div className="schedule-state">
+              Студенческий BI-модуль подключим после экранов посещаемости и
+              ведомости.
+            </div>
+          </main>
+        </div>
+      );
+    }
+
     return (
       <StudentSchedulePage
         user={currentUser}
@@ -99,6 +238,7 @@ function App() {
       />
     );
   }
+
   if (normalizedRole === "teacher") {
     if (teacherPage === "disciplines") {
       return (
@@ -106,10 +246,10 @@ function App() {
           user={currentUser}
           onLogout={handleLogout}
           onOpenSchedule={() => setTeacherPage("schedule")}
-          onSelectDiscipline={openDisciplineDetails}
-          onOpenAttendance={() => openAttendance()}
-          onOpenGradebook={() => openGradebook()}
-          onOpenAnalytics={() => openAnalytics()}
+          onSelectDiscipline={openTeacherDisciplineDetails}
+          onOpenAttendance={() => openTeacherAttendance()}
+          onOpenGradebook={() => openTeacherGradebook()}
+          onOpenAnalytics={() => openTeacherAnalytics()}
         />
       );
     }
@@ -123,10 +263,13 @@ function App() {
           onLogout={handleLogout}
           onOpenSchedule={() => setTeacherPage("schedule")}
           onOpenDisciplines={() => setTeacherPage("disciplines")}
-          onOpenAttendance={openAttendance}
-          onOpenGradebook={openGradebook}
+          onOpenAttendance={openTeacherAttendance}
+          onOpenGradebook={openTeacherGradebook}
           onOpenAnalytics={() =>
-            openAnalytics(selectedDisciplineId ?? undefined, selectedGroupId ?? undefined)
+            openTeacherAnalytics(
+              selectedDisciplineId ?? undefined,
+              selectedGroupId ?? undefined
+            )
           }
         />
       );
@@ -141,9 +284,12 @@ function App() {
           onLogout={handleLogout}
           onOpenSchedule={() => setTeacherPage("schedule")}
           onOpenDisciplines={() => setTeacherPage("disciplines")}
-          onOpenGradebook={openGradebook}
+          onOpenGradebook={openTeacherGradebook}
           onOpenAnalytics={() =>
-            openAnalytics(selectedDisciplineId ?? undefined, selectedGroupId ?? undefined)
+            openTeacherAnalytics(
+              selectedDisciplineId ?? undefined,
+              selectedGroupId ?? undefined
+            )
           }
         />
       );
@@ -158,9 +304,12 @@ function App() {
           onLogout={handleLogout}
           onOpenSchedule={() => setTeacherPage("schedule")}
           onOpenDisciplines={() => setTeacherPage("disciplines")}
-          onOpenAttendance={openAttendance}
+          onOpenAttendance={openTeacherAttendance}
           onOpenAnalytics={() =>
-            openAnalytics(selectedDisciplineId ?? undefined, selectedGroupId ?? undefined)
+            openTeacherAnalytics(
+              selectedDisciplineId ?? undefined,
+              selectedGroupId ?? undefined
+            )
           }
         />
       );
@@ -175,8 +324,8 @@ function App() {
           onLogout={handleLogout}
           onOpenSchedule={() => setTeacherPage("schedule")}
           onOpenDisciplines={() => setTeacherPage("disciplines")}
-          onOpenAttendance={openAttendance}
-          onOpenGradebook={openGradebook}
+          onOpenAttendance={openTeacherAttendance}
+          onOpenGradebook={openTeacherGradebook}
         />
       );
     }
@@ -186,60 +335,25 @@ function App() {
         user={currentUser}
         onLogout={handleLogout}
         onOpenDisciplines={() => setTeacherPage("disciplines")}
-        onOpenAttendance={() => openAttendance()}
-        onOpenGradebook={() => openGradebook()}
-        onOpenAnalytics={() => openAnalytics()}
+        onOpenAttendance={() => openTeacherAttendance()}
+        onOpenGradebook={() => openTeacherGradebook()}
+        onOpenAnalytics={() => openTeacherAnalytics()}
       />
     );
   }
 
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        padding: "48px",
-        background: "#eef2ff",
-        fontFamily: "Manrope, system-ui, sans-serif"
-      }}
-    >
-      <section
-        style={{
-          maxWidth: "960px",
-          margin: "0 auto",
-          background: "#ffffff",
-          borderRadius: "28px",
-          padding: "36px",
-          boxShadow: "0 24px 70px rgba(27, 46, 94, 0.12)"
-        }}
-      >
-        <p style={{ margin: "0 0 8px", color: "#7b87a5", fontWeight: 700 }}>
-          Вход выполнен
-        </p>
-
-        <h1 style={{ margin: "0 0 12px", fontSize: "32px" }}>
-          Добро пожаловать, {currentUser.name}!
-        </h1>
-
-        <p style={{ color: "#64748b", marginBottom: "28px" }}>
+    <div className="schedule-layout">
+      <main className="schedule-content">
+        <h1>Вход выполнен</h1>
+        <div className="schedule-state">
           Для этой роли экран пока находится в разработке.
-        </p>
-
-        <button
-          onClick={handleLogout}
-          style={{
-            border: "none",
-            borderRadius: "16px",
-            padding: "14px 20px",
-            background: "#2563eb",
-            color: "#ffffff",
-            fontWeight: 800,
-            cursor: "pointer"
-          }}
-        >
+        </div>
+        <button className="logout-button" type="button" onClick={handleLogout}>
           Выйти
         </button>
-      </section>
-    </main>
+      </main>
+    </div>
   );
 }
 

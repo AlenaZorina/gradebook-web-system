@@ -504,3 +504,46 @@ export type LoginRequest = {
   
     return response.json();
   }
+  export type StudentDisciplineDetails = {
+    studentUserId: number;
+    idStudent: number;
+    idGroup: number;
+    groupName: string;
+    courseNo: number;
+    idProgram: number;
+    programName: string;
+    idDiscipline: number;
+    disciplineName: string;
+    pudUrl?: string | null;
+    startModuleNo?: number | null;
+    endModuleNo?: number | null;
+    academicYear: string;
+    idAssignment: number;
+    formulaText: string;
+    teachersCount: number;
+    teachersShortNames: string;
+  };
+  
+  export async function getStudentDisciplineDetails(
+    idUser: number,
+    disciplineId: number
+  ): Promise<StudentDisciplineDetails> {
+    const response = await fetch(
+      `${API_URL}/api/users/${idUser}/student-disciplines/${disciplineId}`
+    );
+  
+    if (!response.ok) {
+      let message = "Не удалось загрузить информацию о дисциплине";
+  
+      try {
+        const error = await response.json();
+        message = error.message ?? message;
+      } catch {
+        // оставляем стандартное сообщение
+      }
+  
+      throw new Error(message);
+    }
+  
+    return response.json();
+  }

@@ -8,6 +8,10 @@ type StudentDisciplinesPageProps = {
   user: LoginResponse;
   onLogout: () => void;
   onOpenSchedule: () => void;
+  onSelectDiscipline: (disciplineId: number) => void;
+  onOpenAttendance?: () => void;
+  onOpenGradebook?: () => void;
+  onOpenAnalytics?: () => void;
 };
 
 function getStudentInitials(user: LoginResponse) {
@@ -28,39 +32,59 @@ function getStudentShortName(user: LoginResponse) {
 
 function ScheduleIcon() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <rect x="4" y="5" width="16" height="15" rx="3" stroke="currentColor" strokeWidth="1.8" />
-      <path d="M8 3.5V7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <path d="M16 3.5V7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <path d="M4 9.5H20" stroke="currentColor" strokeWidth="1.8" />
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M7 3v3M17 3v3M4.5 9h15M6.5 5h11A2.5 2.5 0 0 1 20 7.5v10A2.5 2.5 0 0 1 17.5 20h-11A2.5 2.5 0 0 1 4 17.5v-10A2.5 2.5 0 0 1 6.5 5Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
 
 function DisciplineIcon() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
       <path
-        d="M6.5 4.5H17.5A2.5 2.5 0 0 1 20 7V18.5A1.5 1.5 0 0 1 18.5 20H6.5A2.5 2.5 0 0 1 4 17.5V7A2.5 2.5 0 0 1 6.5 4.5Z"
+        d="M6 4.5h10.5A1.5 1.5 0 0 1 18 6v13.5H7.5A2.5 2.5 0 0 1 5 17V6.5A2 2 0 0 1 7 4.5Z"
+        fill="none"
         stroke="currentColor"
-        strokeWidth="1.8"
+        strokeWidth="2"
+        strokeLinecap="round"
       />
-      <path d="M8 9H16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <path d="M8 13H14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path
+        d="M8 8h7M8 11h7M8 14h4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
 
 function AttendanceIcon() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <rect x="4" y="5" width="16" height="15" rx="3" stroke="currentColor" strokeWidth="1.8" />
+    <svg viewBox="0 0 24 24" aria-hidden="true">
       <path
-        d="M8 12L10.4 14.4L16.2 8.6"
+        d="M8 12.5 10.5 15 16 9"
+        fill="none"
         stroke="currentColor"
-        strokeWidth="1.8"
+        strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
+      />
+      <rect
+        x="4"
+        y="4"
+        width="16"
+        height="16"
+        rx="4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
       />
     </svg>
   );
@@ -68,58 +92,69 @@ function AttendanceIcon() {
 
 function GradesIcon() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <rect x="5" y="4" width="14" height="16" rx="3" stroke="currentColor" strokeWidth="1.8" />
-      <path d="M8 9H16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <path d="M8 12.5H15" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <path d="M8 16H12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M7 4.5h10A1.5 1.5 0 0 1 18.5 6v12A1.5 1.5 0 0 1 17 19.5H7A1.5 1.5 0 0 1 5.5 18V6A1.5 1.5 0 0 1 7 4.5Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+      <path
+        d="M8.5 9h7M8.5 12h7M8.5 15h4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
 
 function AnalyticsIcon() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M5 18.5V11" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <path d="M12 18.5V5.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <path d="M19 18.5V14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <path d="M4 19H20" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M5 19V5M5 19h14M9 16v-5M13 16V8M17 16v-8"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
 
 function LogoutIcon() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
       <path
-        d="M10 5H8A3 3 0 0 0 5 8V16A3 3 0 0 0 8 19H10"
+        d="M10 6H6.5A1.5 1.5 0 0 0 5 7.5v9A1.5 1.5 0 0 0 6.5 18H10M14 8l4 4-4 4M18 12H9"
+        fill="none"
         stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-      />
-      <path
-        d="M14 8L18 12L14 16"
-        stroke="currentColor"
-        strokeWidth="1.8"
+        strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <path d="M18 12H10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
     </svg>
   );
 }
 
 function SearchIcon() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle cx="10.8" cy="10.8" r="5.8" stroke="currentColor" strokeWidth="1.9" />
-      <path d="M15.2 15.2L20 20" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="m15.5 15.5 4 4M10.5 17a6.5 6.5 0 1 1 0-13 6.5 6.5 0 0 1 0 13Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
 
 function getDisciplineLetter(name?: string | null) {
-    return name?.trim()?.[0]?.toUpperCase() ?? "Д";
+  return name?.trim()?.[0]?.toUpperCase() ?? "Д";
 }
 
 function getModuleText(item: StudentDiscipline) {
@@ -137,7 +172,11 @@ function getModuleText(item: StudentDiscipline) {
 export function StudentDisciplinesPage({
   user,
   onLogout,
-  onOpenSchedule
+  onOpenSchedule,
+  onSelectDiscipline,
+  onOpenAttendance,
+  onOpenGradebook,
+  onOpenAnalytics
 }: StudentDisciplinesPageProps) {
   const [disciplines, setDisciplines] = useState<StudentDiscipline[]>([]);
   const [statusFilter, setStatusFilter] = useState("current");
@@ -168,36 +207,36 @@ export function StudentDisciplinesPage({
 
   const filteredDisciplines = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
-  
+
     let result = disciplines.filter((item) => {
       const disciplineName = item.disciplineName ?? "";
       const teachersShortNames = item.teachersShortNames ?? "";
-  
+
       const matchesSearch =
         disciplineName.toLowerCase().includes(normalizedSearch) ||
         teachersShortNames.toLowerCase().includes(normalizedSearch);
-  
-        if (!matchesSearch) {
-            return false;
-        }
-    
-        return statusFilter === "current";
-        });
-    
-        if (sortMode === "name") {
-        result = [...result].sort((a, b) =>
-            (a.disciplineName ?? "").localeCompare(b.disciplineName ?? "", "ru")
-        );
-        }
-    
-        if (sortMode === "module") {
-        result = [...result].sort((a, b) =>
-            (a.startModuleNo ?? 999) - (b.startModuleNo ?? 999)
-        );
-        }
-    
-        return result;
-    }, [disciplines, search, sortMode, statusFilter]);
+
+      if (!matchesSearch) {
+        return false;
+      }
+
+      return statusFilter === "current";
+    });
+
+    if (sortMode === "name") {
+      result = [...result].sort((a, b) =>
+        (a.disciplineName ?? "").localeCompare(b.disciplineName ?? "", "ru")
+      );
+    }
+
+    if (sortMode === "module") {
+      result = [...result].sort(
+        (a, b) => (a.startModuleNo ?? 999) - (b.startModuleNo ?? 999)
+      );
+    }
+
+    return result;
+  }, [disciplines, search, sortMode, statusFilter]);
 
   const groupedByCourse = useMemo(() => {
     const grouped = new Map<number, StudentDiscipline[]>();
@@ -207,28 +246,27 @@ export function StudentDisciplinesPage({
         grouped.set(item.courseNo, []);
       }
 
-      grouped.get(item.courseNo)!.push(item);
+      grouped.get(item.courseNo)?.push(item);
     });
 
     return Array.from(grouped.entries()).sort(([a], [b]) => a - b);
   }, [filteredDisciplines]);
 
   return (
-    <main className="schedule-layout">
+    <div className="schedule-layout">
       <aside className="app-sidebar">
         <div className="sidebar-main">
           <div className="user-block">
             <div className="avatar-placeholder avatar-initials">
               {getStudentInitials(user)}
             </div>
-
             <div>
               <p>{getStudentShortName(user)}</p>
               <span>{studentInfo ? `Студент · ${studentInfo.groupName}` : "Студент"}</span>
             </div>
           </div>
 
-          <div className="sidebar-section-title">ОБЩЕЕ</div>
+          <p className="sidebar-section-title">Общее</p>
 
           <nav className="main-nav">
             <button className="nav-item" type="button" onClick={onOpenSchedule}>
@@ -245,14 +283,14 @@ export function StudentDisciplinesPage({
               Дисциплины
             </button>
 
-            <button className="nav-item" type="button">
+            <button className="nav-item" type="button" onClick={onOpenAttendance}>
               <span className="nav-icon">
                 <AttendanceIcon />
               </span>
               Посещаемость
             </button>
 
-            <button className="nav-item" type="button">
+            <button className="nav-item" type="button" onClick={onOpenGradebook}>
               <span className="nav-icon">
                 <GradesIcon />
               </span>
@@ -262,14 +300,16 @@ export function StudentDisciplinesPage({
 
           <div className="sidebar-divider" />
 
-          <div className="sidebar-section-title">BI-КОНТУР</div>
+          <p className="sidebar-section-title">BI-контур</p>
 
-          <button className="nav-item" type="button">
-            <span className="nav-icon">
-              <AnalyticsIcon />
-            </span>
-            Модуль аналитики
-          </button>
+          <nav className="main-nav">
+            <button className="nav-item" type="button" onClick={onOpenAnalytics}>
+              <span className="nav-icon">
+                <AnalyticsIcon />
+              </span>
+              Модуль аналитики
+            </button>
+          </nav>
         </div>
 
         <button className="logout-button" type="button" onClick={onLogout}>
@@ -280,20 +320,19 @@ export function StudentDisciplinesPage({
         </button>
       </aside>
 
-      <section className="student-disciplines-content">
-      <header className="student-disciplines-header">
-        <div>
+      <main className="student-disciplines-content">
+        <section className="student-disciplines-hero">
+          <div>
             <h1>Дисциплины</h1>
-
             {studentInfo && (
-            <p>
-                {studentInfo.courseNo} курс • {studentInfo.groupName}
-            </p>
+              <p>
+                {studentInfo.courseNo} курс · {studentInfo.groupName}
+              </p>
             )}
-        </div>
-        </header>
+          </div>
+        </section>
 
-        <div className="student-disciplines-toolbar">
+        <section className="student-disciplines-filters">
           <select
             value={statusFilter}
             onChange={(event) => setStatusFilter(event.target.value)}
@@ -301,33 +340,27 @@ export function StudentDisciplinesPage({
             <option value="current">Текущие</option>
           </select>
 
-          <select
-            value={sortMode}
-            onChange={(event) => setSortMode(event.target.value)}
-          >
+          <select value={sortMode} onChange={(event) => setSortMode(event.target.value)}>
             <option value="name">Сортировать по названию</option>
             <option value="module">Сортировать по модулю</option>
           </select>
 
-          <label className="student-disciplines-search">
+          <label className="student-search">
+            <SearchIcon />
             <input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Поиск"
             />
-
-            <span>
-              <SearchIcon />
-            </span>
           </label>
-        </div>
+        </section>
 
-        {isLoading && <div className="disciplines-state">Загружаем дисциплины...</div>}
+        {isLoading && <div className="schedule-state">Загружаем дисциплины...</div>}
 
-        {error && <div className="disciplines-error">{error}</div>}
+        {error && <div className="schedule-error">{error}</div>}
 
         {!isLoading && !error && filteredDisciplines.length === 0 && (
-          <div className="disciplines-state">Дисциплины не найдены</div>
+          <div className="schedule-state">Дисциплины не найдены</div>
         )}
 
         {!isLoading &&
@@ -338,15 +371,24 @@ export function StudentDisciplinesPage({
 
               <div className="student-disciplines-grid">
                 {items.map((item) => (
-                  <article className="student-discipline-card" key={item.idDiscipline}>
+                  <article
+                    className="student-discipline-card"
+                    key={`${item.idDiscipline}-${item.idGroup}`}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => onSelectDiscipline(item.idDiscipline)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        onSelectDiscipline(item.idDiscipline);
+                      }
+                    }}
+                  >
                     <div className="student-discipline-cover">
-                      <span>{getDisciplineLetter(item.disciplineName)}</span>
+                      {getDisciplineLetter(item.disciplineName)}
                     </div>
 
-                    <div className="student-discipline-card-body">
-                    <h3 title={item.disciplineName ?? "Дисциплина"}>
-                    {item.disciplineName ?? "Дисциплина"}
-                    </h3>
+                    <div className="student-discipline-body">
+                      <h3>{item.disciplineName ?? "Дисциплина"}</h3>
 
                       <div className="student-discipline-meta">
                         <span>{item.groupName}</span>
@@ -363,7 +405,7 @@ export function StudentDisciplinesPage({
               </div>
             </section>
           ))}
-      </section>
-    </main>
+      </main>
+    </div>
   );
 }

@@ -1,0 +1,203 @@
+.student-details-content {
+    height: 100vh;
+    padding: 52px 48px 70px;
+    overflow: auto;
+    box-sizing: border-box;
+  }
+  
+  .details-back-button {
+    border: none;
+    background: transparent;
+    color: #7b87a5;
+    font-family: "Manrope", system-ui, sans-serif;
+    font-size: 14px;
+    font-weight: 900;
+    cursor: pointer;
+    padding: 0;
+    margin-bottom: 28px;
+    transition: 0.18s ease;
+  }
+  
+  .details-back-button:hover {
+    color: #2563eb;
+  }
+  
+  .student-details-hero {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 34px;
+  }
+  
+  .student-details-hero h1 {
+    max-width: 920px;
+    margin: 0 0 16px;
+    color: #111827;
+    font-size: 38px;
+    line-height: 1.08;
+    font-weight: 900;
+    letter-spacing: -0.055em;
+  }
+  
+  .student-details-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  .student-details-meta strong {
+    color: #111827;
+    font-size: 18px;
+    line-height: 1;
+    font-weight: 900;
+  }
+  
+  .student-details-meta span,
+  .student-details-year {
+    min-height: 38px;
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    border: 1px solid #dce4f5;
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 12px 28px rgba(27, 46, 94, 0.06);
+    padding: 0 18px;
+    color: #39445c;
+    font-size: 14px;
+    font-weight: 900;
+  }
+  
+  .student-details-actions {
+    max-width: 980px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  
+  .student-details-card {
+    width: 100%;
+    border: 1px solid rgba(225, 231, 245, 0.95);
+    border-radius: 30px;
+    background: rgba(255, 255, 255, 0.88);
+    box-shadow: 0 22px 60px rgba(27, 46, 94, 0.08);
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+  
+  .student-details-card-header,
+  .student-details-link-card {
+    width: 100%;
+    min-height: 104px;
+    border: none;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 26px 30px;
+    text-align: left;
+    cursor: pointer;
+    font-family: "Manrope", system-ui, sans-serif;
+    box-sizing: border-box;
+  }
+  
+  .student-details-link-card {
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  }
+  
+  .student-details-link-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(37, 99, 235, 0.24);
+    box-shadow: 0 28px 70px rgba(27, 46, 94, 0.12);
+  }
+  
+  .student-details-card h2 {
+    margin: 0 0 7px;
+    color: #111827;
+    font-size: 21px;
+    line-height: 1.2;
+    font-weight: 900;
+    letter-spacing: -0.035em;
+  }
+  
+  .student-details-card a,
+  .student-details-muted {
+    color: #39445c;
+    font-size: 14px;
+    font-weight: 800;
+  }
+  
+  .student-details-card a {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  
+  .student-details-card p {
+    margin: 0;
+    color: #63718f;
+    font-size: 14px;
+    line-height: 1.45;
+    font-weight: 750;
+  }
+  
+  .student-details-arrow {
+    color: #5b6578;
+    font-size: 34px;
+    line-height: 1;
+    font-weight: 800;
+    flex: 0 0 auto;
+  }
+  
+  .student-formula-body {
+    padding: 0 30px 28px;
+  }
+  
+  .student-formula-value {
+    width: fit-content;
+    max-width: 100%;
+    border: 1px solid #d7dfef;
+    border-radius: 14px;
+    background: #ffffff;
+    padding: 13px 16px;
+    color: #111827;
+    font-size: 15px;
+    font-weight: 850;
+    line-height: 1.4;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+  }
+  
+  .student-formula-body p {
+    max-width: 620px;
+    margin: 14px 0 0;
+    color: #7b87a5;
+    font-size: 13px;
+    line-height: 1.45;
+    font-weight: 700;
+  }
+  
+  @media (max-width: 780px) {
+    .student-details-content {
+      height: auto;
+      padding: 32px 20px 50px;
+    }
+  
+    .student-details-hero {
+      flex-direction: column;
+    }
+  
+    .student-details-hero h1 {
+      font-size: 30px;
+    }
+  
+    .student-details-card-header,
+    .student-details-link-card {
+      min-height: 92px;
+      padding: 22px;
+    }
+  
+    .student-formula-body {
+      padding: 0 22px 24px;
+    }
+  }

@@ -1,315 +1,203 @@
 .student-disciplines-content {
-    height: 100vh;
-    padding: 52px 48px 70px;
-    overflow-y: auto;
-    box-sizing: border-box;
-    font-family: "Manrope", system-ui, sans-serif;
-    color: #111827;
+  height: 100vh;
+  padding: 52px 48px 70px;
+  overflow: auto;
+  box-sizing: border-box;
+}
+
+.student-disciplines-hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 28px;
+}
+
+.student-disciplines-hero h1 {
+  margin: 0;
+  color: #111827;
+  font-size: 36px;
+  line-height: 1.1;
+  font-weight: 900;
+  letter-spacing: -0.05em;
+}
+
+.student-disciplines-hero p {
+  margin: 10px 0 0;
+  color: #6b7692;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.student-disciplines-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 34px;
+}
+
+.student-disciplines-filters select,
+.student-search {
+  min-height: 46px;
+  border: 1px solid #dce4f5;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 12px 28px rgba(27, 46, 94, 0.06);
+}
+
+.student-disciplines-filters select {
+  padding: 0 42px 0 18px;
+  color: #111827;
+  font-family: "Manrope", system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  outline: none;
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, #64748b 50%),
+    linear-gradient(135deg, #64748b 50%, transparent 50%);
+  background-position: calc(100% - 22px) 19px, calc(100% - 16px) 19px;
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+}
+
+.student-search {
+  width: min(320px, 100%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 16px;
+  box-sizing: border-box;
+}
+
+.student-search svg {
+  width: 18px;
+  height: 18px;
+  color: #7b87a5;
+  flex: 0 0 auto;
+}
+
+.student-search input {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: #111827;
+  font-family: "Manrope", system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.student-search input::placeholder {
+  color: #9aa6bd;
+}
+
+.student-course-section {
+  margin-bottom: 38px;
+}
+
+.student-course-section h2 {
+  margin: 0 0 18px;
+  color: #111827;
+  font-size: 22px;
+  line-height: 1.2;
+  font-weight: 900;
+  letter-spacing: -0.035em;
+}
+
+.student-disciplines-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 20px;
+}
+
+.student-discipline-card {
+  min-height: 238px;
+  border: 1px solid rgba(225, 231, 245, 0.95);
+  border-radius: 30px;
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: 0 22px 60px rgba(27, 46, 94, 0.08);
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.student-discipline-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(37, 99, 235, 0.22);
+  box-shadow: 0 28px 70px rgba(27, 46, 94, 0.12);
+}
+
+.student-discipline-card:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.24);
+  outline-offset: 4px;
+}
+
+.student-discipline-cover {
+  height: 96px;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at top left, rgba(255, 255, 255, 0.45), transparent 38%),
+    linear-gradient(135deg, #4f74ff 0%, #8da6ff 100%);
+  color: #ffffff;
+  font-size: 38px;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+}
+
+.student-discipline-body {
+  padding: 20px 22px 22px;
+}
+
+.student-discipline-body h3 {
+  min-height: 56px;
+  margin: 0 0 14px;
+  color: #111827;
+  font-size: 20px;
+  line-height: 1.25;
+  font-weight: 900;
+  letter-spacing: -0.035em;
+}
+
+.student-discipline-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.student-discipline-meta span {
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #3353b8;
+  padding: 7px 11px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.student-discipline-body p {
+  margin: 0;
+  color: #7b87a5;
+  font-size: 13px;
+  line-height: 1.45;
+  font-weight: 700;
+}
+
+.student-discipline-body strong {
+  color: #39445c;
+  font-weight: 900;
+}
+
+@media (max-width: 780px) {
+  .student-disciplines-content {
+    height: auto;
+    padding: 32px 20px 50px;
   }
-  
-  .student-disciplines-header {
-    width: min(100%, 1180px);
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 28px;
-    margin-bottom: 26px;
+
+  .student-disciplines-hero h1 {
+    font-size: 30px;
   }
-  
-  .student-disciplines-header h1 {
-    margin: 0 0 10px;
-    color: #111827;
-    font-size: 34px;
-    line-height: 1.12;
-    font-weight: 900;
-    letter-spacing: -0.05em;
-  }
-  
-  .student-disciplines-header p {
-    margin: 0;
-    color: #4b5a78;
-    font-size: 18px;
-    line-height: 1.35;
-    font-weight: 900;
-  }
-  
-  .student-disciplines-program {
-    width: min(100%, 390px);
-    border-radius: 26px;
-    background: rgba(255, 255, 255, 0.82);
-    border: 1px solid rgba(255, 255, 255, 0.94);
-    box-shadow: 0 18px 46px rgba(27, 46, 94, 0.08);
-    padding: 18px 20px;
-    box-sizing: border-box;
-  }
-  
-  .student-disciplines-program span {
-    display: block;
-    margin-bottom: 7px;
-    color: #7b87a5;
-    font-size: 12px;
-    font-weight: 900;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-  
-  .student-disciplines-program strong {
-    display: block;
-    color: #111827;
-    font-size: 15px;
-    line-height: 1.35;
-    font-weight: 900;
-  }
-  
-  /* FILTERS */
-  
-  .student-disciplines-toolbar {
-    width: min(100%, 880px);
-    display: grid;
-    grid-template-columns: 180px 250px minmax(280px, 420px);
-    gap: 14px;
-    align-items: center;
-    margin-bottom: 32px;
-  }
-  
-  .student-disciplines-toolbar select,
-  .student-disciplines-search {
-    height: 44px;
-    border: 1px solid #dce4f5;
-    border-radius: 999px;
-    background-color: rgba(255, 255, 255, 0.92);
-    color: #111827;
-    box-shadow: 0 12px 28px rgba(27, 46, 94, 0.05);
-    box-sizing: border-box;
-  }
-  
-  .student-disciplines-toolbar select {
-    width: 100%;
-    padding: 0 42px 0 20px;
-    outline: none;
-    font-family: "Manrope", system-ui, sans-serif;
-    font-size: 14px;
-    font-weight: 800;
-    cursor: pointer;
-    appearance: none;
-    background-image:
-      linear-gradient(45deg, transparent 50%, #2563eb 50%),
-      linear-gradient(135deg, #2563eb 50%, transparent 50%);
-    background-position:
-      calc(100% - 23px) 18px,
-      calc(100% - 17px) 18px;
-    background-size:
-      6px 6px,
-      6px 6px;
-    background-repeat: no-repeat;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
-  
-  .student-disciplines-toolbar select:focus,
-  .student-disciplines-search:focus-within {
-    border-color: #6f8fff;
-    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
-  }
-  
-  .student-disciplines-search {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 0 17px 0 20px;
-  }
-  
-  .student-disciplines-search input {
-    width: 100%;
-    min-width: 0;
-    border: none;
-    background: transparent;
-    outline: none;
-    color: #111827;
-    font-family: "Manrope", system-ui, sans-serif;
-    font-size: 14px;
-    font-weight: 700;
-  }
-  
-  .student-disciplines-search input::placeholder {
-    color: #9aa6c0;
-  }
-  
-  .student-disciplines-search span {
-    width: 18px;
-    height: 18px;
-    min-width: 18px;
-    color: #2563eb;
-    display: grid;
-    place-items: center;
-  }
-  
-  /* важная защита от огромного SVG */
-  .student-disciplines-search svg {
-    width: 18px !important;
-    height: 18px !important;
-    display: block;
-  }
-  
-  /* COURSE + CARDS */
-  
-  .student-course-section {
-    margin-bottom: 38px;
-  }
-  
-  .student-course-section h2 {
-    margin: 0 0 18px;
-    color: #111827;
-    font-size: 22px;
-    line-height: 1.2;
-    font-weight: 900;
-    letter-spacing: -0.035em;
-  }
-  
+
   .student-disciplines-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(230px, 280px));
-    gap: 22px;
-    align-items: start;
+    grid-template-columns: 1fr;
   }
-  
-  .student-discipline-card {
-    min-height: 248px;
-    border-radius: 28px;
-    background: rgba(255, 255, 255, 0.82);
-    border: 1px solid rgba(255, 255, 255, 0.92);
-    box-shadow: 0 22px 60px rgba(27, 46, 94, 0.08);
-    padding: 14px;
-    transition: 0.18s ease;
-    cursor: pointer;
-    box-sizing: border-box;
-  }
-  
-  .student-discipline-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 26px 70px rgba(27, 46, 94, 0.13);
-  }
-  
-  .student-discipline-cover {
-    height: 96px;
-    border-radius: 21px;
-    background:
-      radial-gradient(circle at top right, rgba(255, 255, 255, 0.58), transparent 36%),
-      linear-gradient(135deg, #dbe6ff, #7c9cff);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 16px;
-  }
-  
-  .student-discipline-cover span {
-    width: 48px;
-    height: 48px;
-    border-radius: 17px;
-    background: rgba(255, 255, 255, 0.78);
-    color: #2563eb;
-    display: grid;
-    place-items: center;
-    font-size: 24px;
-    font-weight: 900;
-  }
-  
-  .student-discipline-card-body h3 {
-    margin: 0 0 12px;
-    color: #111827;
-    font-size: 16px;
-    line-height: 1.25;
-    font-weight: 900;
-    letter-spacing: -0.025em;
-    max-height: 2.5em;
-    overflow: hidden;
-  }
-  
-  .student-discipline-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 10px;
-  }
-  
-  .student-discipline-meta span {
-    border-radius: 999px;
-    background: #edf3ff;
-    color: #2563eb;
-    padding: 6px 10px;
-    font-size: 12px;
-    font-weight: 900;
-  }
-  
-  .student-discipline-card-body p {
-    margin: 0;
-    color: #7b87a5;
-    font-size: 13px;
-    line-height: 1.4;
-    font-weight: 700;
-    max-height: 3em;
-    overflow: hidden;
-  }
-  
-  .student-discipline-card-body p strong {
-    color: #4b5a78;
-    font-weight: 900;
-  }
-  
-  /* STATES */
-  
-  .disciplines-state,
-  .disciplines-error {
-    width: fit-content;
-    border-radius: 18px;
-    padding: 14px 18px;
-    font-size: 14px;
-    font-weight: 700;
-  }
-  
-  .disciplines-state {
-    background: #ffffff;
-    color: #64748b;
-    box-shadow: 0 14px 32px rgba(27, 46, 94, 0.08);
-  }
-  
-  .disciplines-error {
-    background: #fee2e2;
-    color: #b91c1c;
-  }
-  
-  /* RESPONSIVE */
-  
-  @media (max-width: 1180px) {
-    .student-disciplines-content {
-      padding: 44px 32px 60px;
-    }
-  
-    .student-disciplines-header {
-      flex-direction: column;
-    }
-  
-    .student-disciplines-program {
-      width: 100%;
-    }
-  
-    .student-disciplines-toolbar {
-      grid-template-columns: 1fr;
-      max-width: 100%;
-    }
-  
-    .student-disciplines-grid {
-      grid-template-columns: repeat(2, minmax(210px, 1fr));
-    }
-  }
-  
-  @media (max-width: 780px) {
-    .student-disciplines-content {
-      height: auto;
-      padding: 32px 20px 50px;
-    }
-  
-    .student-disciplines-grid {
-      grid-template-columns: 1fr;
-    }
-  }
+}
