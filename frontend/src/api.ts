@@ -807,3 +807,37 @@ export type LoginRequest = {
   
     return response.json();
   }
+  export type OfficeAttendanceProgramOption = {
+    idProgram: number;
+    programName: string;
+  };
+  
+  export type OfficeAttendanceDiscipline = {
+    idDiscipline: number;
+    disciplineName: string;
+    pudUrl?: string | null;
+    programs: OfficeAttendanceProgramOption[];
+    courseNos: number[];
+    moduleNos: number[];
+    groupsCount: number;
+    studentsCount: number;
+    sessionsCount: number;
+    markedAttendanceCount: number;
+    presentAttendanceCount: number;
+    absentAttendanceCount: number;
+    attendancePercent: number | null;
+  };
+  
+  export async function getOfficeAttendanceDisciplines(
+    idUser: number
+  ): Promise<OfficeAttendanceDiscipline[]> {
+    const response = await fetch(
+      `${API_URL}/api/users/${idUser}/office/attendance-disciplines`
+    );
+  
+    if (!response.ok) {
+      throw new Error("Не удалось загрузить дисциплины для посещаемости");
+    }
+  
+    return response.json();
+  }

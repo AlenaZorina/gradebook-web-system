@@ -15,6 +15,7 @@ import { StudentAnalyticsPage } from "./pages/StudentAnalyticsPage";
 import { OfficeResitsPage } from "./pages/OfficeResitsPage";
 import { OfficeResitGroupsPage } from "./pages/OfficeResitGroupsPage";
 import { OfficeResitStudentsPage } from "./pages/OfficeResitStudentsPage";
+import { OfficeAttendanceDisciplinesPage } from "./pages/OfficeAttendanceDisciplinesPage";
 import type { LoginResponse } from "./api";
 
 type TeacherPage =
@@ -37,7 +38,8 @@ type OfficePage =
   | "resits"
   | "resitGroups"
   | "resitStudents"
-  | "attendance"
+  | "attendanceDisciplines"
+  | "attendanceDetails"
   | "finalSheets"
   | "students"
   | "analytics";
@@ -58,6 +60,8 @@ function App() {
     useState<number | null>(null);
   const [selectedOfficeGroupId, setSelectedOfficeGroupId] =
     useState<number | null>(null);
+  const [selectedOfficeAttendanceDisciplineId, setSelectedOfficeAttendanceDisciplineId] =
+    useState<number | null>(null);
 
   function handleLogout() {
     setCurrentUser(null);
@@ -68,6 +72,7 @@ function App() {
     setSelectedGroupId(null);
     setSelectedOfficeDisciplineId(null);
     setSelectedOfficeGroupId(null);
+    setSelectedOfficeAttendanceDisciplineId(null);
   }
 
   function openTeacherDisciplineDetails(disciplineId: number) {
@@ -161,6 +166,11 @@ function App() {
     setOfficePage("resitStudents");
   }
 
+  function openOfficeAttendanceDetails(disciplineId: number) {
+    setSelectedOfficeAttendanceDisciplineId(disciplineId);
+    setOfficePage("attendanceDetails");
+  }
+
   if (!currentUser) {
     return <LoginPage onLogin={setCurrentUser} />;
   }
@@ -176,7 +186,7 @@ function App() {
           onLogout={handleLogout}
           onBack={() => setOfficePage("resits")}
           onSelectGroup={openOfficeResitStudents}
-          onOpenAttendance={() => setOfficePage("attendance")}
+          onOpenAttendance={() => setOfficePage("attendanceDisciplines")}
           onOpenFinalSheets={() => setOfficePage("finalSheets")}
           onOpenStudents={() => setOfficePage("students")}
           onOpenAnalytics={() => setOfficePage("analytics")}
@@ -197,7 +207,7 @@ function App() {
           onLogout={handleLogout}
           onBack={() => setOfficePage("resitGroups")}
           onOpenResits={() => setOfficePage("resits")}
-          onOpenAttendance={() => setOfficePage("attendance")}
+          onOpenAttendance={() => setOfficePage("attendanceDisciplines")}
           onOpenFinalSheets={() => setOfficePage("finalSheets")}
           onOpenStudents={() => setOfficePage("students")}
           onOpenAnalytics={() => setOfficePage("analytics")}
@@ -205,20 +215,37 @@ function App() {
       );
     }
 
-    if (officePage === "attendance") {
+    if (officePage === "attendanceDisciplines") {
+      return (
+        <OfficeAttendanceDisciplinesPage
+          user={currentUser}
+          onLogout={handleLogout}
+          onSelectDiscipline={openOfficeAttendanceDetails}
+          onOpenResits={() => setOfficePage("resits")}
+          onOpenFinalSheets={() => setOfficePage("finalSheets")}
+          onOpenStudents={() => setOfficePage("students")}
+          onOpenAnalytics={() => setOfficePage("analytics")}
+        />
+      );
+    }
+
+    if (officePage === "attendanceDetails") {
       return (
         <div className="schedule-layout">
           <main className="schedule-content">
             <button
               className="details-back-button"
               type="button"
-              onClick={() => setOfficePage("resits")}
+              onClick={() => setOfficePage("attendanceDisciplines")}
             >
-              ← Назад
+              ← Назад к дисциплинам
             </button>
-            <h1>Посещаемость</h1>
+
+            <h1>Посещаемость по дисциплине</h1>
+
             <div className="schedule-state">
-              Экран просмотра посещаемости учебного офиса подключим позже.
+              Экран просмотра посещаемости по дисциплине №
+              {selectedOfficeAttendanceDisciplineId} подключим следующим шагом.
             </div>
           </main>
         </div>
@@ -236,7 +263,9 @@ function App() {
             >
               ← Назад
             </button>
+
             <h1>Итоговые ведомости</h1>
+
             <div className="schedule-state">
               Экран итоговых ведомостей учебного офиса подключим позже.
             </div>
@@ -256,7 +285,9 @@ function App() {
             >
               ← Назад
             </button>
+
             <h1>Студенты</h1>
+
             <div className="schedule-state">
               Экран списка студентов учебного офиса подключим позже.
             </div>
@@ -276,7 +307,9 @@ function App() {
             >
               ← Назад
             </button>
+
             <h1>Модуль аналитики</h1>
+
             <div className="schedule-state">
               BI-модуль учебного офиса подключим позже.
             </div>
@@ -290,7 +323,7 @@ function App() {
         user={currentUser}
         onLogout={handleLogout}
         onSelectDiscipline={openOfficeResitGroups}
-        onOpenAttendance={() => setOfficePage("attendance")}
+        onOpenAttendance={() => setOfficePage("attendanceDisciplines")}
         onOpenFinalSheets={() => setOfficePage("finalSheets")}
         onOpenStudents={() => setOfficePage("students")}
         onOpenAnalytics={() => setOfficePage("analytics")}
@@ -489,9 +522,11 @@ function App() {
     <div className="schedule-layout">
       <main className="schedule-content">
         <h1>Вход выполнен</h1>
+
         <div className="schedule-state">
           Для этой роли экран пока находится в разработке.
         </div>
+
         <button className="logout-button" type="button" onClick={handleLogout}>
           Выйти
         </button>
