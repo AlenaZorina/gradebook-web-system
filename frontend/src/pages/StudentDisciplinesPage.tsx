@@ -158,7 +158,11 @@ function getDisciplineLetter(name?: string | null) {
 }
 
 function getModuleText(item: StudentDiscipline) {
-  if (item.startModuleNo && item.endModuleNo && item.startModuleNo !== item.endModuleNo) {
+  if (
+    item.startModuleNo &&
+    item.endModuleNo &&
+    item.startModuleNo !== item.endModuleNo
+  ) {
     return `${item.startModuleNo}–${item.endModuleNo} модули`;
   }
 
@@ -262,7 +266,9 @@ export function StudentDisciplinesPage({
             </div>
             <div>
               <p>{getStudentShortName(user)}</p>
-              <span>{studentInfo ? `Студент · ${studentInfo.groupName}` : "Студент"}</span>
+              <span>
+                {studentInfo ? `Студент · ${studentInfo.groupName}` : "Студент"}
+              </span>
             </div>
           </div>
 
@@ -283,18 +289,26 @@ export function StudentDisciplinesPage({
               Дисциплины
             </button>
 
-            <button className="nav-item" type="button" onClick={onOpenAttendance}>
+            <button
+              className="nav-item"
+              type="button"
+              onClick={() => onOpenAttendance?.()}
+            >
               <span className="nav-icon">
                 <AttendanceIcon />
               </span>
               Посещаемость
             </button>
 
-            <button className="nav-item" type="button" onClick={onOpenGradebook}>
+            <button
+              className="nav-item"
+              type="button"
+              onClick={() => onOpenGradebook?.()}
+            >
               <span className="nav-icon">
                 <GradesIcon />
               </span>
-              Оценки
+              Ведомость
             </button>
           </nav>
 
@@ -303,7 +317,11 @@ export function StudentDisciplinesPage({
           <p className="sidebar-section-title">BI-контур</p>
 
           <nav className="main-nav">
-            <button className="nav-item" type="button" onClick={onOpenAnalytics}>
+            <button
+              className="nav-item"
+              type="button"
+              onClick={() => onOpenAnalytics?.()}
+            >
               <span className="nav-icon">
                 <AnalyticsIcon />
               </span>

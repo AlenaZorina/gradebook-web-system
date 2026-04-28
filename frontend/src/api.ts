@@ -547,3 +547,41 @@ export type LoginRequest = {
   
     return response.json();
   }
+  export type StudentAttendanceSession = {
+    idSession: number;
+    lessonDate: string;
+    dateLabel: string;
+    startTime?: string | null;
+    endTime?: string | null;
+    status: "present" | "absent" | "unknown";
+  };
+  
+  export type StudentAttendance = {
+    studentUserId: number;
+    idStudent: number;
+    idAssignment: number;
+    idDiscipline: number;
+    disciplineName: string;
+    idGroup: number;
+    groupName: string;
+    courseNo: number;
+    programName: string;
+    academicYear: string;
+    attendancePercent: number | null;
+    sessions: StudentAttendanceSession[];
+  };
+  
+  export async function getStudentAttendance(
+    idUser: number,
+    disciplineId: number
+  ): Promise<StudentAttendance> {
+    const response = await fetch(
+      `${API_URL}/api/users/${idUser}/student-attendance?disciplineId=${disciplineId}`
+    );
+  
+    if (!response.ok) {
+      throw new Error("Не удалось загрузить посещаемость студента");
+    }
+  
+    return response.json();
+  }

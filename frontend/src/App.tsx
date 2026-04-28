@@ -9,6 +9,7 @@ import { TeacherAnalyticsPage } from "./pages/TeacherAnalyticsPage";
 import { StudentSchedulePage } from "./pages/StudentSchedulePage";
 import { StudentDisciplinesPage } from "./pages/StudentDisciplinesPage";
 import { StudentDisciplineDetailsPage } from "./pages/StudentDisciplineDetailsPage";
+import { StudentAttendancePage } from "./pages/StudentAttendancePage";
 import type { LoginResponse } from "./api";
 
 type TeacherPage =
@@ -29,6 +30,7 @@ type StudentPage =
 
 function App() {
   const [currentUser, setCurrentUser] = useState<LoginResponse | null>(null);
+
   const [teacherPage, setTeacherPage] = useState<TeacherPage>("schedule");
   const [studentPage, setStudentPage] = useState<StudentPage>("schedule");
 
@@ -135,8 +137,8 @@ function App() {
           onLogout={handleLogout}
           onOpenSchedule={() => setStudentPage("schedule")}
           onSelectDiscipline={openStudentDisciplineDetails}
-          onOpenAttendance={() => setStudentPage("attendance")}
-          onOpenGradebook={() => setStudentPage("gradebook")}
+          onOpenAttendance={() => openStudentAttendance()}
+          onOpenGradebook={() => openStudentGradebook()}
           onOpenAnalytics={openStudentAnalytics}
         />
       );
@@ -159,27 +161,15 @@ function App() {
 
     if (studentPage === "attendance") {
       return (
-        <div className="schedule-layout">
-          <main className="schedule-content">
-            <button
-              className="details-back-button"
-              type="button"
-              onClick={() => {
-                if (selectedDisciplineId) {
-                  setStudentPage("disciplineDetails");
-                } else {
-                  setStudentPage("disciplines");
-                }
-              }}
-            >
-              ← Назад
-            </button>
-            <h1>Посещаемость</h1>
-            <div className="schedule-state">
-              Экран посещаемости студента подключим следующим шагом.
-            </div>
-          </main>
-        </div>
+        <StudentAttendancePage
+          user={currentUser}
+          initialDisciplineId={selectedDisciplineId}
+          onLogout={handleLogout}
+          onOpenSchedule={() => setStudentPage("schedule")}
+          onOpenDisciplines={() => setStudentPage("disciplines")}
+          onOpenGradebook={openStudentGradebook}
+          onOpenAnalytics={openStudentAnalytics}
+        />
       );
     }
 
@@ -235,6 +225,9 @@ function App() {
         user={currentUser}
         onLogout={handleLogout}
         onOpenDisciplines={() => setStudentPage("disciplines")}
+        onOpenAttendance={() => openStudentAttendance()}
+        onOpenGradebook={() => openStudentGradebook()}
+        onOpenAnalytics={openStudentAnalytics}
       />
     );
   }

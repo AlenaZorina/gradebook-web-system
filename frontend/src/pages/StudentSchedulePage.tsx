@@ -8,6 +8,9 @@ type StudentSchedulePageProps = {
   user: LoginResponse;
   onLogout: () => void;
   onOpenDisciplines: () => void;
+  onOpenAttendance: () => void;
+  onOpenGradebook: () => void;
+  onOpenAnalytics: () => void;
 };
 
 const days = [
@@ -147,7 +150,10 @@ function LogoutIcon() {
 export function StudentSchedulePage({
   user,
   onLogout,
-  onOpenDisciplines
+  onOpenDisciplines,
+  onOpenAttendance,
+  onOpenGradebook,
+  onOpenAnalytics
 }: StudentSchedulePageProps) {
   const [schedule, setSchedule] = useState<StudentScheduleItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -233,14 +239,14 @@ export function StudentSchedulePage({
             Дисциплины
             </button>
 
-            <button className="nav-item" type="button">
+            <button className="nav-item" type="button" onClick={onOpenAttendance}>
               <span className="nav-icon">
                 <AttendanceIcon />
               </span>
               Посещаемость
             </button>
 
-            <button className="nav-item" type="button">
+            <button className="nav-item" type="button" onClick={onOpenGradebook}>
               <span className="nav-icon">
                 <GradesIcon />
               </span>
@@ -252,7 +258,7 @@ export function StudentSchedulePage({
 
           <div className="sidebar-section-title">BI-КОНТУР</div>
 
-          <button className="nav-item" type="button">
+          <button className="nav-item" type="button" onClick={onOpenAnalytics}>
             <span className="nav-icon">
               <AnalyticsIcon />
             </span>
