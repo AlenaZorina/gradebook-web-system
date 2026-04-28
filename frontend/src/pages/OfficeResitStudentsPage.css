@@ -1,0 +1,176 @@
+.office-resit-students-content {
+    height: 100vh;
+    padding: 52px 48px 70px;
+    overflow: auto;
+    box-sizing: border-box;
+    position: relative;
+  }
+  
+  .office-resit-students-hero {
+    margin-bottom: 48px;
+  }
+  
+  .office-resit-students-hero h1 {
+    margin: 0 0 38px;
+    color: #111827;
+    font-size: 34px;
+    line-height: 1.1;
+    font-weight: 900;
+    letter-spacing: -0.05em;
+  }
+  
+  .office-resit-students-heading {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+  
+  .office-resit-students-heading div {
+    margin-right: 8px;
+  }
+  
+  .office-resit-students-heading h2 {
+    margin: 0 0 8px;
+    color: #111827;
+    font-size: 22px;
+    line-height: 1.15;
+    font-weight: 900;
+    letter-spacing: -0.04em;
+  }
+  
+  .office-resit-students-heading p {
+    margin: 0;
+    color: #39445c;
+    font-size: 15px;
+    font-weight: 750;
+  }
+  
+  .office-resit-students-heading > span {
+    min-height: 34px;
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    border: 1px solid #dce4f5;
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 12px 28px rgba(27, 46, 94, 0.06);
+    padding: 0 16px;
+    color: #39445c;
+    font-size: 13px;
+    font-weight: 900;
+  }
+  
+  .office-resit-table-card {
+    width: min(100%, 900px);
+    border-radius: 30px;
+    background: rgba(255, 255, 255, 0.84);
+    border: 1px solid rgba(225, 231, 245, 0.95);
+    box-shadow: 0 22px 60px rgba(27, 46, 94, 0.08);
+    padding: 24px 26px;
+    box-sizing: border-box;
+  }
+  
+  .office-resit-table-scroll {
+    width: 100%;
+    overflow-x: auto;
+  }
+  
+  .office-resit-table {
+    width: 100%;
+    min-width: 720px;
+    border-collapse: collapse;
+    color: #111827;
+    font-family: "Manrope", system-ui, sans-serif;
+  }
+  
+  .office-resit-table th,
+  .office-resit-table td {
+    padding: 16px 18px;
+    text-align: left;
+    vertical-align: top;
+    font-size: 14px;
+    font-weight: 800;
+  }
+  
+  .office-resit-table th {
+    border-bottom: 1px solid #111827;
+    font-weight: 900;
+  }
+  
+  .office-resit-table th:not(:last-child),
+  .office-resit-table td:not(:last-child) {
+    border-right: 1px solid #9aa6bd;
+  }
+  
+  .office-resit-table tbody tr:not(:last-child) td {
+    border-bottom: 1px solid #edf1f8;
+  }
+  
+  .office-resit-bad-grade {
+    min-width: 34px;
+    min-height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: #ffe8e8;
+    color: #c43232;
+    padding: 0 10px;
+    font-weight: 950;
+  }
+  
+  .office-resit-empty-cell {
+    text-align: center !important;
+    color: #7b87a5;
+    font-weight: 850;
+    padding: 34px 18px !important;
+  }
+  
+  .office-resit-export-button {
+    position: fixed;
+    right: 64px;
+    bottom: 48px;
+    min-width: 120px;
+    min-height: 42px;
+    border: none;
+    border-radius: 999px;
+    background: #6f6a6a;
+    color: #ffffff;
+    font-family: "Manrope", system-ui, sans-serif;
+    font-size: 14px;
+    font-weight: 850;
+    cursor: pointer;
+    box-shadow: 0 18px 42px rgba(64, 64, 64, 0.14);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+  }
+  
+  .office-resit-export-button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    background: #5f5a5a;
+    box-shadow: 0 22px 48px rgba(64, 64, 64, 0.18);
+  }
+  
+  .office-resit-export-button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+  
+  @media (max-width: 780px) {
+    .office-resit-students-content {
+      height: auto;
+      padding: 32px 20px 110px;
+    }
+  
+    .office-resit-students-hero h1 {
+      font-size: 30px;
+    }
+  
+    .office-resit-table-card {
+      padding: 18px;
+    }
+  
+    .office-resit-export-button {
+      right: 20px;
+      bottom: 24px;
+    }
+  }

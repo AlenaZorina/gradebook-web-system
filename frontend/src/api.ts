@@ -734,3 +734,76 @@ export type LoginRequest = {
   
     return response.json();
   }
+  export type OfficeResitGroup = {
+    idDiscipline: number;
+    disciplineName: string;
+    idGroup: number;
+    groupName: string;
+    courseNo: number;
+    idProgram: number;
+    programName: string;
+    startModuleNo: number;
+    endModuleNo: number;
+    idAssignment: number;
+    academicYear: string;
+    teacherShortName: string;
+    idSheet?: number | null;
+    sheetStatus: string;
+    studentsCount: number;
+    retakeStudentsCount: number;
+  };
+  
+  export type OfficeResitStudent = {
+    idStudent: number;
+    fullName: string;
+    recordBookNo: string;
+    programName: string;
+    groupName: string;
+    finalGrade: number;
+  };
+  
+  export type OfficeResitStudentList = {
+    idDiscipline: number;
+    disciplineName: string;
+    idGroup: number;
+    groupName: string;
+    courseNo: number;
+    idProgram: number;
+    programName: string;
+    idAssignment: number;
+    academicYear: string;
+    teacherShortName: string;
+    retakeStudentsCount: number;
+    students: OfficeResitStudent[];
+  };
+  
+  export async function getOfficeResitGroups(
+    idUser: number,
+    disciplineId: number
+  ): Promise<OfficeResitGroup[]> {
+    const response = await fetch(
+      `${API_URL}/api/users/${idUser}/office/resit-disciplines/${disciplineId}/groups`
+    );
+  
+    if (!response.ok) {
+      throw new Error("Не удалось загрузить группы по дисциплине");
+    }
+  
+    return response.json();
+  }
+  
+  export async function getOfficeResitStudents(
+    idUser: number,
+    disciplineId: number,
+    groupId: number
+  ): Promise<OfficeResitStudentList> {
+    const response = await fetch(
+      `${API_URL}/api/users/${idUser}/office/resit-disciplines/${disciplineId}/groups/${groupId}/students`
+    );
+  
+    if (!response.ok) {
+      throw new Error("Не удалось загрузить список студентов на пересдачу");
+    }
+  
+    return response.json();
+  }
