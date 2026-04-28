@@ -585,3 +585,48 @@ export type LoginRequest = {
   
     return response.json();
   }
+  export type StudentGradebookElement = {
+    idElement: number;
+    elementName: string;
+    orderNo: number;
+    controlType?: string | null;
+    weight?: number | null;
+    gradeValue?: number | null;
+    dateLabel: string;
+  };
+  
+  export type StudentGradebook = {
+    studentUserId: number;
+    idStudent: number;
+    idAssignment: number;
+    idSheet?: number | null;
+    sheetStatus: string;
+    idDiscipline: number;
+    disciplineName: string;
+    idGroup: number;
+    groupName: string;
+    courseNo: number;
+    programName: string;
+    academicYear: string;
+    formulaText: string;
+    accumulatedGrade?: number | null;
+    examGrade?: number | null;
+    preliminaryFinalGrade?: number | null;
+    finalGrade?: number | null;
+    elements: StudentGradebookElement[];
+  };
+  
+  export async function getStudentGradebook(
+    idUser: number,
+    disciplineId: number
+  ): Promise<StudentGradebook> {
+    const response = await fetch(
+      `${API_URL}/api/users/${idUser}/student-gradebook?disciplineId=${disciplineId}`
+    );
+  
+    if (!response.ok) {
+      throw new Error("Не удалось загрузить ведомость студента");
+    }
+  
+    return response.json();
+  }

@@ -1,0 +1,406 @@
+.student-gradebook-content {
+    height: 100vh;
+    padding: 52px 48px 70px;
+    overflow: auto;
+    box-sizing: border-box;
+    position: relative;
+  }
+  
+  .student-gradebook-hero {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 78px;
+  }
+  
+  .student-gradebook-hero h1 {
+    max-width: 920px;
+    margin: 0 0 16px;
+    color: #111827;
+    font-size: 36px;
+    line-height: 1.08;
+    font-weight: 900;
+    letter-spacing: -0.055em;
+  }
+  
+  .student-gradebook-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  .student-gradebook-meta strong {
+    color: #111827;
+    font-size: 18px;
+    line-height: 1;
+    font-weight: 900;
+  }
+  
+  .student-gradebook-meta span {
+    min-height: 38px;
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    border: 1px solid #dce4f5;
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 12px 28px rgba(27, 46, 94, 0.06);
+    padding: 0 18px;
+    color: #39445c;
+    font-size: 14px;
+    font-weight: 900;
+  }
+  
+  .student-gradebook-select {
+    min-width: 320px;
+    display: grid;
+    gap: 8px;
+  }
+  
+  .student-gradebook-select span {
+    color: #7b87a5;
+    font-size: 12px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  
+  .student-gradebook-select select {
+    min-height: 46px;
+    border: 1px solid #dce4f5;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 12px 28px rgba(27, 46, 94, 0.06);
+    padding: 0 42px 0 18px;
+    color: #111827;
+    font-family: "Manrope", system-ui, sans-serif;
+    font-size: 14px;
+    font-weight: 850;
+    outline: none;
+    appearance: none;
+    background-image: linear-gradient(45deg, transparent 50%, #64748b 50%),
+      linear-gradient(135deg, #64748b 50%, transparent 50%);
+    background-position: calc(100% - 22px) 20px, calc(100% - 16px) 20px;
+    background-size: 6px 6px, 6px 6px;
+    background-repeat: no-repeat;
+  }
+  
+  .student-gradebook-table-card {
+    width: min(100%, 860px);
+    margin-left: 12px;
+    border-radius: 30px;
+    background: rgba(255, 255, 255, 0.84);
+    border: 1px solid rgba(225, 231, 245, 0.95);
+    box-shadow: 0 22px 60px rgba(27, 46, 94, 0.08);
+    padding: 24px 26px;
+    box-sizing: border-box;
+  }
+  
+  .student-gradebook-table-scroll {
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 6px;
+  }
+  
+  .student-gradebook-table {
+    width: 100%;
+    min-width: 680px;
+    border-collapse: collapse;
+    color: #111827;
+    font-family: "Manrope", system-ui, sans-serif;
+  }
+  
+  .student-gradebook-table th,
+  .student-gradebook-table td {
+    padding: 14px 18px;
+    text-align: center;
+    white-space: nowrap;
+    font-size: 14px;
+    font-weight: 850;
+  }
+  
+  .student-gradebook-table th:first-child,
+  .student-gradebook-table td:first-child {
+    text-align: left;
+    border-right: 1px solid #9aa6bd;
+    color: #111827;
+    width: 94px;
+  }
+  
+  .student-gradebook-table thead tr,
+  .student-gradebook-table tbody tr:first-child {
+    border-bottom: 1px solid #9aa6bd;
+  }
+  
+  .student-grade-value {
+    min-width: 32px;
+    min-height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: #eef2ff;
+    color: #243876;
+    padding: 0 8px;
+    font-weight: 950;
+  }
+  
+  .student-grade-value.empty {
+    background: #f3f4f6;
+    color: #9aa6bd;
+  }
+  
+  .student-gradebook-summary {
+    display: grid;
+    gap: 18px;
+    margin: 54px 0 0 12px;
+  }
+  
+  .student-gradebook-summary-item {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  }
+  
+  .summary-color {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    flex: 0 0 auto;
+  }
+  
+  .summary-color.accumulated {
+    background: #f1f3f7;
+  }
+  
+  .summary-color.exam {
+    background: #f1f3f7;
+  }
+  
+  .summary-color.final {
+    background: #e4f34d;
+  }
+  
+  .student-gradebook-summary-item p {
+    margin: 0;
+    color: #111827;
+    font-size: 16px;
+    font-weight: 900;
+  }
+  
+  .student-gradebook-summary-item strong {
+    display: block;
+    margin-top: 4px;
+    color: #111827;
+    font-size: 20px;
+    font-weight: 950;
+  }
+  
+  .student-gradebook-report-button {
+    position: fixed;
+    right: 64px;
+    bottom: 48px;
+    min-width: 190px;
+    min-height: 42px;
+    border: none;
+    border-radius: 999px;
+    background: #6f6a6a;
+    color: #ffffff;
+    font-family: "Manrope", system-ui, sans-serif;
+    font-size: 14px;
+    font-weight: 850;
+    cursor: pointer;
+    box-shadow: 0 18px 42px rgba(64, 64, 64, 0.14);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+  }
+  
+  .student-gradebook-report-button:hover {
+    transform: translateY(-2px);
+    background: #5f5a5a;
+    box-shadow: 0 22px 48px rgba(64, 64, 64, 0.18);
+  }
+  
+  .student-gradebook-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 30;
+    display: grid;
+    place-items: center;
+    background: rgba(15, 23, 42, 0.24);
+    backdrop-filter: blur(8px);
+    padding: 24px;
+    box-sizing: border-box;
+  }
+  
+  .student-gradebook-modal {
+    width: min(540px, 100%);
+    position: relative;
+    border-radius: 28px;
+    border: 1px solid rgba(225, 231, 245, 0.95);
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 28px 90px rgba(15, 23, 42, 0.2);
+    padding: 34px 34px 28px;
+    box-sizing: border-box;
+  }
+  
+  .student-gradebook-modal-close {
+    position: absolute;
+    top: 16px;
+    right: 18px;
+    border: none;
+    background: transparent;
+    color: #7b87a5;
+    font-size: 28px;
+    line-height: 1;
+    cursor: pointer;
+  }
+  
+  .student-gradebook-modal h2 {
+    margin: 0 28px 8px 0;
+    color: #111827;
+    font-size: 22px;
+    line-height: 1.22;
+    font-weight: 950;
+    letter-spacing: -0.035em;
+  }
+  
+  .student-gradebook-modal > p {
+    margin: 0 0 22px;
+    color: #77717a;
+    font-size: 14px;
+    line-height: 1.45;
+    font-weight: 700;
+  }
+  
+  .student-gradebook-date-field {
+    display: grid;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  
+  .student-gradebook-date-field > span {
+    color: #77717a;
+    font-size: 13px;
+    font-weight: 850;
+  }
+  
+  .student-gradebook-date-field div {
+    width: fit-content;
+    min-height: 38px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-radius: 999px;
+    border: 1px solid #dce4f5;
+    background: #ffffff;
+    padding: 0 12px;
+  }
+  
+  .student-gradebook-date-field svg {
+    width: 18px;
+    height: 18px;
+    color: #6f6a6a;
+  }
+  
+  .student-gradebook-date-field input {
+    border: none;
+    outline: none;
+    background: transparent;
+    color: #111827;
+    font-family: "Manrope", system-ui, sans-serif;
+    font-size: 14px;
+    font-weight: 800;
+  }
+  
+  .student-gradebook-modal textarea {
+    width: 100%;
+    min-height: 96px;
+    resize: vertical;
+    border: 1px solid #aeb7c8;
+    border-radius: 14px;
+    background: #ffffff;
+    padding: 14px;
+    box-sizing: border-box;
+    color: #111827;
+    font-family: "Manrope", system-ui, sans-serif;
+    font-size: 14px;
+    font-weight: 750;
+    line-height: 1.45;
+    outline: none;
+  }
+  
+  .student-gradebook-modal textarea:focus {
+    border-color: #7f9dff;
+    box-shadow: 0 0 0 4px rgba(79, 116, 255, 0.12);
+  }
+  
+  .student-gradebook-report-message {
+    margin-top: 12px;
+    border-radius: 16px;
+    background: #eef2ff;
+    color: #3353b8;
+    padding: 12px 14px;
+    font-size: 13px;
+    line-height: 1.45;
+    font-weight: 850;
+  }
+  
+  .student-gradebook-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 20px;
+  }
+  
+  .student-gradebook-submit-button {
+    min-width: 128px;
+    min-height: 40px;
+    border: none;
+    border-radius: 999px;
+    background: #6f6a6a;
+    color: #ffffff;
+    font-family: "Manrope", system-ui, sans-serif;
+    font-size: 14px;
+    font-weight: 850;
+    cursor: pointer;
+    transition: background 0.18s ease, transform 0.18s ease;
+  }
+  
+  .student-gradebook-submit-button:hover {
+    transform: translateY(-1px);
+    background: #5f5a5a;
+  }
+  
+  @media (max-width: 780px) {
+    .student-gradebook-content {
+      height: auto;
+      padding: 32px 20px 110px;
+    }
+  
+    .student-gradebook-hero {
+      flex-direction: column;
+      margin-bottom: 34px;
+    }
+  
+    .student-gradebook-hero h1 {
+      font-size: 30px;
+    }
+  
+    .student-gradebook-select {
+      min-width: 100%;
+    }
+  
+    .student-gradebook-table-card {
+      margin-left: 0;
+      padding: 18px;
+    }
+  
+    .student-gradebook-summary {
+      margin-left: 0;
+    }
+  
+    .student-gradebook-report-button {
+      right: 20px;
+      bottom: 24px;
+    }
+  }

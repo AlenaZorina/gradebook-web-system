@@ -10,6 +10,7 @@ import { StudentSchedulePage } from "./pages/StudentSchedulePage";
 import { StudentDisciplinesPage } from "./pages/StudentDisciplinesPage";
 import { StudentDisciplineDetailsPage } from "./pages/StudentDisciplineDetailsPage";
 import { StudentAttendancePage } from "./pages/StudentAttendancePage";
+import { StudentGradebookPage } from "./pages/StudentGradebookPage";
 import type { LoginResponse } from "./api";
 
 type TeacherPage =
@@ -175,27 +176,15 @@ function App() {
 
     if (studentPage === "gradebook") {
       return (
-        <div className="schedule-layout">
-          <main className="schedule-content">
-            <button
-              className="details-back-button"
-              type="button"
-              onClick={() => {
-                if (selectedDisciplineId) {
-                  setStudentPage("disciplineDetails");
-                } else {
-                  setStudentPage("disciplines");
-                }
-              }}
-            >
-              ← Назад
-            </button>
-            <h1>Ведомость</h1>
-            <div className="schedule-state">
-              Экран ведомости студента подключим следующим шагом.
-            </div>
-          </main>
-        </div>
+        <StudentGradebookPage
+          user={currentUser}
+          initialDisciplineId={selectedDisciplineId}
+          onLogout={handleLogout}
+          onOpenSchedule={() => setStudentPage("schedule")}
+          onOpenDisciplines={() => setStudentPage("disciplines")}
+          onOpenAttendance={openStudentAttendance}
+          onOpenAnalytics={openStudentAnalytics}
+        />
       );
     }
 
