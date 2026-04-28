@@ -1,0 +1,107 @@
+.office-student-details-content {
+    height: 100vh;
+    padding: 52px 48px 70px;
+    overflow: auto;
+    box-sizing: border-box;
+  }
+  
+  .office-student-details-content h1 {
+    margin: 0 0 54px;
+    color: #111827;
+    font-size: 34px;
+    line-height: 1.1;
+    font-weight: 900;
+    letter-spacing: -0.05em;
+  }
+  
+  .office-student-profile-main {
+    width: min(100%, 420px);
+    margin: 0 auto 62px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .office-student-profile-avatar {
+    width: 112px;
+    height: 112px;
+    border-radius: 999px;
+    background: #d9d9d9;
+    margin-bottom: 24px;
+  }
+  
+  .office-student-profile-main h2 {
+    margin: 0 0 6px;
+    color: #111827;
+    font-size: 25px;
+    line-height: 1.15;
+    font-weight: 900;
+    letter-spacing: -0.04em;
+  }
+  
+  .office-student-profile-main p {
+    margin: 0 0 4px;
+    color: #111827;
+    font-size: 16px;
+    font-weight: 750;
+  }
+  
+  .office-student-profile-main span {
+    color: #111827;
+    font-size: 15px;
+    font-weight: 650;
+  }
+  
+  .office-student-actions-list {
+    width: min(100%, 980px);
+    display: grid;
+    gap: 12px;
+    margin: 0 auto;
+  }
+  
+  .office-student-actions-list button {
+    width: 100%;
+    min-height: 66px;
+    border: 1px solid rgba(197, 204, 216, 0.95);
+    border-radius: 24px;
+    background: rgba(255, 255, 255, 0.92);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 26px;
+    cursor: pointer;
+    font-family: "Manrope", system-ui, sans-serif;
+    box-shadow: 0 14px 36px rgba(27, 46, 94, 0.045);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  }
+  
+  .office-student-actions-list button:hover {
+    transform: translateY(-2px);
+    border-color: rgba(37, 99, 235, 0.22);
+    box-shadow: 0 20px 52px rgba(27, 46, 94, 0.09);
+  }
+  
+  .office-student-actions-list span {
+    color: #111827;
+    font-size: 20px;
+    font-weight: 850;
+  }
+  
+  .office-student-actions-list strong {
+    color: #5b6578;
+    font-size: 42px;
+    line-height: 1;
+    font-weight: 650;
+  }
+  
+  @media (max-width: 780px) {
+    .office-student-details-content {
+      height: auto;
+      padding: 32px 20px 50px;
+    }
+  
+    .office-student-details-content h1 {
+      font-size: 30px;
+    }
+  }

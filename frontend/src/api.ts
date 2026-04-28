@@ -1083,3 +1083,67 @@ export type LoginRequest = {
   
     return response.json();
   }
+  export type OfficeStudentDetails = {
+    idStudent: number;
+    idUser: number;
+    fullName: string;
+    surname: string;
+    name: string;
+    fathername?: string | null;
+    recordBookNo: string;
+    email?: string | null;
+    idGroup: number;
+    groupName: string;
+    courseNo: number;
+    idProgram: number;
+    programName: string;
+    idStatus?: number | null;
+    studentStatus?: string | null;
+  };
+  
+  export type OfficeStudentAttendanceDiscipline = {
+    idStudent: number;
+    idDiscipline: number;
+    disciplineName: string;
+    pudUrl?: string | null;
+    idEnrollment: number;
+    courseNo: number;
+    moduleNos: number[];
+    idAssignment: number;
+    academicYear: string;
+    sessionsCount: number;
+    markedAttendanceCount: number;
+    presentAttendanceCount: number;
+    absenceCount: number;
+    attendancePercent: number | null;
+  };
+  
+  export async function getOfficeStudentDetails(
+    idUser: number,
+    studentId: number
+  ): Promise<OfficeStudentDetails> {
+    const response = await fetch(
+      `${API_URL}/api/users/${idUser}/office/students/${studentId}`
+    );
+  
+    if (!response.ok) {
+      throw new Error("Не удалось загрузить карточку студента");
+    }
+  
+    return response.json();
+  }
+  
+  export async function getOfficeStudentAttendanceSummary(
+    idUser: number,
+    studentId: number
+  ): Promise<OfficeStudentAttendanceDiscipline[]> {
+    const response = await fetch(
+      `${API_URL}/api/users/${idUser}/office/students/${studentId}/attendance-summary`
+    );
+  
+    if (!response.ok) {
+      throw new Error("Не удалось загрузить посещаемость студента");
+    }
+  
+    return response.json();
+  }

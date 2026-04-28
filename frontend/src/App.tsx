@@ -22,6 +22,8 @@ import { OfficeFinalSheetsDisciplinesPage } from "./pages/OfficeFinalSheetsDisci
 import { OfficeFinalSheetGroupsPage } from "./pages/OfficeFinalSheetGroupsPage";
 import { OfficeFinalSheetPage } from "./pages/OfficeFinalSheetPage"
 import { OfficeStudentsPage } from "./pages/OfficeStudentsPage";;
+import { OfficeStudentDetailsPage } from "./pages/OfficeStudentDetailsPage";
+import { OfficeStudentAttendanceSummaryPage } from "./pages/OfficeStudentAttendanceSummaryPage";
 import type { LoginResponse } from "./api";
 
 type TeacherPage =
@@ -52,6 +54,9 @@ type StudentPage =
   | "finalSheet"
   | "students"
   | "studentDetails"
+  | "studentAttendance"
+  | "studentGradebook"
+  | "studentPersonalData"
   | "analytics";
 
 function App() {
@@ -214,6 +219,18 @@ function App() {
   function openOfficeStudentDetails(studentId: number) {
     setSelectedOfficeStudentId(studentId);
     setOfficePage("studentDetails");
+  }
+  
+  function openOfficeStudentAttendance() {
+    setOfficePage("studentAttendance");
+  }
+  
+  function openOfficeStudentGradebook() {
+    setOfficePage("studentGradebook");
+  }
+  
+  function openOfficeStudentPersonalData() {
+    setOfficePage("studentPersonalData");
   }
 
   if (!currentUser) {
@@ -378,6 +395,39 @@ function App() {
         />
       );
     }
+    if (officePage === "studentDetails" && selectedOfficeStudentId) {
+      return (
+        <OfficeStudentDetailsPage
+          user={currentUser}
+          studentId={selectedOfficeStudentId}
+          onLogout={handleLogout}
+          onBack={() => setOfficePage("students")}
+          onOpenStudentAttendance={openOfficeStudentAttendance}
+          onOpenStudentGradebook={openOfficeStudentGradebook}
+          onOpenStudentPersonalData={openOfficeStudentPersonalData}
+          onOpenResits={() => setOfficePage("resits")}
+          onOpenAttendance={() => setOfficePage("attendanceDisciplines")}
+          onOpenFinalSheets={() => setOfficePage("finalSheetsDisciplines")}
+          onOpenStudents={() => setOfficePage("students")}
+          onOpenAnalytics={() => setOfficePage("analytics")}
+        />
+      );
+    }
+    if (officePage === "studentAttendance" && selectedOfficeStudentId) {
+      return (
+        <OfficeStudentAttendanceSummaryPage
+          user={currentUser}
+          studentId={selectedOfficeStudentId}
+          onLogout={handleLogout}
+          onBack={() => setOfficePage("studentDetails")}
+          onOpenResits={() => setOfficePage("resits")}
+          onOpenAttendance={() => setOfficePage("attendanceDisciplines")}
+          onOpenFinalSheets={() => setOfficePage("finalSheetsDisciplines")}
+          onOpenStudents={() => setOfficePage("students")}
+          onOpenAnalytics={() => setOfficePage("analytics")}
+        />
+      );
+    }
     if (officePage === "studentDetails") {
       return (
         <div className="schedule-layout">
@@ -394,6 +444,49 @@ function App() {
     
             <div className="schedule-state">
               Экран карточки студента №{selectedOfficeStudentId} подключим следующим шагом.
+            </div>
+          </main>
+        </div>
+      );
+    }
+    if (officePage === "studentGradebook" && selectedOfficeStudentId) {
+      return (
+        <div className="schedule-layout">
+          <main className="schedule-content">
+            <button
+              className="details-back-button"
+              type="button"
+              onClick={() => setOfficePage("studentDetails")}
+            >
+              ← Назад к студенту
+            </button>
+    
+            <h1>Студенты / ведомость</h1>
+    
+            <div className="schedule-state">
+              Экран ведомости выбранного студента подключим следующим шагом.
+            </div>
+          </main>
+        </div>
+      );
+    }
+    
+    if (officePage === "studentPersonalData" && selectedOfficeStudentId) {
+      return (
+        <div className="schedule-layout">
+          <main className="schedule-content">
+            <button
+              className="details-back-button"
+              type="button"
+              onClick={() => setOfficePage("studentDetails")}
+            >
+              ← Назад к студенту
+            </button>
+    
+            <h1>Студенты / личные данные</h1>
+    
+            <div className="schedule-state">
+              Экран личных данных выбранного студента подключим следующим шагом.
             </div>
           </main>
         </div>
