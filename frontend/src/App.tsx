@@ -12,6 +12,7 @@ import { StudentDisciplineDetailsPage } from "./pages/StudentDisciplineDetailsPa
 import { StudentAttendancePage } from "./pages/StudentAttendancePage";
 import { StudentGradebookPage } from "./pages/StudentGradebookPage";
 import { StudentAnalyticsPage } from "./pages/StudentAnalyticsPage";
+import { OfficeResitsPage } from "./pages/OfficeResitsPage";
 import type { LoginResponse } from "./api";
 
 type TeacherPage =
@@ -30,23 +31,36 @@ type StudentPage =
   | "gradebook"
   | "analytics";
 
+type OfficePage =
+  | "resits"
+  | "resitGroups"
+  | "attendance"
+  | "finalSheets"
+  | "students"
+  | "analytics";
+
 function App() {
   const [currentUser, setCurrentUser] = useState<LoginResponse | null>(null);
 
   const [teacherPage, setTeacherPage] = useState<TeacherPage>("schedule");
   const [studentPage, setStudentPage] = useState<StudentPage>("schedule");
+  const [officePage, setOfficePage] = useState<OfficePage>("resits");
 
   const [selectedDisciplineId, setSelectedDisciplineId] = useState<number | null>(
     null
   );
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
+  const [selectedOfficeDisciplineId, setSelectedOfficeDisciplineId] =
+    useState<number | null>(null);
 
   function handleLogout() {
     setCurrentUser(null);
     setTeacherPage("schedule");
     setStudentPage("schedule");
+    setOfficePage("resits");
     setSelectedDisciplineId(null);
     setSelectedGroupId(null);
+    setSelectedOfficeDisciplineId(null);
   }
 
   function openTeacherDisciplineDetails(disciplineId: number) {
@@ -129,11 +143,141 @@ function App() {
     setStudentPage("analytics");
   }
 
+  function openOfficeResitGroups(disciplineId: number) {
+    setSelectedOfficeDisciplineId(disciplineId);
+    setOfficePage("resitGroups");
+  }
+
   if (!currentUser) {
     return <LoginPage onLogin={setCurrentUser} />;
   }
 
   const normalizedRole = currentUser.role?.trim().toLowerCase();
+
+  if (normalizedRole === "office_staff") {
+    if (officePage === "resitGroups") {
+      return (
+        <div className="schedule-layout">
+          <main className="schedule-content">
+            <button
+              className="details-back-button"
+              type="button"
+              onClick={() => setOfficePage("resits")}
+            >
+              ← Назад к дисциплинам
+            </button>
+
+            <h1>Группы по дисциплине</h1>
+
+            <div className="schedule-state">
+              Экран групп для дисциплины №{selectedOfficeDisciplineId} подключим
+              следующим шагом.
+            </div>
+          </main>
+        </div>
+      );
+    }
+
+    if (officePage === "attendance") {
+      return (
+        <div className="schedule-layout">
+          <main className="schedule-content">
+            <button
+              className="details-back-button"
+              type="button"
+              onClick={() => setOfficePage("resits")}
+            >
+              ← Назад
+            </button>
+
+            <h1>Посещаемость</h1>
+
+            <div className="schedule-state">
+              Экран просмотра посещаемости учебного офиса подключим позже.
+            </div>
+          </main>
+        </div>
+      );
+    }
+
+    if (officePage === "finalSheets") {
+      return (
+        <div className="schedule-layout">
+          <main className="schedule-content">
+            <button
+              className="details-back-button"
+              type="button"
+              onClick={() => setOfficePage("resits")}
+            >
+              ← Назад
+            </button>
+
+            <h1>Итоговые ведомости</h1>
+
+            <div className="schedule-state">
+              Экран итоговых ведомостей учебного офиса подключим позже.
+            </div>
+          </main>
+        </div>
+      );
+    }
+
+    if (officePage === "students") {
+      return (
+        <div className="schedule-layout">
+          <main className="schedule-content">
+            <button
+              className="details-back-button"
+              type="button"
+              onClick={() => setOfficePage("resits")}
+            >
+              ← Назад
+            </button>
+
+            <h1>Студенты</h1>
+
+            <div className="schedule-state">
+              Экран списка студентов учебного офиса подключим позже.
+            </div>
+          </main>
+        </div>
+      );
+    }
+
+    if (officePage === "analytics") {
+      return (
+        <div className="schedule-layout">
+          <main className="schedule-content">
+            <button
+              className="details-back-button"
+              type="button"
+              onClick={() => setOfficePage("resits")}
+            >
+              ← Назад
+            </button>
+
+            <h1>Модуль аналитики</h1>
+
+            <div className="schedule-state">
+              BI-модуль учебного офиса подключим позже.
+            </div>
+          </main>
+        </div>
+      );
+    }
+
+    return (
+      <OfficeResitsPage
+        user={currentUser}
+        onLogout={handleLogout}
+        onSelectDiscipline={openOfficeResitGroups}
+        onOpenAttendance={() => setOfficePage("attendance")}
+        onOpenFinalSheets={() => setOfficePage("finalSheets")}
+        onOpenStudents={() => setOfficePage("students")}
+        onOpenAnalytics={() => setOfficePage("analytics")}
+      />
+    );
+  }
 
   if (normalizedRole === "student") {
     if (studentPage === "disciplines") {
@@ -326,9 +470,11 @@ function App() {
     <div className="schedule-layout">
       <main className="schedule-content">
         <h1>Вход выполнен</h1>
+
         <div className="schedule-state">
           Для этой роли экран пока находится в разработке.
         </div>
+
         <button className="logout-button" type="button" onClick={handleLogout}>
           Выйти
         </button>

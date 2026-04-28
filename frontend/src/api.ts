@@ -704,3 +704,33 @@ export type LoginRequest = {
   
     return response.json();
   }
+  export type OfficeProgramOption = {
+    idProgram: number;
+    programName: string;
+  };
+  
+  export type OfficeResitDiscipline = {
+    idDiscipline: number;
+    disciplineName: string;
+    pudUrl?: string | null;
+    programs: OfficeProgramOption[];
+    courseNos: number[];
+    moduleNos: number[];
+    groupsCount: number;
+    studentsCount: number;
+    retakeStudentsCount: number;
+  };
+  
+  export async function getOfficeResitDisciplines(
+    idUser: number
+  ): Promise<OfficeResitDiscipline[]> {
+    const response = await fetch(
+      `${API_URL}/api/users/${idUser}/office/resit-disciplines`
+    );
+  
+    if (!response.ok) {
+      throw new Error("Не удалось загрузить дисциплины для пересдач");
+    }
+  
+    return response.json();
+  }
