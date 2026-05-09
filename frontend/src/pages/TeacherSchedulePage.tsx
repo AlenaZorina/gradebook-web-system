@@ -2,6 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import type { LoginResponse, TeacherScheduleItem } from "../api";
 import { getTeacherSchedule } from "../api";
 import "./TeacherSchedulePage.css";
+import {
+  getTeacherInitials,
+  getTeacherShortName,
+  getTeacherSubtitle
+} from "../utils/teacherProfile";
 
 type TeacherSchedulePageProps = {
   user: LoginResponse;
@@ -47,21 +52,9 @@ function formatDateRange(items: TeacherScheduleItem[]) {
   return `с ${format(first)} по ${format(last)}`;
 }
 
-function getTeacherInitials(user: LoginResponse) {
-  const surnameInitial = user.surname?.trim()?.[0] ?? "";
-  const nameInitial = user.name?.trim()?.[0] ?? "";
 
-  return `${surnameInitial}${nameInitial}`.toUpperCase();
-}
 
-function getTeacherShortName(user: LoginResponse) {
-  const nameInitial = user.name?.trim()?.[0] ? `${user.name.trim()[0]}.` : "";
-  const fathernameInitial = user.fathername?.trim()?.[0]
-    ? `${user.fathername.trim()[0]}.`
-    : "";
 
-  return `${user.surname} ${nameInitial}${fathernameInitial}`;
-}
 
 function ScheduleIcon() {
   return (
@@ -305,10 +298,7 @@ export function TeacherSchedulePage({
       .slice(0, 1);
   }, [schedule]);
 
-  const teacherPosition =
-    schedule[0]?.position && schedule[0]?.department
-      ? `${schedule[0].position} ${schedule[0].department}`
-      : "Преподаватель кафедры";
+
 
   return (
     <main className="schedule-layout">
@@ -321,7 +311,7 @@ export function TeacherSchedulePage({
 
             <div>
               <p>{getTeacherShortName(user)}</p>
-              <span>{teacherPosition}</span>
+              <span>{getTeacherSubtitle(user)}</span>
             </div>
           </div>
 

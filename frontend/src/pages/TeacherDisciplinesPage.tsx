@@ -3,22 +3,13 @@ import type { LoginResponse, TeacherDiscipline } from "../api";
 import { getTeacherDisciplines } from "../api";
 import "./TeacherSchedulePage.css";
 import "./TeacherDisciplinesPage.css";
+import {
+  getTeacherInitials,
+  getTeacherShortName,
+  getTeacherSubtitle
+} from "../utils/teacherProfile";
 
-function getTeacherInitials(user: LoginResponse) {
-  const surnameInitial = user.surname?.trim()?.[0] ?? "";
-  const nameInitial = user.name?.trim()?.[0] ?? "";
 
-  return `${surnameInitial}${nameInitial}`.toUpperCase();
-}
-
-function getTeacherShortName(user: LoginResponse) {
-  const nameInitial = user.name?.trim()?.[0] ? `${user.name.trim()[0]}.` : "";
-  const fathernameInitial = user.fathername?.trim()?.[0]
-    ? `${user.fathername.trim()[0]}.`
-    : "";
-
-  return `${user.surname} ${nameInitial}${fathernameInitial}`;
-}
 
 function ScheduleIcon() {
   return (
@@ -208,7 +199,7 @@ export function TeacherDisciplinesPage({
 
             <div>
               <p>{getTeacherShortName(user)}</p>
-              <span>Преподаватель кафедры</span>
+              <span>{getTeacherSubtitle(user)}</span>
             </div>
           </div>
 
