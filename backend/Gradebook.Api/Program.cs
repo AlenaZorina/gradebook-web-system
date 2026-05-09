@@ -1,9 +1,13 @@
 using DotNetEnv;
 using Gradebook.Api.Services;
+using Gradebook.Api.Services.ScheduleImport;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var envPath = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "..", "..", ".env"));
+var envPath = Path.GetFullPath(
+    Path.Combine(Directory.GetCurrentDirectory(), "..", "..", ".env")
+);
+
 if (File.Exists(envPath))
 {
     Env.Load(envPath);
@@ -30,7 +34,7 @@ builder.Services.AddCors(options =>
     });
 });
 
-builder.Services.AddHttpClient<SupabaseRestClient>(client =>
+builder.Services.AddHttpClient(nameof(SupabaseRestClient), client =>
 {
     client.Timeout = TimeSpan.FromSeconds(30);
 });
@@ -39,8 +43,21 @@ builder.Services.AddSingleton(sp =>
 {
     var httpClientFactory = sp.GetRequiredService<IHttpClientFactory>();
     var httpClient = httpClientFactory.CreateClient(nameof(SupabaseRestClient));
-    return new SupabaseRestClient(httpClient, supabaseUrl!, supabaseSecretKey!);
+
+    return new SupabaseRestClient(
+        httpClient,
+        supabaseUrl!,
+        supabaseSecretKey!
+    );
 });
+
+builder.Services.AddHttpClient<HseScheduleCrawler>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(60);
+});
+
+builder.Services.AddScoped<HseScheduleExcelParser>();
+builder.Services.AddScoped<HseScheduleImportService>();
 
 var app = builder.Build();
 
