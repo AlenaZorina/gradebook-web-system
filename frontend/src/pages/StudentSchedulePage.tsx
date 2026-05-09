@@ -179,20 +179,20 @@ export function StudentSchedulePage({
 
   const weeks = useMemo(() => {
     const grouped = new Map<string, StudentScheduleItem[]>();
-
+  
     schedule.forEach((item) => {
       const key = `${item.moduleNo ?? "-"}-${item.weekNo ?? "-"}`;
-
+  
       if (!grouped.has(key)) {
         grouped.set(key, []);
       }
-
+  
       grouped.get(key)!.push(item);
     });
-
+  
     return Array.from(grouped.entries()).map(([key, items]) => {
       const first = items[0];
-
+  
       return {
         key,
         moduleNo: first.moduleNo,

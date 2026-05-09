@@ -262,28 +262,47 @@ export function TeacherSchedulePage({
 
   const weeks = useMemo(() => {
     const grouped = new Map<string, TeacherScheduleItem[]>();
-
+  
     schedule.forEach((item) => {
-      const key = `${item.moduleNo ?? "-"}-${item.weekNo ?? "-"}`;
-
-      if (!grouped.has(key)) {
-        grouped.set(key, []);
+      
+  
+      const monday = new Date(item.lessonDate);
+      const day = monday.getDay() === 0 ? 7 : monday.getDay();
+      monday.setDate(monday.getDate() - day + 1);
+  
+      const weekKey = `${item.moduleNo ?? "-"}-${item.weekNo ?? "-"}-${monday.toISOString().slice(0, 10)}`;
+  
+      if (!grouped.has(weekKey)) {
+        grouped.set(weekKey, []);
       }
-
-      grouped.get(key)!.push(item);
+  
+      grouped.get(weekKey)!.push(item);
     });
-
-    return Array.from(grouped.entries()).map(([key, items]) => {
-      const first = items[0];
-
+  
+    const allWeeks = Array.from(grouped.entries()).map(([key, items]) => {
+      const sortedItems = [...items].sort(
+        (a, b) =>
+          new Date(a.lessonDate).getTime() - new Date(b.lessonDate).getTime()
+      );
+  
+      const first = sortedItems[0];
+  
       return {
         key,
         moduleNo: first.moduleNo,
         weekNo: first.weekNo,
-        dateRange: formatDateRange(items),
-        items
+        dateRange: formatDateRange(sortedItems),
+        firstDate: first.lessonDate,
+        items: sortedItems
       };
     });
+  
+    return allWeeks
+      .sort(
+        (a, b) =>
+          new Date(b.firstDate).getTime() - new Date(a.firstDate).getTime()
+      )
+      .slice(0, 1);
   }, [schedule]);
 
   const teacherPosition =
