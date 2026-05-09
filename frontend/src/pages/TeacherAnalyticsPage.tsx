@@ -3,6 +3,11 @@ import type { LoginResponse, TeacherAnalytics, TeacherDiscipline } from "../api"
 import { getTeacherAnalytics, getTeacherDisciplines } from "../api";
 import "./TeacherSchedulePage.css";
 import "./TeacherAnalyticsPage.css";
+import {
+  getTeacherInitials,
+  getTeacherShortName,
+  getTeacherSubtitle
+} from "../utils/teacherProfile";
 
 type TeacherAnalyticsPageProps = {
   user: LoginResponse;
@@ -128,16 +133,16 @@ export function TeacherAnalyticsPage({
   return (
     <main className="schedule-layout">
       <aside className="app-sidebar">
-        <div className="user-block">
-          <div className="avatar-placeholder" />
-          <div>
-            <p>
-              {user.surname} {user.name[0]}.
-              {user.fathername ? `${user.fathername[0]}.` : ""}
-            </p>
-            <span>Преподаватель кафедры ИТБ</span>
-          </div>
+      <div className="user-block">
+        <div className="avatar-placeholder avatar-initials">
+          {getTeacherInitials(user)}
         </div>
+
+        <div>
+          <p>{getTeacherShortName(user)}</p>
+          <span>{getTeacherSubtitle(user)}</span>
+        </div>
+      </div>
 
         <div className="sidebar-section-title">ОБЩЕЕ</div>
 
