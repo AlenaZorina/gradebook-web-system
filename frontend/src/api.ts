@@ -1309,3 +1309,47 @@ export type LoginRequest = {
   
     return response.json();
   }
+  export type HseScheduleImportResult = {
+    foundLinksCount: number;
+    downloadedFilesCount: number;
+    createdImportsCount: number;
+    duplicateFilesCount: number;
+    addedEntriesCount: number;
+    skippedEntriesCount: number;
+    createdDisciplinesCount: number;
+    createdTeachersCount: number;
+    createdGroupsCount: number;
+    createdAssignmentsCount: number;
+    createdAttendanceSessionsCount: number;
+    warnings: string[];
+  };
+  
+  export async function importHseSchedule(
+    idUser: number,
+    moduleNo: number,
+    onlyLatest: boolean
+  ): Promise<HseScheduleImportResult> {
+    const response = await fetch(
+      `${API_URL}/api/users/${idUser}/office/schedule/import-hse`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          moduleNo,
+          onlyLatest
+        })
+      }
+    );
+  
+    if (!response.ok) {
+      const text = await response.text();
+  
+      throw new Error(
+        text || "Не удалось импортировать расписание с сайта ВШЭ"
+      );
+    }
+  
+    return response.json();
+  }
