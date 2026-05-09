@@ -32,11 +32,12 @@ public class HseScheduleCrawler
         var doc = new HtmlDocument();
         doc.LoadHtml(pageHtml);
 
-        var links = doc.DocumentNode.SelectNodes("//a[@href]") ?? Enumerable.Empty<HtmlNode>();
+        var linkNodes = doc.DocumentNode.SelectNodes("//a[@href]")
+            ?? Enumerable.Empty<HtmlNode>();
 
         var foundLinks = new List<HseScheduleFile>();
 
-        foreach (var link in links)
+        foreach (var link in linkNodes)
         {
             var title = NormalizeText(WebUtility.HtmlDecode(link.InnerText));
 
@@ -61,7 +62,13 @@ public class HseScheduleCrawler
 
             var fileUrl = BuildAbsoluteUrl(href);
 
+            if (!IsHttpUrl(fileUrl))
+            {
+                continue;
+            }
+
             var weekNo = int.Parse(match.Groups["week"].Value);
+
             var weekStart = DateOnly.ParseExact(
                 match.Groups["date"].Value,
                 "dd.MM.yyyy",
@@ -93,32 +100,74 @@ public class HseScheduleCrawler
 
         foreach (var file in foundLinks)
         {
-            file.Bytes = await _httpClient.GetByteArrayAsync(file.Url, cancellationToken);
+            file.Bytes = await DownloadFileAsync(file.Url, cancellationToken);
             file.FileHash = Convert.ToHexString(SHA256.HashData(file.Bytes)).ToLowerInvariant();
         }
 
         return foundLinks;
     }
 
+    private async Task<byte[]> DownloadFileAsync(
+        string url,
+        CancellationToken cancellationToken
+    )
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, url);
+
+        request.Headers.UserAgent.ParseAdd(
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+        );
+
+        request.Headers.Referrer = new Uri(TimetablePageUrl);
+
+        using var response = await _httpClient.SendAsync(request, cancellationToken);
+
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadAsByteArrayAsync(cancellationToken);
+    }
+
     private static string BuildAbsoluteUrl(string href)
     {
-        if (Uri.TryCreate(href, UriKind.Absolute, out var absoluteUri))
+        href = WebUtility.HtmlDecode(href).Trim();
+
+        if (href.StartsWith("//", StringComparison.Ordinal))
         {
-            return absoluteUri.ToString();
+            return $"https:{href}";
         }
 
-        var baseUri = new Uri(TimetablePageUrl);
-        return new Uri(baseUri, href).ToString();
+        if (href.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
+            || href.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+        {
+            return href;
+        }
+
+        if (href.StartsWith("/"))
+        {
+            var baseUri = new Uri(TimetablePageUrl);
+            return new Uri(baseUri, href).ToString();
+        }
+
+        var fallbackBaseUri = new Uri(TimetablePageUrl);
+        return new Uri(fallbackBaseUri, href).ToString();
+    }
+
+    private static bool IsHttpUrl(string url)
+    {
+        return Uri.TryCreate(url, UriKind.Absolute, out var uri)
+            && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
     }
 
     private static string BuildFileName(string fileUrl, int weekNo, DateOnly weekStart)
     {
-        var uri = new Uri(fileUrl);
-        var fileName = Path.GetFileName(uri.LocalPath);
-
-        if (!string.IsNullOrWhiteSpace(fileName))
+        if (Uri.TryCreate(fileUrl, UriKind.Absolute, out var uri))
         {
-            return fileName;
+            var fileName = Path.GetFileName(uri.LocalPath);
+
+            if (!string.IsNullOrWhiteSpace(fileName))
+            {
+                return WebUtility.UrlDecode(fileName);
+            }
         }
 
         return $"hse-schedule-week-{weekNo}-{weekStart:yyyy-MM-dd}.xls";
