@@ -8,4 +8,7 @@ public class AuthLoginResponseDto
     public string Name { get; set; } = string.Empty;
     public string Surname { get; set; } = string.Empty;
     public string? Fathername { get; set; }
+    public string? Department { get; set; }
+    public string? Position { get; set; }
 }
+

@@ -27,11 +27,10 @@ public class AuthController : ControllerBase
 
         var login = Uri.EscapeDataString(request.Login.Trim());
 
-        var query =
-            "user_auth" +
-            "?select=id_user,login,password_hash,users(id_user,name,surname,fathername,role(role_name))" +
-            $"&login=eq.{login}" +
-            "&limit=1";
+        var query = "user_auth"
+    + "?select=id_user,login,password_hash,users(id_user,name,surname,fathername,role(role_name),teachers(id_teacher,department,position))"
+    + $"&login=eq.{login}"
+    + "&limit=1";
 
         var result = await _supabase.GetAsync(query);
 
@@ -71,15 +70,19 @@ public class AuthController : ControllerBase
             return StatusCode(500, new { message = "У пользователя не найдены данные профиля или роли" });
         }
 
+        var teacherProfile = record.User.Teacher;
+
         var response = new AuthLoginResponseDto
-        {
-            IdUser = record.User.IdUser,
-            Login = record.Login,
-            Role = record.User.Role.RoleName,
-            Name = record.User.Name,
-            Surname = record.User.Surname,
-            Fathername = record.User.Fathername
-        };
+       {
+    IdUser = record.User.IdUser,
+    Login = record.Login,
+    Role = record.User.Role.RoleName,
+    Name = record.User.Name,
+    Surname = record.User.Surname,
+    Fathername = record.User.Fathername,
+    Department = teacherProfile?.Department,
+    Position = teacherProfile?.Position
+};
 
         return Ok(response);
     }
@@ -115,6 +118,9 @@ public class AuthController : ControllerBase
 
         [JsonPropertyName("role")]
         public SupabaseRole? Role { get; set; }
+
+        [JsonPropertyName("teachers")]
+        public SupabaseTeacher? Teacher { get; set; }
     }
 
     private class SupabaseRole
@@ -122,4 +128,16 @@ public class AuthController : ControllerBase
         [JsonPropertyName("role_name")]
         public string RoleName { get; set; } = string.Empty;
     }
+
+    private class SupabaseTeacher
+{
+    [JsonPropertyName("id_teacher")]
+    public int IdTeacher { get; set; }
+
+    [JsonPropertyName("department")]
+    public string? Department { get; set; }
+
+    [JsonPropertyName("position")]
+    public string? Position { get; set; }
+}
 }
