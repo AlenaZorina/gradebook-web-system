@@ -19,6 +19,7 @@ type OfficeAttendanceGroupsPageProps = {
 function getOfficeInitials(user: LoginResponse) {
   const surnameInitial = user.surname?.trim()?.[0] ?? "";
   const nameInitial = user.name?.trim()?.[0] ?? "";
+
   return `${surnameInitial}${nameInitial}`.toUpperCase();
 }
 
@@ -141,6 +142,29 @@ function formatPercent(value: number | null) {
   return `${value}%`;
 }
 
+function pluralize(value: number, one: string, few: string, many: string) {
+  const absValue = Math.abs(value) % 100;
+  const lastDigit = absValue % 10;
+
+  if (absValue > 10 && absValue < 20) {
+    return many;
+  }
+
+  if (lastDigit === 1) {
+    return one;
+  }
+
+  if (lastDigit >= 2 && lastDigit <= 4) {
+    return few;
+  }
+
+  return many;
+}
+
+function formatCount(value: number, one: string, few: string, many: string) {
+  return `${value} ${pluralize(value, one, few, many)}`;
+}
+
 export function OfficeAttendanceGroupsPage({
   user,
   disciplineId,
@@ -246,7 +270,7 @@ export function OfficeAttendanceGroupsPage({
       </aside>
 
       <main className="office-attendance-groups-content">
-        <button className="details-back-button" type="button" onClick={onBack}>
+        <button className="office-attendance-back-link" type="button" onClick={onBack}>
           ← Назад к дисциплинам
         </button>
 
@@ -255,12 +279,12 @@ export function OfficeAttendanceGroupsPage({
 
           {headerInfo && (
             <div className="office-attendance-groups-heading">
-              <div>
+              <div className="office-attendance-discipline-title-row">
                 <h2>{headerInfo.disciplineName}</h2>
-                <p>{headerInfo.teacherShortName}</p>
+                <span>{headerInfo.courseNo} курс</span>
               </div>
 
-              <span>{headerInfo.courseNo} курс</span>
+              <p>{headerInfo.teacherShortName}</p>
             </div>
           )}
         </section>
@@ -282,16 +306,28 @@ export function OfficeAttendanceGroupsPage({
                 type="button"
                 onClick={() => onSelectGroup(group.idGroup)}
               >
-                <span>
-                  <h3>Посещаемость &#40;ведомость&#41;</h3>
-                  <p>Группа: {group.groupName}</p>
+                <span className="office-attendance-group-card-info">
+                  <h3>{group.groupName}</h3>
+
                   <small>
-                    {group.studentsCount} студентов · {group.sessionsCount} занятий · посещ.{" "}
-                    {formatPercent(group.attendancePercent)}
+                    {formatCount(
+                      group.studentsCount,
+                      "студент",
+                      "студента",
+                      "студентов"
+                    )}{" "}
+                    ·{" "}
+                    {formatCount(
+                      group.sessionsCount,
+                      "занятие",
+                      "занятия",
+                      "занятий"
+                    )}{" "}
+                    · посещаемость {formatPercent(group.attendancePercent)}
                   </small>
                 </span>
 
-                <strong>›</strong>
+                <span className="office-attendance-group-chevron" aria-hidden="true" />
               </button>
             ))}
           </section>

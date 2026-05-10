@@ -1,134 +1,257 @@
 .office-attendance-groups-content {
-    height: 100vh;
-    padding: 52px 48px 70px;
-    overflow: auto;
-    box-sizing: border-box;
+  height: 100vh;
+  padding: 52px 48px 70px;
+  overflow-y: auto;
+  box-sizing: border-box;
+  font-family: "Manrope", system-ui, sans-serif;
+  color: #111827;
+}
+
+.office-attendance-back-link {
+  width: fit-content;
+  border: none;
+  background: transparent;
+  color: #7b87a5;
+  font-family: "Manrope", system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+  margin: 0 0 8px;
+  padding: 0;
+  transition: 0.18s ease;
+}
+
+.office-attendance-back-link:hover {
+  color: #2563eb;
+}
+
+.office-attendance-groups-hero {
+  width: min(100%, 1180px);
+  margin-bottom: 30px;
+}
+
+.office-attendance-groups-hero h1 {
+  margin: 0 0 34px;
+  color: #111827;
+  font-size: 34px;
+  line-height: 1.1;
+  font-weight: 950;
+  letter-spacing: -0.05em;
+}
+
+.office-attendance-groups-heading {
+  display: grid;
+  gap: 8px;
+}
+
+.office-attendance-discipline-title-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.office-attendance-discipline-title-row h2 {
+  margin: 0;
+  color: #111827;
+  font-size: 26px;
+  line-height: 1.12;
+  font-weight: 950;
+  letter-spacing: -0.04em;
+}
+
+.office-attendance-discipline-title-row span {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid #dce4f5;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 12px 28px rgba(27, 46, 94, 0.06);
+  padding: 0 18px;
+  color: #39445c;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.office-attendance-groups-heading p {
+  margin: 0;
+  color: #39445c;
+  font-size: 16px;
+  font-weight: 750;
+}
+
+.office-attendance-groups-list {
+  width: min(100%, 1180px);
+  display: grid;
+  gap: 16px;
+  margin-top: 26px;
+}
+
+.office-attendance-group-card {
+  width: 100%;
+  min-height: 98px;
+  border: 1px solid rgba(255, 255, 255, 0.94);
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow: 0 18px 46px rgba(27, 46, 94, 0.07);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 22px;
+  padding: 22px 30px;
+  text-align: left;
+  cursor: pointer;
+  font-family: "Manrope", system-ui, sans-serif;
+  box-sizing: border-box;
+  backdrop-filter: blur(14px);
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease,
+    background 0.18s ease;
+}
+
+.office-attendance-group-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(37, 99, 235, 0.22);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 24px 60px rgba(27, 46, 94, 0.11);
+}
+
+.office-attendance-group-card:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.22);
+  outline-offset: 4px;
+}
+
+.office-attendance-group-card-info {
+  min-width: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.office-attendance-group-card h3 {
+  margin: 0;
+  color: #111827;
+  font-size: 22px;
+  line-height: 1.2;
+  font-weight: 950;
+  letter-spacing: -0.035em;
+}
+
+.office-attendance-group-card small {
+  display: block;
+  color: #7b87a5;
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.office-attendance-group-chevron {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 auto;
+  border-right: 3px solid #64748b;
+  border-bottom: 3px solid #64748b;
+  transform: rotate(-45deg);
+  margin-right: 4px;
+  transition: 0.18s ease;
+}
+
+.office-attendance-group-card:hover .office-attendance-group-chevron {
+  border-color: #2563eb;
+  transform: translateX(3px) rotate(-45deg);
+}
+
+/* sidebar safety styles */
+
+.avatar-initials {
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, #4f74ff 0%, #8da6ff 100%);
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  box-shadow: 0 14px 28px rgba(37, 99, 235, 0.22);
+}
+
+.nav-icon,
+.nav-item > span:first-child {
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  border-radius: 11px;
+  background: rgba(167, 181, 216, 0.5);
+  color: inherit;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  transition: 0.18s ease;
+}
+
+.nav-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.nav-item.active .nav-icon,
+.nav-item.active > span:first-child {
+  background: linear-gradient(135deg, #2563eb, #6f8fff);
+  color: #ffffff;
+}
+
+.sidebar-main {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.logout-button {
+  margin-top: auto;
+}
+
+.logout-button .nav-icon {
+  background: rgba(239, 68, 68, 0.08);
+}
+
+@media (max-width: 1180px) {
+  .office-attendance-groups-content {
+    padding: 44px 32px 60px;
   }
-  
-  .office-attendance-groups-hero {
-    margin-bottom: 30px;
-  }
-  
-  .office-attendance-groups-hero h1 {
-    margin: 0 0 42px;
-    color: #111827;
-    font-size: 34px;
-    line-height: 1.1;
-    font-weight: 900;
-    letter-spacing: -0.05em;
-  }
-  
-  .office-attendance-groups-heading {
-    display: flex;
-    align-items: center;
-    gap: 24px;
-  }
-  
-  .office-attendance-groups-heading h2 {
-    margin: 0 0 8px;
-    color: #111827;
-    font-size: 24px;
-    line-height: 1.15;
-    font-weight: 900;
-    letter-spacing: -0.04em;
-  }
-  
-  .office-attendance-groups-heading p {
-    margin: 0;
-    color: #39445c;
-    font-size: 16px;
-    font-weight: 750;
-  }
-  
-  .office-attendance-groups-heading > span {
-    min-height: 38px;
-    display: inline-flex;
-    align-items: center;
-    border-radius: 999px;
-    border: 1px solid #dce4f5;
-    background: rgba(255, 255, 255, 0.92);
-    box-shadow: 0 12px 28px rgba(27, 46, 94, 0.06);
-    padding: 0 18px;
-    color: #39445c;
-    font-size: 14px;
-    font-weight: 900;
-  }
-  
+
+  .office-attendance-groups-hero,
   .office-attendance-groups-list {
-    width: min(100%, 980px);
-    display: grid;
-    gap: 14px;
-    margin-top: 26px;
-  }
-  
-  .office-attendance-group-card {
     width: 100%;
-    min-height: 92px;
-    border: 1px solid rgba(225, 231, 245, 0.95);
-    border-radius: 28px;
-    background: rgba(255, 255, 255, 0.88);
-    box-shadow: 0 18px 46px rgba(27, 46, 94, 0.07);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 18px;
-    padding: 18px 28px;
-    text-align: left;
-    cursor: pointer;
-    font-family: "Manrope", system-ui, sans-serif;
-    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
   }
-  
-  .office-attendance-group-card:hover {
-    transform: translateY(-2px);
-    border-color: rgba(37, 99, 235, 0.22);
-    box-shadow: 0 24px 60px rgba(27, 46, 94, 0.11);
+}
+
+@media (max-width: 780px) {
+  .office-attendance-groups-content {
+    height: auto;
+    padding: 32px 20px 50px;
   }
-  
+
+  .office-attendance-groups-hero h1 {
+    font-size: 30px;
+    margin-bottom: 26px;
+  }
+
+  .office-attendance-discipline-title-row {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .office-attendance-discipline-title-row h2 {
+    font-size: 24px;
+  }
+
+  .office-attendance-group-card {
+    min-height: 88px;
+    padding: 20px 22px;
+  }
+
   .office-attendance-group-card h3 {
-    margin: 0 0 6px;
-    color: #111827;
     font-size: 20px;
-    line-height: 1.2;
-    font-weight: 900;
-    letter-spacing: -0.03em;
   }
-  
-  .office-attendance-group-card p {
-    margin: 0;
-    color: #39445c;
-    font-size: 14px;
-    font-weight: 800;
-  }
-  
-  .office-attendance-group-card small {
-    display: block;
-    margin-top: 6px;
-    color: #7b87a5;
-    font-size: 12px;
-    font-weight: 850;
-  }
-  
-  .office-attendance-group-card strong {
-    color: #5b6578;
-    font-size: 42px;
-    line-height: 1;
-    font-weight: 650;
-  }
-  
-  @media (max-width: 780px) {
-    .office-attendance-groups-content {
-      height: auto;
-      padding: 32px 20px 50px;
-    }
-  
-    .office-attendance-groups-heading {
-      flex-direction: column;
-      align-items: flex-start;
-    }
-  
-    .office-attendance-groups-hero h1 {
-      font-size: 30px;
-      margin-bottom: 30px;
-    }
-  }
+}
