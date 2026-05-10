@@ -19,6 +19,7 @@ type OfficeResitGroupsPageProps = {
 function getOfficeInitials(user: LoginResponse) {
   const surnameInitial = user.surname?.trim()?.[0] ?? "";
   const nameInitial = user.name?.trim()?.[0] ?? "";
+
   return `${surnameInitial}${nameInitial}`.toUpperCase();
 }
 
@@ -27,6 +28,7 @@ function getOfficeShortName(user: LoginResponse) {
   const fathernameInitial = user.fathername?.trim()?.[0]
     ? `${user.fathername.trim()[0]}.`
     : "";
+
   return `${user.surname} ${nameInitial}${fathernameInitial}`;
 }
 
@@ -167,6 +169,32 @@ export function OfficeResitGroupsPage({
 
   const headerInfo = useMemo(() => groups[0] ?? null, [groups]);
 
+  const visibleGroups = useMemo(() => {
+    const map = new Map<number, OfficeResitGroup>();
+
+    groups.forEach((group) => {
+      const existing = map.get(group.idGroup);
+
+      if (!existing) {
+        map.set(group.idGroup, group);
+        return;
+      }
+
+      map.set(group.idGroup, {
+        ...existing,
+        retakeStudentsCount: Math.max(
+          existing.retakeStudentsCount,
+          group.retakeStudentsCount
+        ),
+        studentsCount: Math.max(existing.studentsCount, group.studentsCount)
+      });
+    });
+
+    return Array.from(map.values()).sort((a, b) =>
+      a.groupName.localeCompare(b.groupName, "ru")
+    );
+  }, [groups]);
+
   return (
     <div className="schedule-layout">
       <aside className="app-sidebar">
@@ -175,6 +203,7 @@ export function OfficeResitGroupsPage({
             <div className="avatar-placeholder avatar-initials">
               {getOfficeInitials(user)}
             </div>
+
             <div>
               <p>{getOfficeShortName(user)}</p>
               <span>Сотрудник учебного офиса</span>
@@ -236,7 +265,7 @@ export function OfficeResitGroupsPage({
       </aside>
 
       <main className="office-resit-groups-content">
-        <button className="details-back-button" type="button" onClick={onBack}>
+        <button className="office-resit-back-link" type="button" onClick={onBack}>
           ← Назад к дисциплинам
         </button>
 
@@ -245,12 +274,12 @@ export function OfficeResitGroupsPage({
 
           {headerInfo && (
             <div className="office-resit-groups-heading">
-              <div>
+              <div className="office-resit-discipline-title-row">
                 <h2>{headerInfo.disciplineName}</h2>
-                <p>{headerInfo.teacherShortName}</p>
+                <span>{headerInfo.courseNo} курс</span>
               </div>
 
-              <span>{headerInfo.courseNo} курс</span>
+              <p>{headerInfo.teacherShortName}</p>
             </div>
           )}
         </section>
@@ -259,28 +288,29 @@ export function OfficeResitGroupsPage({
 
         {error && <div className="schedule-error">{error}</div>}
 
-        {!isLoading && !error && groups.length === 0 && (
+        {!isLoading && !error && visibleGroups.length === 0 && (
           <div className="schedule-state">Группы по дисциплине не найдены</div>
         )}
 
-        {!isLoading && !error && groups.length > 0 && (
+        {!isLoading && !error && visibleGroups.length > 0 && (
           <section className="office-resit-groups-list">
-            {groups.map((group) => (
+            {visibleGroups.map((group) => (
               <button
                 className="office-resit-group-card"
-                key={`${group.idDiscipline}-${group.idGroup}-${group.idAssignment}`}
+                key={`${group.idDiscipline}-${group.idGroup}`}
                 type="button"
                 onClick={() => onSelectGroup(group.idGroup)}
               >
-                <span>
-                  <h3>Итоговая ведомость</h3>
-                  <p>Группа: {group.groupName}</p>
+                <span className="office-resit-group-card-info">
+                  <h3>{group.groupName}</h3>
+
                   <small>
-                    На пересдачу: {group.retakeStudentsCount} из {group.studentsCount}
+                    На пересдачу: {group.retakeStudentsCount} из{" "}
+                    {group.studentsCount}
                   </small>
                 </span>
 
-                <strong>›</strong>
+                <span className="office-resit-group-chevron" aria-hidden="true" />
               </button>
             ))}
           </section>
