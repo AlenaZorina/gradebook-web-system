@@ -10,13 +10,9 @@ import {
   getTeacherDisciplines,
   updateTeacherAttendance
 } from "../api";
+import { TeacherSidebar } from "../components/TeacherSidebar";
 import "./TeacherSchedulePage.css";
 import "./TeacherAttendancePage.css";
-import {
-  getTeacherInitials,
-  getTeacherShortName,
-  getTeacherSubtitle
-} from "../utils/teacherProfile";
 
 type TeacherAttendancePageProps = {
   user: LoginResponse;
@@ -29,10 +25,6 @@ type TeacherAttendancePageProps = {
   onOpenAnalytics: () => void;
   onBackToDiscipline?: () => void;
 };
-
-function NavIcon({ label }: { label: string }) {
-  return <span className="nav-icon">{label}</span>;
-}
 
 export function TeacherAttendancePage({
   user,
@@ -52,13 +44,16 @@ export function TeacherAttendancePage({
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(
     initialGroupId ?? null
   );
+
   const [attendance, setAttendance] = useState<TeacherAttendance | null>(null);
   const [draftStudents, setDraftStudents] = useState<AttendanceStudent[]>([]);
+
   const [isLoading, setIsLoading] = useState(true);
   const [isAttendanceLoading, setIsAttendanceLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
   const [error, setError] = useState("");
   const [saveMessage, setSaveMessage] = useState("");
-  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     async function loadDisciplines() {
@@ -91,7 +86,9 @@ export function TeacherAttendancePage({
           setSelectedGroupId(initialGroup.idGroup);
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Ошибка загрузки дисциплин");
+        setError(
+          err instanceof Error ? err.message : "Ошибка загрузки дисциплин"
+        );
       } finally {
         setIsLoading(false);
       }
@@ -197,10 +194,13 @@ export function TeacherAttendancePage({
   }
 
   function handleCancel() {
-    if (attendance) {
-      setDraftStudents(attendance.students);
-      setSaveMessage("Изменения отменены.");
+    if (!attendance) {
+      return;
     }
+
+    setDraftStudents(attendance.students);
+    setSaveMessage("Изменения отменены.");
+    setError("");
   }
 
   async function handleSave() {
@@ -240,7 +240,9 @@ export function TeacherAttendancePage({
 
       setSaveMessage("Изменения сохранены в базе.");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Ошибка сохранения посещаемости");
+      setError(
+        err instanceof Error ? err.message : "Ошибка сохранения посещаемости"
+      );
     } finally {
       setIsSaving(false);
     }
@@ -251,7 +253,10 @@ export function TeacherAttendancePage({
       return;
     }
 
-    const header = ["ФИО", ...attendance.sessions.map((session) => session.dateLabel)];
+    const header = [
+      "ФИО",
+      ...attendance.sessions.map((session) => session.dateLabel)
+    ];
 
     const rows = draftStudents.map((student) => [
       student.fullName,
@@ -286,7 +291,9 @@ export function TeacherAttendancePage({
 
   const presentCount = useMemo(() => {
     return draftStudents.reduce((total, student) => {
-      return total + student.marks.filter((mark) => mark.status === "present").length;
+      return (
+        total + student.marks.filter((mark) => mark.status === "present").length
+      );
     }, 0);
   }, [draftStudents]);
 
@@ -300,69 +307,21 @@ export function TeacherAttendancePage({
 
   return (
     <div className="schedule-layout">
-      <aside className="app-sidebar">
-        <div className="sidebar-main">
-          <div className="user-block">
-            <div className="avatar-placeholder avatar-initials">
-              {getTeacherInitials(user)}
-            </div>
-
-            <div>
-              <p>{getTeacherShortName(user)}</p>
-              <span>{getTeacherSubtitle(user)}</span>
-            </div>
-          </div>
-
-          <p className="sidebar-section-title">ОБЩЕЕ</p>
-
-          <nav className="main-nav">
-            <button className="nav-item" type="button" onClick={onOpenSchedule}>
-              <NavIcon label="📅" />
-              Расписание
-            </button>
-
-            <button className="nav-item" type="button" onClick={onOpenDisciplines}>
-              <NavIcon label="▤" />
-              Дисциплины
-            </button>
-
-            <button className="nav-item active" type="button">
-              <NavIcon label="✓" />
-              Посещаемость
-            </button>
-
-            <button
-              className="nav-item"
-              type="button"
-              onClick={() =>
-                onOpenGradebook(
-                  selectedDisciplineId ?? undefined,
-                  selectedGroupId ?? undefined
-                )
-              }
-            >
-              <NavIcon label="▦" />
-              Ведомость
-            </button>
-          </nav>
-
-          <div className="sidebar-divider" />
-
-          <p className="sidebar-section-title">BI-КОНТУР</p>
-
-          <nav className="main-nav">
-            <button className="nav-item" type="button" onClick={onOpenAnalytics}>
-              <NavIcon label="↗" />
-              Модуль аналитики
-            </button>
-          </nav>
-        </div>
-
-        <button className="logout-button" type="button" onClick={onLogout}>
-          <NavIcon label="↪" />
-          Выйти
-        </button>
-      </aside>
+      <TeacherSidebar
+        user={user}
+        activePage="attendance"
+        onLogout={onLogout}
+        onOpenSchedule={onOpenSchedule}
+        onOpenDisciplines={onOpenDisciplines}
+        onOpenAttendance={() => undefined}
+        onOpenGradebook={() =>
+          onOpenGradebook(
+            selectedDisciplineId ?? undefined,
+            selectedGroupId ?? undefined
+          )
+        }
+        onOpenAnalytics={onOpenAnalytics}
+      />
 
       <main className="attendance-content">
         {onBackToDiscipline && selectedDisciplineId && (
@@ -433,7 +392,9 @@ export function TeacherAttendancePage({
           </label>
         </section>
 
-        {isLoading && <div className="attendance-state">Загружаем данные...</div>}
+        {isLoading && (
+          <div className="attendance-state">Загружаем данные...</div>
+        )}
 
         {error && <div className="attendance-error">{error}</div>}
 
@@ -458,6 +419,7 @@ export function TeacherAttendancePage({
                   <thead>
                     <tr>
                       <th>ФИО</th>
+
                       {attendance.sessions.map((session) => (
                         <th key={session.idSession}>{session.dateLabel}</th>
                       ))}
@@ -482,7 +444,10 @@ export function TeacherAttendancePage({
                                 className={`attendance-mark ${status}`}
                                 type="button"
                                 onClick={() =>
-                                  toggleStatus(student.idStudent, session.idSession)
+                                  toggleStatus(
+                                    student.idStudent,
+                                    session.idSession
+                                  )
                                 }
                                 aria-label={
                                   status === "present"

@@ -11,13 +11,9 @@ import {
   submitTeacherGradebook,
   updateTeacherGradebook
 } from "../api";
+import { TeacherSidebar } from "../components/TeacherSidebar";
 import "./TeacherSchedulePage.css";
 import "./TeacherGradebookPage.css";
-import {
-  getTeacherInitials,
-  getTeacherShortName,
-  getTeacherSubtitle
-} from "../utils/teacherProfile";
 
 type TeacherGradebookPageProps = {
   user: LoginResponse;
@@ -31,10 +27,6 @@ type TeacherGradebookPageProps = {
   onBackToDiscipline?: () => void;
 };
 
-function NavIcon({ label }: { label: string }) {
-  return <span className="nav-icon">{label}</span>;
-}
-
 export function TeacherGradebookPage({
   user,
   initialDisciplineId,
@@ -47,18 +39,23 @@ export function TeacherGradebookPage({
   onBackToDiscipline
 }: TeacherGradebookPageProps) {
   const [disciplines, setDisciplines] = useState<TeacherDiscipline[]>([]);
+
   const [selectedDisciplineId, setSelectedDisciplineId] = useState<number | null>(
     initialDisciplineId ?? null
   );
+
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(
     initialGroupId ?? null
   );
+
   const [gradebook, setGradebook] = useState<TeacherGradebook | null>(null);
   const [draftStudents, setDraftStudents] = useState<GradebookStudent[]>([]);
+
   const [isLoading, setIsLoading] = useState(true);
   const [isGradebookLoading, setIsGradebookLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
   const [error, setError] = useState("");
   const [saveMessage, setSaveMessage] = useState("");
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
@@ -94,7 +91,9 @@ export function TeacherGradebookPage({
           setSelectedGroupId(initialGroup.idGroup);
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Ошибка загрузки дисциплин");
+        setError(
+          err instanceof Error ? err.message : "Ошибка загрузки дисциплин"
+        );
       } finally {
         setIsLoading(false);
       }
@@ -166,7 +165,9 @@ export function TeacherGradebookPage({
       } catch (err) {
         setGradebook(null);
         setDraftStudents([]);
-        setError(err instanceof Error ? err.message : "Ошибка загрузки ведомости");
+        setError(
+          err instanceof Error ? err.message : "Ошибка загрузки ведомости"
+        );
       } finally {
         setIsGradebookLoading(false);
       }
@@ -229,11 +230,13 @@ export function TeacherGradebookPage({
   }
 
   function handleCancel() {
-    if (gradebook) {
-      setDraftStudents(gradebook.students);
-      setSaveMessage("Изменения отменены.");
-      setError("");
+    if (!gradebook) {
+      return;
     }
+
+    setDraftStudents(gradebook.students);
+    setSaveMessage("Изменения отменены.");
+    setError("");
   }
 
   function areAllFinalGradesFilled() {
@@ -367,69 +370,21 @@ export function TeacherGradebookPage({
 
   return (
     <div className="schedule-layout">
-      <aside className="app-sidebar">
-        <div className="sidebar-main">
-          <div className="user-block">
-            <div className="avatar-placeholder avatar-initials">
-              {getTeacherInitials(user)}
-            </div>
-
-            <div>
-              <p>{getTeacherShortName(user)}</p>
-              <span>{getTeacherSubtitle(user)}</span>
-            </div>
-          </div>
-
-          <p className="sidebar-section-title">ОБЩЕЕ</p>
-
-          <nav className="main-nav">
-            <button className="nav-item" type="button" onClick={onOpenSchedule}>
-              <NavIcon label="📅" />
-              Расписание
-            </button>
-
-            <button className="nav-item" type="button" onClick={onOpenDisciplines}>
-              <NavIcon label="▤" />
-              Дисциплины
-            </button>
-
-            <button
-              className="nav-item"
-              type="button"
-              onClick={() =>
-                onOpenAttendance(
-                  selectedDisciplineId ?? undefined,
-                  selectedGroupId ?? undefined
-                )
-              }
-            >
-              <NavIcon label="✓" />
-              Посещаемость
-            </button>
-
-            <button className="nav-item active" type="button">
-              <NavIcon label="▦" />
-              Ведомость
-            </button>
-          </nav>
-
-          <div className="sidebar-divider" />
-
-          <p className="sidebar-section-title">BI-КОНТУР</p>
-
-          <nav className="main-nav">
-            <button className="nav-item" type="button" onClick={onOpenAnalytics}>
-              <NavIcon label="↗" />
-              Модуль аналитики
-            </button>
-          </nav>
-        </div>
-
-        <button className="logout-button" type="button" onClick={onLogout}>
-          <NavIcon label="↪" />
-          Выйти
-        </button>
-      </aside>
+      <TeacherSidebar
+        user={user}
+        activePage="gradebook"
+        onLogout={onLogout}
+        onOpenSchedule={onOpenSchedule}
+        onOpenDisciplines={onOpenDisciplines}
+        onOpenAttendance={() =>
+          onOpenAttendance(
+            selectedDisciplineId ?? undefined,
+            selectedGroupId ?? undefined
+          )
+        }
+        onOpenGradebook={() => undefined}
+        onOpenAnalytics={onOpenAnalytics}
+      />
 
       <main className="gradebook-content">
         {onBackToDiscipline && selectedDisciplineId && (
@@ -445,10 +400,13 @@ export function TeacherGradebookPage({
         <section className="gradebook-topline">
           <div>
             <h1>{gradebook?.disciplineName ?? "Ведомость"}</h1>
+
             <p>
               {gradebook
                 ? `${gradebook.courseNo} курс${
-                    selectedGroup?.groupName ? ` · ${selectedGroup.groupName}` : ""
+                    selectedGroup?.groupName
+                      ? ` · ${selectedGroup.groupName}`
+                      : ""
                   }`
                 : "Выберите дисциплину и группу"}
             </p>
@@ -467,6 +425,7 @@ export function TeacherGradebookPage({
         <section className="gradebook-filters">
           <label className="gradebook-filter">
             <span>Дисциплина</span>
+
             <select
               value={selectedDisciplineId ?? ""}
               onChange={(event) => {
@@ -488,6 +447,7 @@ export function TeacherGradebookPage({
 
           <label className="gradebook-filter">
             <span>Группа</span>
+
             <select
               value={selectedGroupId ?? ""}
               onChange={(event) => setSelectedGroupId(Number(event.target.value))}
@@ -520,9 +480,11 @@ export function TeacherGradebookPage({
                   <thead>
                     <tr>
                       <th>ФИО</th>
+
                       {gradebook.elements.map((element) => (
                         <th key={element.idElement}>{element.elementName}</th>
                       ))}
+
                       <th>итог</th>
                     </tr>
                   </thead>
@@ -560,7 +522,10 @@ export function TeacherGradebookPage({
                             className="gradebook-input gradebook-final-input"
                             value={student.finalGrade ?? ""}
                             onChange={(event) =>
-                              updateFinalGrade(student.idStudent, event.target.value)
+                              updateFinalGrade(
+                                student.idStudent,
+                                event.target.value
+                              )
                             }
                           />
                         </td>
