@@ -55,6 +55,7 @@ function AttendanceIcon() {
         strokeLinecap="round"
         strokeLinejoin="round"
       />
+
       <rect
         x="4"
         y="4"
@@ -78,6 +79,7 @@ function FinalSheetsIcon() {
         stroke="currentColor"
         strokeWidth="2"
       />
+
       <path
         d="M8.5 9h7M8.5 12h7M8.5 15h4"
         fill="none"
@@ -147,7 +149,11 @@ function SearchIcon() {
 }
 
 function getDisciplineLetter(name?: string | null) {
-  return name?.trim()?.[0]?.toUpperCase() ?? "Д";
+  const cleanedName = (name ?? "")
+    .replace(/^\([^)]*\)\s*/, "")
+    .trim();
+
+  return cleanedName[0]?.toUpperCase() ?? "Д";
 }
 
 function formatArray(values: number[]) {
@@ -164,6 +170,14 @@ function formatPercent(value: number | null) {
   }
 
   return `${value}%`;
+}
+
+function formatPrograms(discipline: OfficeAttendanceDiscipline) {
+  const programNames = discipline.programs
+    .map((program) => program.programName)
+    .filter(Boolean);
+
+  return programNames.length > 0 ? programNames.join(", ") : "не указана";
 }
 
 export function OfficeAttendanceDisciplinesPage({
@@ -338,6 +352,7 @@ export function OfficeAttendanceDisciplinesPage({
         <section className="office-attendance-disciplines-hero">
           <div>
             <h1>Посещаемость / дисциплины</h1>
+
             <p>
               Выберите дисциплину, чтобы перейти к просмотру посещаемости по
               группам и занятиям.
@@ -351,6 +366,7 @@ export function OfficeAttendanceDisciplinesPage({
             onChange={(event) => setSelectedProgramId(event.target.value)}
           >
             <option value="all">ОП</option>
+
             {programOptions.map((program) => (
               <option key={program.idProgram} value={program.idProgram}>
                 {program.programName}
@@ -363,6 +379,7 @@ export function OfficeAttendanceDisciplinesPage({
             onChange={(event) => setSelectedCourseNo(event.target.value)}
           >
             <option value="all">Курс</option>
+
             {courseOptions.map((courseNo) => (
               <option key={courseNo} value={courseNo}>
                 {courseNo} курс
@@ -375,6 +392,7 @@ export function OfficeAttendanceDisciplinesPage({
             onChange={(event) => setSelectedModuleNo(event.target.value)}
           >
             <option value="all">Модуль</option>
+
             {moduleOptions.map((moduleNo) => (
               <option key={moduleNo} value={moduleNo}>
                 {moduleNo} модуль
@@ -384,6 +402,7 @@ export function OfficeAttendanceDisciplinesPage({
 
           <label className="office-attendance-disciplines-search">
             <SearchIcon />
+
             <input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
@@ -412,13 +431,14 @@ export function OfficeAttendanceDisciplinesPage({
                 tabIndex={0}
                 onClick={() => onSelectDiscipline(discipline.idDiscipline)}
                 onKeyDown={(event) => {
-                  if (event.key === "Enter") {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
                     onSelectDiscipline(discipline.idDiscipline);
                   }
                 }}
               >
                 <div className="office-attendance-discipline-cover">
-                  {getDisciplineLetter(discipline.disciplineName)}
+                  <span>{getDisciplineLetter(discipline.disciplineName)}</span>
                 </div>
 
                 <div className="office-attendance-discipline-body">
@@ -429,19 +449,16 @@ export function OfficeAttendanceDisciplinesPage({
                     <span>{formatArray(discipline.moduleNos)} модуль</span>
                   </div>
 
-                  <p>
-                    ОП:{" "}
-                    <strong>
-                      {discipline.programs
-                        .map((program) => program.programName)
-                        .join(", ") || "не указана"}
-                    </strong>
+                  <p className="office-attendance-discipline-programs">
+                    <span>ОП:</span> <strong>{formatPrograms(discipline)}</strong>
                   </p>
 
                   <div className="office-attendance-discipline-stats">
                     <span>{discipline.groupsCount} групп</span>
                     <span>{discipline.sessionsCount} занятий</span>
-                    <span>Посещ. {formatPercent(discipline.attendancePercent)}</span>
+                    <span className="accent">
+                      Посещ. {formatPercent(discipline.attendancePercent)}
+                    </span>
                   </div>
                 </div>
               </article>
