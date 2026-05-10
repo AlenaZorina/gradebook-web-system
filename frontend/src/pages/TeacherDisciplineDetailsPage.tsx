@@ -197,6 +197,7 @@ export function TeacherDisciplineDetailsPage({
   const [draftElements, setDraftElements] = useState<FormulaDraftElement[]>([]);
   const [formulaError, setFormulaError] = useState("");
   const [isFormulaSaving, setIsFormulaSaving] = useState(false);
+  const [draggedFormulaElementId, setDraggedFormulaElementId] = useState<string | null>(null);
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -296,7 +297,47 @@ export function TeacherDisciplineDetailsPage({
       )
     );
   }
-
+  function reorderDraftElements(sourceTempId: string, targetTempId: string) {
+    if (sourceTempId === targetTempId) {
+      return;
+    }
+  
+    setDraftElements((current) => {
+      const sourceIndex = current.findIndex((item) => item.tempId === sourceTempId);
+      const targetIndex = current.findIndex((item) => item.tempId === targetTempId);
+  
+      if (sourceIndex === -1 || targetIndex === -1) {
+        return current;
+      }
+  
+      const next = [...current];
+      const [movedItem] = next.splice(sourceIndex, 1);
+  
+      next.splice(targetIndex, 0, movedItem);
+  
+      return next.map((item, index) => ({
+        ...item,
+        orderNo: index + 1
+      }));
+    });
+  }
+  
+  function handleFormulaDragStart(tempId: string) {
+    setDraggedFormulaElementId(tempId);
+  }
+  
+  function handleFormulaDrop(targetTempId: string) {
+    if (!draggedFormulaElementId) {
+      return;
+    }
+  
+    reorderDraftElements(draggedFormulaElementId, targetTempId);
+    setDraggedFormulaElementId(null);
+  }
+  
+  function handleFormulaDragEnd() {
+    setDraggedFormulaElementId(null);
+  }
   async function saveFormula() {
     if (!details) {
       return;
@@ -516,50 +557,65 @@ export function TeacherDisciplineDetailsPage({
                         </div>
 
                         <div className="formula-editor-list">
-                          {draftElements.map((item, index) => (
-                            <div className="formula-editor-row" key={item.tempId}>
-                              <label>
-                                Вес
-                                <input
-                                  value={item.weight}
-                                  onChange={(event) =>
-                                    updateDraftElement(
-                                      item.tempId,
-                                      "weight",
-                                      event.target.value
-                                    )
-                                  }
-                                  placeholder="0,3"
-                                />
-                              </label>
+                        {draftElements.map((item, index) => (
+                          <div
+                            className={`formula-editor-row ${
+                              draggedFormulaElementId === item.tempId ? "formula-editor-row-dragging" : ""
+                            }`}
+                            key={item.tempId}
+                            onDragOver={(event) => event.preventDefault()}
+                            onDrop={() => handleFormulaDrop(item.tempId)}
+                          >
+                            <button
+                              className="formula-drag-handle"
+                              type="button"
+                              draggable
+                              onDragStart={() => handleFormulaDragStart(item.tempId)}
+                              onDragEnd={handleFormulaDragEnd}
+                              aria-label="Изменить порядок элемента"
+                              title="Перетащить элемент"
+                            >
+                              ⋮⋮
+                            </button>
 
-                              <span className="formula-editor-multiply">*</span>
+                            <label>
+                              Вес
+                              <input
+                                value={item.weight}
+                                onChange={(event) =>
+                                  updateDraftElement(item.tempId, "weight", event.target.value)
+                                }
+                                placeholder="0,3"
+                              />
+                            </label>
 
-                              <label>
-                                Элемент контроля
-                                <input
-                                  value={item.elementName}
-                                  onChange={(event) =>
-                                    updateDraftElement(
-                                      item.tempId,
-                                      "elementName",
-                                      event.target.value
-                                    )
-                                  }
-                                  placeholder={`ЛР${index + 1}`}
-                                />
-                              </label>
+                            <span className="formula-editor-multiply">*</span>
 
-                              <button
-                                className="formula-delete-button"
-                                type="button"
-                                onClick={() => removeFormulaElement(item.tempId)}
-                                disabled={draftElements.length === 1}
-                              >
-                                Удалить
-                              </button>
-                            </div>
-                          ))}
+                            <label>
+                              Элемент контроля
+                              <input
+                                value={item.elementName}
+                                onChange={(event) =>
+                                  updateDraftElement(
+                                    item.tempId,
+                                    "elementName",
+                                    event.target.value
+                                  )
+                                }
+                                placeholder={`ЛР${index + 1}`}
+                              />
+                            </label>
+
+                            <button
+                              className="formula-delete-button"
+                              type="button"
+                              onClick={() => removeFormulaElement(item.tempId)}
+                              disabled={draftElements.length === 1}
+                            >
+                              Удалить
+                            </button>
+                          </div>
+                        ))}
                         </div>
 
                         {formulaError && (

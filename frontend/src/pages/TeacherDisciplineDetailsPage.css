@@ -284,9 +284,11 @@
 
 .formula-editor-row {
   display: grid;
-  grid-template-columns: 130px 24px minmax(220px, 1fr) 110px;
+  grid-template-columns: 36px 130px 24px minmax(220px, 1fr) 110px;
   gap: 10px;
   align-items: end;
+  border-radius: 16px;
+  transition: background 0.18s ease, box-shadow 0.18s ease;
 }
 
 .formula-editor-row label {
@@ -325,6 +327,34 @@
   color: #63718f;
   font-size: 20px;
   font-weight: 900;
+}
+
+.formula-drag-handle {
+  width: 36px;
+  height: 42px;
+  border: 1px solid #dce4f5;
+  border-radius: 14px;
+  background: #ffffff;
+  color: #7b88a8;
+  font-size: 18px;
+  font-weight: 900;
+  cursor: grab;
+  transition: 0.18s ease;
+}
+
+.formula-drag-handle:hover {
+  background: #edf3ff;
+  color: #2563eb;
+  border-color: #c8d8ff;
+}
+
+.formula-drag-handle:active {
+  cursor: grabbing;
+}
+
+.formula-editor-row-dragging {
+  background: rgba(237, 243, 255, 0.72);
+  box-shadow: 0 10px 28px rgba(37, 99, 235, 0.1);
 }
 
 .formula-delete-button,
@@ -399,6 +429,11 @@
   margin-top: 16px;
 }
 
+.formula-editor-actions > div {
+  display: flex;
+  align-items: center;
+}
+
 .formula-editor-error {
   margin-top: 12px;
   border-radius: 14px;
@@ -448,7 +483,7 @@
   }
 
   .formula-editor-row {
-    grid-template-columns: 120px 22px minmax(200px, 1fr) 100px;
+    grid-template-columns: 36px 120px 22px minmax(200px, 1fr) 100px;
   }
 }
 
@@ -489,8 +524,19 @@
     align-items: stretch;
   }
 
+  .formula-drag-handle {
+    width: 100%;
+  }
+
   .formula-editor-multiply {
     display: none;
+  }
+
+  .formula-delete-button,
+  .formula-add-button,
+  .formula-cancel-button,
+  .formula-save-button {
+    width: 100%;
   }
 
   .formula-editor-actions {
