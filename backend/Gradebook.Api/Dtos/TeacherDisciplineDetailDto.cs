@@ -22,4 +22,5 @@ public class TeacherDisciplineDetailDto
     public string? PudUrl { get; set; }
 
     public List<DisciplineGroupOptionDto> Groups { get; set; } = new();
+    public List<TeacherFormulaElementDto> FormulaElements { get; set; } = new();
 }
