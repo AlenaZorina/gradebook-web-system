@@ -27,90 +27,11 @@ type TeacherAttendancePageProps = {
   onOpenDisciplines: () => void;
   onOpenGradebook: (disciplineId?: number, groupId?: number) => void;
   onOpenAnalytics: () => void;
+  onBackToDiscipline?: () => void;
 };
 
-
-function ScheduleIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <rect x="4" y="5" width="16" height="15" rx="3" stroke="currentColor" strokeWidth="1.8" />
-      <path d="M8 3.5V7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <path d="M16 3.5V7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <path d="M4 9.5H20" stroke="currentColor" strokeWidth="1.8" />
-    </svg>
-  );
-}
-
-function DisciplineIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M6.5 4.5H17.5A2.5 2.5 0 0 1 20 7V18.5A1.5 1.5 0 0 1 18.5 20H6.5A2.5 2.5 0 0 1 4 17.5V7A2.5 2.5 0 0 1 6.5 4.5Z"
-        stroke="currentColor"
-        strokeWidth="1.8"
-      />
-      <path d="M8 9H16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <path d="M8 13H14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function AttendanceIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <rect x="4" y="5" width="16" height="15" rx="3" stroke="currentColor" strokeWidth="1.8" />
-      <path
-        d="M8 12L10.4 14.4L16.2 8.6"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function GradebookIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <rect x="5" y="4" width="14" height="16" rx="3" stroke="currentColor" strokeWidth="1.8" />
-      <path d="M8 9H16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <path d="M8 12.5H16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <path d="M8 16H12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function AnalyticsIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M5 18.5V11" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <path d="M12 18.5V5.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <path d="M19 18.5V14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <path d="M4 19H20" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function LogoutIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M10 5H8A3 3 0 0 0 5 8V16A3 3 0 0 0 8 19H10"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-      />
-      <path
-        d="M14 8L18 12L14 16"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path d="M18 12H10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-    </svg>
-  );
+function NavIcon({ label }: { label: string }) {
+  return <span className="nav-icon">{label}</span>;
 }
 
 export function TeacherAttendancePage({
@@ -121,7 +42,8 @@ export function TeacherAttendancePage({
   onOpenSchedule,
   onOpenDisciplines,
   onOpenGradebook,
-  onOpenAnalytics
+  onOpenAnalytics,
+  onBackToDiscipline
 }: TeacherAttendancePageProps) {
   const [disciplines, setDisciplines] = useState<TeacherDiscipline[]>([]);
   const [selectedDisciplineId, setSelectedDisciplineId] = useState<number | null>(
@@ -130,7 +52,6 @@ export function TeacherAttendancePage({
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(
     initialGroupId ?? null
   );
-
   const [attendance, setAttendance] = useState<TeacherAttendance | null>(null);
   const [draftStudents, setDraftStudents] = useState<AttendanceStudent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -149,7 +70,8 @@ export function TeacherAttendancePage({
         setDisciplines(data);
 
         const initialDiscipline =
-          data.find((item) => item.idDiscipline === initialDisciplineId) ?? data[0];
+          data.find((item) => item.idDiscipline === initialDisciplineId) ??
+          data[0];
 
         if (!selectedDisciplineId && initialDiscipline) {
           setSelectedDisciplineId(initialDiscipline.idDiscipline);
@@ -161,7 +83,9 @@ export function TeacherAttendancePage({
               item.idDiscipline === initialDiscipline?.idDiscipline &&
               item.idGroup === initialGroupId
           ) ??
-          data.find((item) => item.idDiscipline === initialDiscipline?.idDiscipline);
+          data.find(
+            (item) => item.idDiscipline === initialDiscipline?.idDiscipline
+          );
 
         if (!selectedGroupId && initialGroup) {
           setSelectedGroupId(initialGroup.idGroup);
@@ -194,7 +118,9 @@ export function TeacherAttendancePage({
       return [];
     }
 
-    return disciplines.filter((item) => item.idDiscipline === selectedDisciplineId);
+    return disciplines.filter(
+      (item) => item.idDiscipline === selectedDisciplineId
+    );
   }, [disciplines, selectedDisciplineId]);
 
   useEffect(() => {
@@ -202,7 +128,9 @@ export function TeacherAttendancePage({
       return;
     }
 
-    const groupExists = groupOptions.some((item) => item.idGroup === selectedGroupId);
+    const groupExists = groupOptions.some(
+      (item) => item.idGroup === selectedGroupId
+    );
 
     if (!groupExists) {
       setSelectedGroupId(groupOptions[0].idGroup);
@@ -231,7 +159,9 @@ export function TeacherAttendancePage({
       } catch (err) {
         setAttendance(null);
         setDraftStudents([]);
-        setError(err instanceof Error ? err.message : "Ошибка загрузки посещаемости");
+        setError(
+          err instanceof Error ? err.message : "Ошибка загрузки посещаемости"
+        );
       } finally {
         setIsAttendanceLoading(false);
       }
@@ -326,13 +256,18 @@ export function TeacherAttendancePage({
     const rows = draftStudents.map((student) => [
       student.fullName,
       ...attendance.sessions.map((session) => {
-        const mark = student.marks.find((item) => item.idSession === session.idSession);
+        const mark = student.marks.find(
+          (item) => item.idSession === session.idSession
+        );
+
         return mark?.status === "present" ? "присутствовал" : "отсутствовал";
       })
     ]);
 
     const csv = [header, ...rows]
-      .map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(";"))
+      .map((row) =>
+        row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(";")
+      )
       .join("\n");
 
     const blob = new Blob([`\uFEFF${csv}`], {
@@ -364,7 +299,7 @@ export function TeacherAttendancePage({
   }, [attendance, draftStudents.length]);
 
   return (
-    <main className="schedule-layout">
+    <div className="schedule-layout">
       <aside className="app-sidebar">
         <div className="sidebar-main">
           <div className="user-block">
@@ -378,27 +313,21 @@ export function TeacherAttendancePage({
             </div>
           </div>
 
-          <div className="sidebar-section-title">ОБЩЕЕ</div>
+          <p className="sidebar-section-title">ОБЩЕЕ</p>
 
           <nav className="main-nav">
             <button className="nav-item" type="button" onClick={onOpenSchedule}>
-              <span className="nav-icon">
-                <ScheduleIcon />
-              </span>
+              <NavIcon label="📅" />
               Расписание
             </button>
 
             <button className="nav-item" type="button" onClick={onOpenDisciplines}>
-              <span className="nav-icon">
-                <DisciplineIcon />
-              </span>
+              <NavIcon label="▤" />
               Дисциплины
             </button>
 
             <button className="nav-item active" type="button">
-              <span className="nav-icon">
-                <AttendanceIcon />
-              </span>
+              <NavIcon label="✓" />
               Посещаемость
             </button>
 
@@ -406,38 +335,47 @@ export function TeacherAttendancePage({
               className="nav-item"
               type="button"
               onClick={() =>
-                onOpenGradebook(selectedDisciplineId ?? undefined, selectedGroupId ?? undefined)
+                onOpenGradebook(
+                  selectedDisciplineId ?? undefined,
+                  selectedGroupId ?? undefined
+                )
               }
             >
-              <span className="nav-icon">
-                <GradebookIcon />
-              </span>
+              <NavIcon label="▦" />
               Ведомость
             </button>
           </nav>
 
           <div className="sidebar-divider" />
 
-          <div className="sidebar-section-title">BI-КОНТУР</div>
+          <p className="sidebar-section-title">BI-КОНТУР</p>
 
-          <button className="nav-item" type="button" onClick={onOpenAnalytics}>
-            <span className="nav-icon">
-              <AnalyticsIcon />
-            </span>
-            Модуль аналитики
-          </button>
+          <nav className="main-nav">
+            <button className="nav-item" type="button" onClick={onOpenAnalytics}>
+              <NavIcon label="↗" />
+              Модуль аналитики
+            </button>
+          </nav>
         </div>
 
         <button className="logout-button" type="button" onClick={onLogout}>
-          <span className="nav-icon">
-            <LogoutIcon />
-          </span>
+          <NavIcon label="↪" />
           Выйти
         </button>
       </aside>
 
-      <section className="attendance-content">
-        <header className="attendance-topline">
+      <main className="attendance-content">
+        {onBackToDiscipline && selectedDisciplineId && (
+          <button
+            className="teacher-back-link"
+            type="button"
+            onClick={onBackToDiscipline}
+          >
+            ← Назад к дисциплине
+          </button>
+        )}
+
+        <section className="attendance-topline">
           <div>
             <h1>{attendance?.disciplineName ?? "Посещаемость"}</h1>
             <p>
@@ -448,19 +386,18 @@ export function TeacherAttendancePage({
           </div>
 
           <button
-            className="attendance-action-button secondary export-button"
+            className="export-button"
             type="button"
             onClick={handleExport}
             disabled={!attendance}
           >
             Экспорт
           </button>
-        </header>
+        </section>
 
-        <div className="attendance-filters">
+        <section className="attendance-filters">
           <label>
             <span>Дисциплина</span>
-
             <select
               value={selectedDisciplineId ?? ""}
               onChange={(event) => {
@@ -470,7 +407,10 @@ export function TeacherAttendancePage({
               disabled={isLoading}
             >
               {uniqueDisciplines.map((discipline) => (
-                <option key={discipline.idDiscipline} value={discipline.idDiscipline}>
+                <option
+                  key={discipline.idDiscipline}
+                  value={discipline.idDiscipline}
+                >
                   {discipline.disciplineName}
                 </option>
               ))}
@@ -479,7 +419,6 @@ export function TeacherAttendancePage({
 
           <label>
             <span>Группа</span>
-
             <select
               value={selectedGroupId ?? ""}
               onChange={(event) => setSelectedGroupId(Number(event.target.value))}
@@ -492,7 +431,7 @@ export function TeacherAttendancePage({
               ))}
             </select>
           </label>
-        </div>
+        </section>
 
         {isLoading && <div className="attendance-state">Загружаем данные...</div>}
 
@@ -540,9 +479,11 @@ export function TeacherAttendancePage({
                           return (
                             <td key={session.idSession}>
                               <button
-                                type="button"
                                 className={`attendance-mark ${status}`}
-                                onClick={() => toggleStatus(student.idStudent, session.idSession)}
+                                type="button"
+                                onClick={() =>
+                                  toggleStatus(student.idStudent, session.idSession)
+                                }
                                 aria-label={
                                   status === "present"
                                     ? "Отметить отсутствие"
@@ -559,12 +500,19 @@ export function TeacherAttendancePage({
                   </tbody>
                 </table>
               </div>
+
+              {saveMessage && (
+                <div className="attendance-save-message">{saveMessage}</div>
+              )}
             </section>
 
-            {saveMessage && <div className="attendance-save-message">{saveMessage}</div>}
-
             <div className="attendance-actions">
-              <button className="attendance-action-button ghost" type="button" onClick={handleCancel}>
+              <button
+                className="attendance-action-button secondary"
+                type="button"
+                onClick={handleCancel}
+                disabled={isSaving}
+              >
                 Отменить
               </button>
 
@@ -579,7 +527,7 @@ export function TeacherAttendancePage({
             </div>
           </>
         )}
-      </section>
-    </main>
+      </main>
+    </div>
   );
 }

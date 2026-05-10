@@ -386,3 +386,20 @@
     font-size: 16px;
   }
 }
+.teacher-back-link {
+  width: fit-content;
+  border: none;
+  background: transparent;
+  color: #7b87a5;
+  font-family: "Manrope", system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+  margin: 0 0 12px;
+  padding: 0;
+  transition: 0.18s ease;
+}
+
+.teacher-back-link:hover {
+  color: #2563eb;
+}

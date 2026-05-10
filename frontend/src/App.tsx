@@ -645,6 +645,12 @@ function App() {
               selectedDisciplineId ?? undefined,
               selectedGroupId ?? undefined
             )
+          
+          }
+          onBackToDiscipline={() =>
+            selectedDisciplineId
+              ? setTeacherPage("disciplineDetails")
+              : setTeacherPage("disciplines")
           }
         />
       );
@@ -665,6 +671,11 @@ function App() {
               selectedDisciplineId ?? undefined,
               selectedGroupId ?? undefined
             )
+          }
+          onBackToDiscipline={() =>
+            selectedDisciplineId
+              ? setTeacherPage("disciplineDetails")
+              : setTeacherPage("disciplines")
           }
         />
       );

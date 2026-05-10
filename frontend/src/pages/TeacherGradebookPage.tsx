@@ -28,90 +28,11 @@ type TeacherGradebookPageProps = {
   onOpenDisciplines: () => void;
   onOpenAttendance: (disciplineId?: number, groupId?: number) => void;
   onOpenAnalytics: () => void;
+  onBackToDiscipline?: () => void;
 };
 
-
-function ScheduleIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <rect x="4" y="5" width="16" height="15" rx="3" stroke="currentColor" strokeWidth="1.8" />
-      <path d="M8 3.5V7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <path d="M16 3.5V7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <path d="M4 9.5H20" stroke="currentColor" strokeWidth="1.8" />
-    </svg>
-  );
-}
-
-function DisciplineIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M6.5 4.5H17.5A2.5 2.5 0 0 1 20 7V18.5A1.5 1.5 0 0 1 18.5 20H6.5A2.5 2.5 0 0 1 4 17.5V7A2.5 2.5 0 0 1 6.5 4.5Z"
-        stroke="currentColor"
-        strokeWidth="1.8"
-      />
-      <path d="M8 9H16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <path d="M8 13H14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function AttendanceIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <rect x="4" y="5" width="16" height="15" rx="3" stroke="currentColor" strokeWidth="1.8" />
-      <path
-        d="M8 12L10.4 14.4L16.2 8.6"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function GradebookIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <rect x="5" y="4" width="14" height="16" rx="3" stroke="currentColor" strokeWidth="1.8" />
-      <path d="M8 9H16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <path d="M8 12.5H15" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <path d="M8 16H12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function AnalyticsIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M5 18.5V11" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <path d="M12 18.5V5.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <path d="M19 18.5V14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <path d="M4 19H20" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function LogoutIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M10 5H8A3 3 0 0 0 5 8V16A3 3 0 0 0 8 19H10"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-      />
-      <path
-        d="M14 8L18 12L14 16"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path d="M18 12H10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-    </svg>
-  );
+function NavIcon({ label }: { label: string }) {
+  return <span className="nav-icon">{label}</span>;
 }
 
 export function TeacherGradebookPage({
@@ -122,7 +43,8 @@ export function TeacherGradebookPage({
   onOpenSchedule,
   onOpenDisciplines,
   onOpenAttendance,
-  onOpenAnalytics
+  onOpenAnalytics,
+  onBackToDiscipline
 }: TeacherGradebookPageProps) {
   const [disciplines, setDisciplines] = useState<TeacherDiscipline[]>([]);
   const [selectedDisciplineId, setSelectedDisciplineId] = useState<number | null>(
@@ -131,7 +53,6 @@ export function TeacherGradebookPage({
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(
     initialGroupId ?? null
   );
-
   const [gradebook, setGradebook] = useState<TeacherGradebook | null>(null);
   const [draftStudents, setDraftStudents] = useState<GradebookStudent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -152,7 +73,8 @@ export function TeacherGradebookPage({
         setDisciplines(data);
 
         const initialDiscipline =
-          data.find((item) => item.idDiscipline === initialDisciplineId) ?? data[0];
+          data.find((item) => item.idDiscipline === initialDisciplineId) ??
+          data[0];
 
         if (!selectedDisciplineId && initialDiscipline) {
           setSelectedDisciplineId(initialDiscipline.idDiscipline);
@@ -164,7 +86,9 @@ export function TeacherGradebookPage({
               item.idDiscipline === initialDiscipline?.idDiscipline &&
               item.idGroup === initialGroupId
           ) ??
-          data.find((item) => item.idDiscipline === initialDiscipline?.idDiscipline);
+          data.find(
+            (item) => item.idDiscipline === initialDiscipline?.idDiscipline
+          );
 
         if (!selectedGroupId && initialGroup) {
           setSelectedGroupId(initialGroup.idGroup);
@@ -197,7 +121,9 @@ export function TeacherGradebookPage({
       return [];
     }
 
-    return disciplines.filter((item) => item.idDiscipline === selectedDisciplineId);
+    return disciplines.filter(
+      (item) => item.idDiscipline === selectedDisciplineId
+    );
   }, [disciplines, selectedDisciplineId]);
 
   const selectedGroup = useMemo(() => {
@@ -209,7 +135,9 @@ export function TeacherGradebookPage({
       return;
     }
 
-    const groupExists = groupOptions.some((item) => item.idGroup === selectedGroupId);
+    const groupExists = groupOptions.some(
+      (item) => item.idGroup === selectedGroupId
+    );
 
     if (!groupExists) {
       setSelectedGroupId(groupOptions[0].idGroup);
@@ -252,7 +180,7 @@ export function TeacherGradebookPage({
       return null;
     }
 
-    const normalized = Number(value);
+    const normalized = Number(value.replace(",", "."));
 
     if (Number.isNaN(normalized)) {
       return null;
@@ -408,7 +336,10 @@ export function TeacherGradebookPage({
     const rows = draftStudents.map((student) => [
       student.fullName,
       ...gradebook.elements.map((element) => {
-        const grade = student.grades.find((item) => item.idElement === element.idElement);
+        const grade = student.grades.find(
+          (item) => item.idElement === element.idElement
+        );
+
         return grade?.gradeValue ?? "";
       }),
       student.finalGrade ?? ""
@@ -416,9 +347,7 @@ export function TeacherGradebookPage({
 
     const csv = [header, ...rows]
       .map((row) =>
-        row
-          .map((cell) => `"${String(cell).replace(/"/g, '""')}"`)
-          .join(";")
+        row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(";")
       )
       .join("\n");
 
@@ -437,7 +366,7 @@ export function TeacherGradebookPage({
   }
 
   return (
-    <main className="schedule-layout">
+    <div className="schedule-layout">
       <aside className="app-sidebar">
         <div className="sidebar-main">
           <div className="user-block">
@@ -451,20 +380,16 @@ export function TeacherGradebookPage({
             </div>
           </div>
 
-          <div className="sidebar-section-title">ОБЩЕЕ</div>
+          <p className="sidebar-section-title">ОБЩЕЕ</p>
 
           <nav className="main-nav">
             <button className="nav-item" type="button" onClick={onOpenSchedule}>
-              <span className="nav-icon">
-                <ScheduleIcon />
-              </span>
+              <NavIcon label="📅" />
               Расписание
             </button>
 
             <button className="nav-item" type="button" onClick={onOpenDisciplines}>
-              <span className="nav-icon">
-                <DisciplineIcon />
-              </span>
+              <NavIcon label="▤" />
               Дисциплины
             </button>
 
@@ -478,42 +403,46 @@ export function TeacherGradebookPage({
                 )
               }
             >
-              <span className="nav-icon">
-                <AttendanceIcon />
-              </span>
+              <NavIcon label="✓" />
               Посещаемость
             </button>
 
             <button className="nav-item active" type="button">
-              <span className="nav-icon">
-                <GradebookIcon />
-              </span>
+              <NavIcon label="▦" />
               Ведомость
             </button>
           </nav>
 
           <div className="sidebar-divider" />
 
-          <div className="sidebar-section-title">BI-КОНТУР</div>
+          <p className="sidebar-section-title">BI-КОНТУР</p>
 
-          <button className="nav-item" type="button" onClick={onOpenAnalytics}>
-            <span className="nav-icon">
-              <AnalyticsIcon />
-            </span>
-            Модуль аналитики
-          </button>
+          <nav className="main-nav">
+            <button className="nav-item" type="button" onClick={onOpenAnalytics}>
+              <NavIcon label="↗" />
+              Модуль аналитики
+            </button>
+          </nav>
         </div>
 
         <button className="logout-button" type="button" onClick={onLogout}>
-          <span className="nav-icon">
-            <LogoutIcon />
-          </span>
+          <NavIcon label="↪" />
           Выйти
         </button>
       </aside>
 
-      <section className="gradebook-content">
-        <header className="gradebook-topline">
+      <main className="gradebook-content">
+        {onBackToDiscipline && selectedDisciplineId && (
+          <button
+            className="teacher-back-link"
+            type="button"
+            onClick={onBackToDiscipline}
+          >
+            ← Назад к дисциплине
+          </button>
+        )}
+
+        <section className="gradebook-topline">
           <div>
             <h1>{gradebook?.disciplineName ?? "Ведомость"}</h1>
             <p>
@@ -533,12 +462,11 @@ export function TeacherGradebookPage({
           >
             Экспорт
           </button>
-        </header>
+        </section>
 
-        <div className="gradebook-filters">
+        <section className="gradebook-filters">
           <label className="gradebook-filter">
             <span>Дисциплина</span>
-
             <select
               value={selectedDisciplineId ?? ""}
               onChange={(event) => {
@@ -548,7 +476,10 @@ export function TeacherGradebookPage({
               disabled={isLoading}
             >
               {uniqueDisciplines.map((discipline) => (
-                <option key={discipline.idDiscipline} value={discipline.idDiscipline}>
+                <option
+                  key={discipline.idDiscipline}
+                  value={discipline.idDiscipline}
+                >
                   {discipline.disciplineName}
                 </option>
               ))}
@@ -557,7 +488,6 @@ export function TeacherGradebookPage({
 
           <label className="gradebook-filter">
             <span>Группа</span>
-
             <select
               value={selectedGroupId ?? ""}
               onChange={(event) => setSelectedGroupId(Number(event.target.value))}
@@ -570,7 +500,7 @@ export function TeacherGradebookPage({
               ))}
             </select>
           </label>
-        </div>
+        </section>
 
         {isLoading && <div className="gradebook-state">Загружаем данные...</div>}
 
@@ -590,11 +520,9 @@ export function TeacherGradebookPage({
                   <thead>
                     <tr>
                       <th>ФИО</th>
-
                       {gradebook.elements.map((element) => (
                         <th key={element.idElement}>{element.elementName}</th>
                       ))}
-
                       <th>итог</th>
                     </tr>
                   </thead>
@@ -613,10 +541,6 @@ export function TeacherGradebookPage({
                             <td key={element.idElement}>
                               <input
                                 className="gradebook-input"
-                                type="number"
-                                min="0"
-                                max="10"
-                                step="0.1"
                                 value={grade?.gradeValue ?? ""}
                                 onChange={(event) =>
                                   grade &&
@@ -634,10 +558,6 @@ export function TeacherGradebookPage({
                         <td>
                           <input
                             className="gradebook-input gradebook-final-input"
-                            type="number"
-                            min="0"
-                            max="10"
-                            step="0.1"
                             value={student.finalGrade ?? ""}
                             onChange={(event) =>
                               updateFinalGrade(student.idStudent, event.target.value)
@@ -651,10 +571,17 @@ export function TeacherGradebookPage({
               </div>
             </section>
 
-            {saveMessage && <div className="gradebook-save-message">{saveMessage}</div>}
+            {saveMessage && (
+              <div className="gradebook-save-message">{saveMessage}</div>
+            )}
 
             <div className="gradebook-actions">
-              <button className="secondary-button" type="button" onClick={handleCancel}>
+              <button
+                className="secondary-button"
+                type="button"
+                onClick={handleCancel}
+                disabled={isSaving}
+              >
                 Отменить
               </button>
 
@@ -669,35 +596,35 @@ export function TeacherGradebookPage({
             </div>
           </>
         )}
-      </section>
 
-      {isSubmitModalOpen && (
-        <div className="gradebook-modal-overlay">
-          <div className="gradebook-modal">
-            <h3>Утвердить итоговую ведомость</h3>
-            <p>Ведомость будет отправлена УО для утверждения</p>
+        {isSubmitModalOpen && (
+          <div className="gradebook-modal-overlay">
+            <div className="gradebook-modal">
+              <h3>Утвердить итоговую ведомость</h3>
+              <p>Ведомость будет отправлена УО для утверждения</p>
 
-            <div className="gradebook-modal-actions">
-              <button
-                className="primary-button"
-                type="button"
-                onClick={handleSubmitGradebook}
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? "Отправляем..." : "Отправить"}
-              </button>
+              <div className="gradebook-modal-actions">
+                <button
+                  className="primary-button"
+                  type="button"
+                  onClick={handleSubmitGradebook}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Отправляем..." : "Отправить"}
+                </button>
 
-              <button
-                className="gradebook-modal-skip"
-                type="button"
-                onClick={() => setIsSubmitModalOpen(false)}
-              >
-                Пропустить
-              </button>
+                <button
+                  className="gradebook-modal-skip"
+                  type="button"
+                  onClick={() => setIsSubmitModalOpen(false)}
+                >
+                  Пропустить
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </main>
+        )}
+      </main>
+    </div>
   );
 }
