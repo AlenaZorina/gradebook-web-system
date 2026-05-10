@@ -111,6 +111,10 @@ function getModuleText(item: TeacherDiscipline) {
 
   return `${item.startModuleNo}–${item.endModuleNo} модули`;
 }
+type TeacherDisciplineCard = TeacherDiscipline & {
+  groupNames: string[];
+  programNames: string[];
+};
 
 export function TeacherDisciplinesPage({
     user,
@@ -146,36 +150,82 @@ export function TeacherDisciplinesPage({
     loadDisciplines();
   }, [user.idUser]);
 
-  const programs = useMemo(() => {
-    return Array.from(new Set(disciplines.map((item) => item.programName))).sort();
+  const uniqueDisciplines = useMemo<TeacherDisciplineCard[]>(() => {
+    const grouped = new Map<number, TeacherDisciplineCard>();
+  
+    disciplines.forEach((item) => {
+      const existing = grouped.get(item.idDiscipline);
+  
+      if (!existing) {
+        grouped.set(item.idDiscipline, {
+          ...item,
+          groupNames: [item.groupName],
+          programNames: [item.programName]
+        });
+  
+        return;
+      }
+  
+      if (!existing.groupNames.includes(item.groupName)) {
+        existing.groupNames.push(item.groupName);
+      }
+  
+      if (!existing.programNames.includes(item.programName)) {
+        existing.programNames.push(item.programName);
+      }
+  
+      existing.courseNo = Math.min(existing.courseNo, item.courseNo);
+      existing.startModuleNo = Math.min(existing.startModuleNo, item.startModuleNo);
+      existing.endModuleNo = Math.max(existing.endModuleNo, item.endModuleNo);
+    });
+  
+    return Array.from(grouped.values()).map((item) => ({
+      ...item,
+      groupNames: [...item.groupNames].sort((a, b) => a.localeCompare(b, "ru")),
+      programNames: [...item.programNames].sort((a, b) => a.localeCompare(b, "ru"))
+    }));
   }, [disciplines]);
+  
+  const programs = useMemo(() => {
+    return Array.from(
+      new Set(uniqueDisciplines.flatMap((item) => item.programNames))
+    ).sort((a, b) => a.localeCompare(b, "ru"));
+  }, [uniqueDisciplines]);
 
   const filteredDisciplines = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
-
-    return disciplines
+  
+    return uniqueDisciplines
       .filter((item) => {
         const matchesProgram =
-          programFilter === "all" || item.programName === programFilter;
-
+          programFilter === "all" || item.programNames.includes(programFilter);
+  
         const matchesSearch =
           !normalizedSearch ||
           item.disciplineName.toLowerCase().includes(normalizedSearch) ||
-          item.groupName.toLowerCase().includes(normalizedSearch);
-
+          item.groupNames.some((groupName) =>
+            groupName.toLowerCase().includes(normalizedSearch)
+          ) ||
+          item.programNames.some((programName) =>
+            programName.toLowerCase().includes(normalizedSearch)
+          );
+  
         return matchesProgram && matchesSearch;
       })
       .sort((a, b) => {
         if (sortMode === "name") {
           return a.disciplineName.localeCompare(b.disciplineName, "ru");
         }
-
-        return a.courseNo - b.courseNo || a.disciplineName.localeCompare(b.disciplineName, "ru");
+  
+        return (
+          a.courseNo - b.courseNo ||
+          a.disciplineName.localeCompare(b.disciplineName, "ru")
+        );
       });
-  }, [disciplines, programFilter, search, sortMode]);
+  }, [uniqueDisciplines, programFilter, search, sortMode]);
 
   const courses = useMemo(() => {
-    const grouped = new Map<number, TeacherDiscipline[]>();
+    const grouped = new Map<number, TeacherDisciplineCard[]>();
 
     filteredDisciplines.forEach((item) => {
       if (!grouped.has(item.courseNo)) {
@@ -307,7 +357,7 @@ export function TeacherDisciplinesPage({
               {items.map((item) => (
                 <article
                 className="discipline-card"
-                key={item.idAssignment}
+                key={item.idDiscipline}
                 onClick={() => onSelectDiscipline(item.idDiscipline)}
               >
                   <div className="discipline-cover">
@@ -318,11 +368,8 @@ export function TeacherDisciplinesPage({
                     <h3>{item.disciplineName}</h3>
 
                     <div className="discipline-meta">
-                      <span>{item.groupName}</span>
                       <span>{getModuleText(item)}</span>
                     </div>
-
-                    <p>{item.programName}</p>
                   </div>
                 </article>
               ))}
