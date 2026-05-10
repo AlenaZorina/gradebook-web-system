@@ -247,6 +247,7 @@ export type LoginRequest = {
     idElement: number;
     elementName: string;
     orderNo: number;
+    weight: number;
   };
   
   export type GradebookGrade = {
@@ -367,6 +368,30 @@ export type LoginRequest = {
     }
   
     return response.json();
+  }
+  export async function exportTeacherGradebook(
+    idUser: number,
+    disciplineId: number,
+    groupId: number
+  ): Promise<Blob> {
+    const response = await fetch(
+      `${API_URL}/api/users/${idUser}/gradebook/export?disciplineId=${disciplineId}&groupId=${groupId}`
+    );
+  
+    if (!response.ok) {
+      let message = "Не удалось экспортировать ведомость";
+  
+      try {
+        const error = await response.json();
+        message = error.message ?? message;
+      } catch {
+        // оставляем стандартное сообщение
+      }
+  
+      throw new Error(message);
+    }
+  
+    return response.blob();
   }
   export type AnalyticsAttendancePoint = {
     lessonDate: string;
