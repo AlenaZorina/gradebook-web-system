@@ -19,6 +19,7 @@ type StudentGradebookPageProps = {
   onOpenDisciplines: () => void;
   onOpenAttendance: (disciplineId?: number, groupId?: number) => void;
   onOpenAnalytics: () => void;
+  onBackToDiscipline?: () => void;
 };
 
 function getStudentInitials(user: LoginResponse) {
@@ -175,7 +176,8 @@ export function StudentGradebookPage({
   onOpenSchedule,
   onOpenDisciplines,
   onOpenAttendance,
-  onOpenAnalytics
+  onOpenAnalytics,
+  onBackToDiscipline
 }: StudentGradebookPageProps) {
   const [disciplines, setDisciplines] = useState<StudentDiscipline[]>([]);
   const [selectedDisciplineId, setSelectedDisciplineId] = useState<number | null>(
@@ -280,6 +282,7 @@ export function StudentGradebookPage({
             <div className="avatar-placeholder avatar-initials">
               {getStudentInitials(user)}
             </div>
+
             <div>
               <p>{getStudentShortName(user)}</p>
               <span>Студент · {currentGroupName}</span>
@@ -347,6 +350,16 @@ export function StudentGradebookPage({
       </aside>
 
       <main className="student-gradebook-content">
+        {onBackToDiscipline && selectedDisciplineId && (
+          <button
+            className="student-gradebook-back-link"
+            type="button"
+            onClick={onBackToDiscipline}
+          >
+            ← Назад к дисциплине
+          </button>
+        )}
+
         <section className="student-gradebook-hero">
           <div>
             <h1>
@@ -360,15 +373,19 @@ export function StudentGradebookPage({
               <span>{currentGroupName}</span>
             </div>
           </div>
+        </section>
 
-          {disciplines.length > 1 && (
-            <label className="student-gradebook-select">
+        {disciplines.length > 1 && (
+          <section className="student-gradebook-filters">
+            <label className="student-gradebook-filter">
               <span>Дисциплина</span>
+
               <select
                 value={selectedDisciplineId ?? ""}
                 onChange={(event) =>
                   setSelectedDisciplineId(Number(event.target.value))
                 }
+                disabled={isDisciplinesLoading}
               >
                 {disciplines.map((discipline) => (
                   <option
@@ -380,8 +397,16 @@ export function StudentGradebookPage({
                 ))}
               </select>
             </label>
-          )}
-        </section>
+          </section>
+        )}
+
+        <button
+          className="student-gradebook-report-button"
+          type="button"
+          onClick={openReportModal}
+        >
+          Сообщить об ошибке
+        </button>
 
         {(isDisciplinesLoading || isGradebookLoading) && (
           <div className="schedule-state">Загружаем ведомость...</div>
@@ -392,13 +417,21 @@ export function StudentGradebookPage({
         )}
 
         {!isDisciplinesLoading && !isGradebookLoading && !error && gradebook && (
-          <>
-            <section className="student-gradebook-table-card">
+          <section className="student-gradebook-panel">
+            <div className="student-gradebook-table-card">
+              <div className="student-gradebook-table-header">
+                <div>
+                  <h2>Ведомость</h2>
+                  <p>Оценки по элементам контроля</p>
+                </div>
+              </div>
+
               <div className="student-gradebook-table-scroll">
                 <table className="student-gradebook-table">
                   <thead>
                     <tr>
                       <th></th>
+
                       {gradebook.elements.map((element) => (
                         <th key={element.idElement}>{element.elementName}</th>
                       ))}
@@ -408,6 +441,7 @@ export function StudentGradebookPage({
                   <tbody>
                     <tr>
                       <td>Дата</td>
+
                       {gradebook.elements.map((element) => (
                         <td key={`date-${element.idElement}`}>
                           {element.dateLabel || "—"}
@@ -417,6 +451,7 @@ export function StudentGradebookPage({
 
                     <tr>
                       <td>Оценка</td>
+
                       {gradebook.elements.map((element) => (
                         <td key={`grade-${element.idElement}`}>
                           <span
@@ -435,34 +470,30 @@ export function StudentGradebookPage({
                   </tbody>
                 </table>
               </div>
-            </section>
+            </div>
 
-            <section className="student-gradebook-summary">
+            <aside className="student-gradebook-summary">
               <div className="student-gradebook-summary-item">
-                <span className="summary-color accumulated"></span>
-                <div>
-                  <p>Накопленная оценка</p>
-                  <strong>{formatGrade(gradebook.accumulatedGrade)}</strong>
-                </div>
+                <span>Накопленная оценка</span>
+                <strong>{formatGrade(gradebook.accumulatedGrade)}</strong>
               </div>
 
               <div className="student-gradebook-summary-item">
-                <span className="summary-color exam"></span>
-                <div>
-                  <p>Экзамен</p>
-                  <strong>{formatGrade(gradebook.examGrade)}</strong>
-                </div>
+                <span>Экзамен</span>
+                <strong>{formatGrade(gradebook.examGrade)}</strong>
               </div>
 
               <div className="student-gradebook-summary-item">
-                <span className="summary-color final"></span>
-                <div>
-                  <p>Итог предварительно</p>
-                  <strong>{formatGrade(gradebook.preliminaryFinalGrade)}</strong>
-                </div>
+                <span>Итог предварительно</span>
+                <strong>{formatGrade(gradebook.preliminaryFinalGrade)}</strong>
               </div>
-            </section>
-          </>
+
+              <div className="student-gradebook-summary-item final">
+                <span>Итог</span>
+                <strong>{formatGrade(gradebook.finalGrade)}</strong>
+              </div>
+            </aside>
+          </section>
         )}
 
         {!isDisciplinesLoading &&
@@ -474,14 +505,6 @@ export function StudentGradebookPage({
               По выбранной дисциплине пока нет элементов контроля.
             </div>
           )}
-
-        <button
-          className="student-gradebook-report-button"
-          type="button"
-          onClick={openReportModal}
-        >
-          Сообщить об ошибке
-        </button>
       </main>
 
       {isReportOpen && (
@@ -504,8 +527,10 @@ export function StudentGradebookPage({
 
             <label className="student-gradebook-date-field">
               <span>Выбрать день</span>
+
               <div>
                 <CalendarIcon />
+
                 <input
                   type="date"
                   value={reportDate}
