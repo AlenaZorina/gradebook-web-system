@@ -147,7 +147,11 @@ function SearchIcon() {
 }
 
 function getDisciplineLetter(name?: string | null) {
-  return name?.trim()?.[0]?.toUpperCase() ?? "Д";
+  const cleanedName = (name ?? "")
+    .replace(/^\([^)]*\)\s*/, "")
+    .trim();
+
+  return cleanedName[0]?.toUpperCase() ?? "Д";
 }
 
 function formatArray(values: number[]) {
@@ -156,6 +160,14 @@ function formatArray(values: number[]) {
   }
 
   return values.join(", ");
+}
+
+function formatPrograms(discipline: OfficeResitDiscipline) {
+  const programNames = discipline.programs
+    .map((program) => program.programName)
+    .filter(Boolean);
+
+  return programNames.length > 0 ? programNames.join(", ") : "не указана";
 }
 
 export function OfficeResitsPage({
@@ -330,6 +342,7 @@ export function OfficeResitsPage({
         <section className="office-resits-hero">
           <div>
             <h1>Списки на пересдачу / дисциплины</h1>
+
             <p>
               Выберите дисциплину, чтобы перейти к списку групп и студентов,
               которым требуется пересдача.
@@ -343,6 +356,7 @@ export function OfficeResitsPage({
             onChange={(event) => setSelectedProgramId(event.target.value)}
           >
             <option value="all">ОП</option>
+
             {programOptions.map((program) => (
               <option key={program.idProgram} value={program.idProgram}>
                 {program.programName}
@@ -355,6 +369,7 @@ export function OfficeResitsPage({
             onChange={(event) => setSelectedCourseNo(event.target.value)}
           >
             <option value="all">Курс</option>
+
             {courseOptions.map((courseNo) => (
               <option key={courseNo} value={courseNo}>
                 {courseNo} курс
@@ -367,6 +382,7 @@ export function OfficeResitsPage({
             onChange={(event) => setSelectedModuleNo(event.target.value)}
           >
             <option value="all">Модуль</option>
+
             {moduleOptions.map((moduleNo) => (
               <option key={moduleNo} value={moduleNo}>
                 {moduleNo} модуль
@@ -376,6 +392,7 @@ export function OfficeResitsPage({
 
           <label className="office-resits-search">
             <SearchIcon />
+
             <input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
@@ -404,13 +421,14 @@ export function OfficeResitsPage({
                 tabIndex={0}
                 onClick={() => onSelectDiscipline(discipline.idDiscipline)}
                 onKeyDown={(event) => {
-                  if (event.key === "Enter") {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
                     onSelectDiscipline(discipline.idDiscipline);
                   }
                 }}
               >
                 <div className="office-resit-card-cover">
-                  {getDisciplineLetter(discipline.disciplineName)}
+                  <span>{getDisciplineLetter(discipline.disciplineName)}</span>
                 </div>
 
                 <div className="office-resit-card-body">
@@ -421,18 +439,15 @@ export function OfficeResitsPage({
                     <span>{formatArray(discipline.moduleNos)} модуль</span>
                   </div>
 
-                  <p>
-                    ОП:{" "}
-                    <strong>
-                      {discipline.programs
-                        .map((program) => program.programName)
-                        .join(", ") || "не указана"}
-                    </strong>
+                  <p className="office-resit-card-programs">
+                    <span>ОП:</span> <strong>{formatPrograms(discipline)}</strong>
                   </p>
 
                   <div className="office-resit-card-stats">
                     <span>{discipline.groupsCount} групп</span>
-                    <span>{discipline.retakeStudentsCount} на пересдачу</span>
+                    <span className="accent">
+                      {discipline.retakeStudentsCount} на пересдачу
+                    </span>
                   </div>
                 </div>
               </article>
