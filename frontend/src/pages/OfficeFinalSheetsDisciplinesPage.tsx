@@ -147,7 +147,11 @@ function SearchIcon() {
 }
 
 function getDisciplineLetter(name?: string | null) {
-  return name?.trim()?.[0]?.toUpperCase() ?? "Д";
+  const cleanedName = (name ?? "")
+    .replace(/^\([^)]*\)\s*/, "")
+    .trim();
+
+  return cleanedName[0]?.toUpperCase() ?? "Д";
 }
 
 function formatArray(values: number[]) {
@@ -164,6 +168,37 @@ function formatPercent(value: number | null) {
   }
 
   return `${value}%`;
+}
+
+function pluralize(value: number, one: string, few: string, many: string) {
+  const absValue = Math.abs(value) % 100;
+  const lastDigit = absValue % 10;
+
+  if (absValue > 10 && absValue < 20) {
+    return many;
+  }
+
+  if (lastDigit === 1) {
+    return one;
+  }
+
+  if (lastDigit >= 2 && lastDigit <= 4) {
+    return few;
+  }
+
+  return many;
+}
+
+function formatCount(value: number, one: string, few: string, many: string) {
+  return `${value} ${pluralize(value, one, few, many)}`;
+}
+
+function formatPrograms(discipline: OfficeFinalSheetDiscipline) {
+  const programNames = discipline.programs
+    .map((program) => program.programName)
+    .filter(Boolean);
+
+  return programNames.length > 0 ? programNames.join(", ") : "не указана";
 }
 
 export function OfficeFinalSheetsDisciplinesPage({
@@ -338,6 +373,7 @@ export function OfficeFinalSheetsDisciplinesPage({
         <section className="office-final-disciplines-hero">
           <div>
             <h1>Итоговые ведомости / дисциплины</h1>
+
             <p>
               Выберите дисциплину, чтобы перейти к просмотру итоговых ведомостей
               по группам.
@@ -351,6 +387,7 @@ export function OfficeFinalSheetsDisciplinesPage({
             onChange={(event) => setSelectedProgramId(event.target.value)}
           >
             <option value="all">ОП</option>
+
             {programOptions.map((program) => (
               <option key={program.idProgram} value={program.idProgram}>
                 {program.programName}
@@ -363,6 +400,7 @@ export function OfficeFinalSheetsDisciplinesPage({
             onChange={(event) => setSelectedCourseNo(event.target.value)}
           >
             <option value="all">Курс</option>
+
             {courseOptions.map((courseNo) => (
               <option key={courseNo} value={courseNo}>
                 {courseNo} курс
@@ -375,6 +413,7 @@ export function OfficeFinalSheetsDisciplinesPage({
             onChange={(event) => setSelectedModuleNo(event.target.value)}
           >
             <option value="all">Модуль</option>
+
             {moduleOptions.map((moduleNo) => (
               <option key={moduleNo} value={moduleNo}>
                 {moduleNo} модуль
@@ -384,6 +423,7 @@ export function OfficeFinalSheetsDisciplinesPage({
 
           <label className="office-final-disciplines-search">
             <SearchIcon />
+
             <input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
@@ -412,13 +452,14 @@ export function OfficeFinalSheetsDisciplinesPage({
                 tabIndex={0}
                 onClick={() => onSelectDiscipline(discipline.idDiscipline)}
                 onKeyDown={(event) => {
-                  if (event.key === "Enter") {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
                     onSelectDiscipline(discipline.idDiscipline);
                   }
                 }}
               >
                 <div className="office-final-discipline-cover">
-                  {getDisciplineLetter(discipline.disciplineName)}
+                  <span>{getDisciplineLetter(discipline.disciplineName)}</span>
                 </div>
 
                 <div className="office-final-discipline-body">
@@ -429,19 +470,32 @@ export function OfficeFinalSheetsDisciplinesPage({
                     <span>{formatArray(discipline.moduleNos)} модуль</span>
                   </div>
 
-                  <p>
-                    ОП:{" "}
-                    <strong>
-                      {discipline.programs
-                        .map((program) => program.programName)
-                        .join(", ") || "не указана"}
-                    </strong>
+                  <p className="office-final-discipline-programs">
+                    <span>ОП:</span> <strong>{formatPrograms(discipline)}</strong>
                   </p>
 
                   <div className="office-final-discipline-stats">
-                    <span>{discipline.groupsCount} групп</span>
-                    <span>{discipline.finalSheetsCount} ведомостей</span>
-                    <span>Заполнено {formatPercent(discipline.filledPercent)}</span>
+                    <span>
+                      {formatCount(
+                        discipline.groupsCount,
+                        "группа",
+                        "группы",
+                        "групп"
+                      )}
+                    </span>
+
+                    <span>
+                      {formatCount(
+                        discipline.finalSheetsCount,
+                        "ведомость",
+                        "ведомости",
+                        "ведомостей"
+                      )}
+                    </span>
+
+                    <span className="accent">
+                      Заполнено {formatPercent(discipline.filledPercent)}
+                    </span>
                   </div>
                 </div>
               </article>
