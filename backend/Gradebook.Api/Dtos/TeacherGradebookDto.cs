@@ -24,6 +24,7 @@ public class GradebookElementDto
     public int IdElement { get; set; }
     public string ElementName { get; set; } = string.Empty;
     public int OrderNo { get; set; }
+    public decimal Weight { get; set; }
 }
 
 public class GradebookStudentDto

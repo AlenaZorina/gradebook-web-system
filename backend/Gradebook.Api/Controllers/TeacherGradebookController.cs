@@ -62,13 +62,12 @@ public class TeacherGradebookController : ControllerBase
         }
 
         var query = "teacher_gradebook_view"
-            + "?select=id_sheet,sheet_status,teacher_user_id,id_assignment,id_discipline,discipline_name,id_group,group_name,course_no,id_student,student_surname,student_name,student_fathername,record_book_no,id_element,element_name,element_order_no,id_grade,grade_value,id_final_grade,final_grade"
-            + $"&teacher_user_id=eq.{idUser}"
-            + $"&id_discipline=eq.{disciplineId.Value}"
-            + $"&id_group=eq.{groupId.Value}"
-            + $"&id_assignment=eq.{ensurePayload.IdAssignment}"
-            + $"&id_sheet=eq.{ensurePayload.IdSheet}";
-
+    + "?select=id_sheet,sheet_status,teacher_user_id,id_assignment,id_discipline,discipline_name,id_group,group_name,course_no,id_student,student_surname,student_name,student_fathername,record_book_no,id_element,element_name,element_order_no,element_weight,id_grade,grade_value,id_final_grade,final_grade"
+    + $"&teacher_user_id=eq.{idUser}"
+    + $"&id_discipline=eq.{disciplineId.Value}"
+    + $"&id_group=eq.{groupId.Value}"
+    + $"&id_assignment=eq.{ensurePayload.IdAssignment}"
+    + $"&id_sheet=eq.{ensurePayload.IdSheet}";
         var result = await _supabase.GetAsync(query);
 
         if (!result.Success)
@@ -107,18 +106,20 @@ public class TeacherGradebookController : ControllerBase
         var first = records.First();
 
         var elements = records
-            .GroupBy(item => new
-            {
-                item.IdElement,
-                item.ElementName,
-                item.ElementOrderNo
-            })
-            .Select(group => new GradebookElementDto
-            {
-                IdElement = group.Key.IdElement,
-                ElementName = group.Key.ElementName,
-                OrderNo = group.Key.ElementOrderNo
-            })
+    .GroupBy(item => new
+    {
+        item.IdElement,
+        item.ElementName,
+        item.ElementOrderNo,
+        item.ElementWeight
+    })
+    .Select(group => new GradebookElementDto
+    {
+        IdElement = group.Key.IdElement,
+        ElementName = group.Key.ElementName,
+        OrderNo = group.Key.ElementOrderNo,
+        Weight = group.Key.ElementWeight
+    })
             .OrderBy(item => item.OrderNo)
             .ToList();
 
@@ -256,10 +257,17 @@ public class TeacherGradebookController : ControllerBase
                     return BadRequest(new { message = "Попытка изменить чужую оценку" });
                 }
 
-                if (grade.GradeValue.HasValue && (grade.GradeValue < 0 || grade.GradeValue > 10))
-                {
-                    return BadRequest(new { message = "Оценка должна быть от 0 до 10" });
-                }
+                if (
+    grade.GradeValue.HasValue
+    && (
+        grade.GradeValue.Value < 0
+        || grade.GradeValue.Value > 10
+        || !IsWholeNumber(grade.GradeValue.Value)
+    )
+)
+{
+    return BadRequest(new { message = "Оценка должна быть целым числом от 0 до 10" });
+}
 
                 var updatePath = $"grades?id_grade=eq.{grade.IdGrade}";
 
@@ -291,10 +299,17 @@ public class TeacherGradebookController : ControllerBase
                 return BadRequest(new { message = "Попытка изменить чужую итоговую оценку" });
             }
 
-            if (student.FinalGrade.HasValue && (student.FinalGrade < 0 || student.FinalGrade > 10))
-            {
-                return BadRequest(new { message = "Итоговая оценка должна быть от 0 до 10" });
-            }
+            if (
+    student.FinalGrade.HasValue
+    && (
+        student.FinalGrade.Value < 0
+        || student.FinalGrade.Value > 10
+        || !IsWholeNumber(student.FinalGrade.Value)
+    )
+)
+{
+    return BadRequest(new { message = "Итоговая оценка должна быть целым числом от 0 до 10" });
+}
 
             var finalUpdatePath = $"final_grades?id_final_grade=eq.{student.IdFinalGrade}";
 
@@ -429,6 +444,11 @@ public class TeacherGradebookController : ControllerBase
         return JsonSerializer.Deserialize<EnsureGradebookResponse>(body, options);
     }
 
+    private static bool IsWholeNumber(decimal value)
+{
+    return value == decimal.Truncate(value);
+}
+
     private class EnsureGradebookResponse
     {
         [JsonPropertyName("idAssignment")]
@@ -490,6 +510,9 @@ public class TeacherGradebookController : ControllerBase
 
         [JsonPropertyName("element_order_no")]
         public int ElementOrderNo { get; set; }
+
+        [JsonPropertyName("element_weight")]
+public decimal ElementWeight { get; set; }
 
         [JsonPropertyName("id_grade")]
         public int IdGrade { get; set; }
