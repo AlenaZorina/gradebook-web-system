@@ -6,6 +6,7 @@ import type {
   TeacherGradebook
 } from "../api";
 import {
+  exportTeacherGradebook,
   getTeacherDisciplines,
   getTeacherGradebook,
   submitTeacherGradebook,
@@ -55,6 +56,7 @@ export function TeacherGradebookPage({
   const [isGradebookLoading, setIsGradebookLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   const [error, setError] = useState("");
   const [saveMessage, setSaveMessage] = useState("");
@@ -180,14 +182,16 @@ export function TeacherGradebookPage({
     if (value.trim() === "") {
       return null;
     }
-
+  
     const normalized = Number(value.replace(",", "."));
-
+  
     if (Number.isNaN(normalized)) {
       return null;
     }
-
-    return Math.min(10, Math.max(0, normalized));
+  
+    const rounded = Math.round(normalized);
+  
+    return Math.min(10, Math.max(0, rounded));
   }
 
   function updateGrade(idStudent: number, idGrade: number, value: string) {
@@ -214,20 +218,7 @@ export function TeacherGradebookPage({
     );
   }
 
-  function updateFinalGrade(idStudent: number, value: string) {
-    const finalGrade = parseGrade(value);
-
-    setDraftStudents((students) =>
-      students.map((student) =>
-        student.idStudent === idStudent
-          ? {
-              ...student,
-              finalGrade
-            }
-          : student
-      )
-    );
-  }
+  
 
   function handleCancel() {
     if (!gradebook) {
@@ -238,11 +229,56 @@ export function TeacherGradebookPage({
     setSaveMessage("Изменения отменены.");
     setError("");
   }
+  function calculatePreliminaryFinal(student: GradebookStudent): number | null {
+    if (!gradebook) {
+      return null;
+    }
+  
+    let hasAnyGrade = false;
+  
+    const total = gradebook.elements.reduce((sum, element) => {
+      const grade = student.grades.find(
+        (item) => item.idElement === element.idElement
+      );
+  
+      if (grade?.gradeValue === null || grade?.gradeValue === undefined) {
+        return sum;
+      }
+  
+      hasAnyGrade = true;
+  
+      return sum + grade.gradeValue * element.weight;
+    }, 0);
+  
+    if (!hasAnyGrade) {
+      return null;
+    }
+  
+    return Math.round(total * 100) / 100;
+  }
+  
+  function calculateRoundedFinal(student: GradebookStudent): number | null {
+    const preliminaryFinal = calculatePreliminaryFinal(student);
+  
+    if (preliminaryFinal === null) {
+      return null;
+    }
+  
+    return Math.min(10, Math.max(0, Math.round(preliminaryFinal)));
+  }
+  
+  function formatPreliminaryFinal(value: number | null): string {
+    if (value === null) {
+      return "—";
+    }
+  
+    return value.toFixed(2).replace(".", ",");
+  }
 
   function areAllFinalGradesFilled() {
     return (
       draftStudents.length > 0 &&
-      draftStudents.every((student) => student.finalGrade !== null)
+      draftStudents.every((student) => calculateRoundedFinal(student) !== null)
     );
   }
 
@@ -267,7 +303,7 @@ export function TeacherGradebookPage({
             gradeValue: grade.gradeValue
           })),
           idFinalGrade: student.idFinalGrade,
-          finalGrade: student.finalGrade
+          finalGrade: calculateRoundedFinal(student)
         }))
       };
 
@@ -278,9 +314,16 @@ export function TeacherGradebookPage({
         payload
       );
 
+      const savedStudents = draftStudents.map((student) => ({
+        ...student,
+        finalGrade: calculateRoundedFinal(student)
+      }));
+      
+      setDraftStudents(savedStudents);
+      
       setGradebook({
         ...gradebook,
-        students: draftStudents
+        students: savedStudents
       });
 
       setSaveMessage("Ведомость сохранена.");
@@ -325,47 +368,36 @@ export function TeacherGradebookPage({
     }
   }
 
-  function handleExport() {
-    if (!gradebook) {
+  async function handleExport() {
+    if (!gradebook || !selectedDisciplineId || !selectedGroupId) {
       return;
     }
-
-    const header = [
-      "ФИО",
-      ...gradebook.elements.map((element) => element.elementName),
-      "итог"
-    ];
-
-    const rows = draftStudents.map((student) => [
-      student.fullName,
-      ...gradebook.elements.map((element) => {
-        const grade = student.grades.find(
-          (item) => item.idElement === element.idElement
-        );
-
-        return grade?.gradeValue ?? "";
-      }),
-      student.finalGrade ?? ""
-    ]);
-
-    const csv = [header, ...rows]
-      .map((row) =>
-        row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(";")
-      )
-      .join("\n");
-
-    const blob = new Blob([`\uFEFF${csv}`], {
-      type: "text/csv;charset=utf-8;"
-    });
-
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-
-    link.href = url;
-    link.download = `gradebook-${selectedGroup?.groupName ?? "group"}.csv`;
-    link.click();
-
-    URL.revokeObjectURL(url);
+  
+    try {
+      setIsExporting(true);
+      setError("");
+  
+      const blob = await exportTeacherGradebook(
+        user.idUser,
+        selectedDisciplineId,
+        selectedGroupId
+      );
+  
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+  
+      link.href = url;
+      link.download = `Рабочая ведомость_${gradebook.disciplineName}_${selectedGroup?.groupName ?? "group"}.xlsx`;
+      link.click();
+  
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Ошибка экспорта ведомости"
+      );
+    } finally {
+      setIsExporting(false);
+    }
   }
 
   return (
@@ -416,9 +448,9 @@ export function TeacherGradebookPage({
             className="export-button"
             type="button"
             onClick={handleExport}
-            disabled={!gradebook}
+            disabled={!gradebook || isExporting}
           >
-            Экспорт
+            {isExporting ? "Экспортируем..." : "Экспорт"}
           </button>
         </section>
 
@@ -485,12 +517,17 @@ export function TeacherGradebookPage({
                         <th key={element.idElement}>{element.elementName}</th>
                       ))}
 
+                      <th className="gradebook-preliminary-header">предварительный итог</th>
                       <th>итог</th>
                     </tr>
                   </thead>
 
                   <tbody>
-                    {draftStudents.map((student) => (
+                  {draftStudents.map((student) => {
+                    const preliminaryFinal = calculatePreliminaryFinal(student);
+                    const roundedFinal = calculateRoundedFinal(student);
+
+                    return (
                       <tr key={student.idStudent}>
                         <td>{student.fullName}</td>
 
@@ -503,6 +540,11 @@ export function TeacherGradebookPage({
                             <td key={element.idElement}>
                               <input
                                 className="gradebook-input"
+                                type="number"
+                                min={0}
+                                max={10}
+                                step={1}
+                                inputMode="numeric"
                                 value={grade?.gradeValue ?? ""}
                                 onChange={(event) =>
                                   grade &&
@@ -517,20 +559,22 @@ export function TeacherGradebookPage({
                           );
                         })}
 
+                        <td className="gradebook-preliminary-cell">
+                          <span className="gradebook-preliminary-value">
+                            {formatPreliminaryFinal(preliminaryFinal)}
+                          </span>
+                        </td>
+
                         <td>
                           <input
                             className="gradebook-input gradebook-final-input"
-                            value={student.finalGrade ?? ""}
-                            onChange={(event) =>
-                              updateFinalGrade(
-                                student.idStudent,
-                                event.target.value
-                              )
-                            }
+                            value={roundedFinal ?? ""}
+                            readOnly
                           />
                         </td>
                       </tr>
-                    ))}
+                    );
+                  })}
                   </tbody>
                 </table>
               </div>

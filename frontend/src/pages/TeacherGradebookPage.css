@@ -279,7 +279,33 @@
   border-color: rgba(37, 99, 235, 0.24);
   box-shadow: 0 10px 22px rgba(37, 99, 235, 0.1);
 }
+.gradebook-preliminary-header {
+  min-width: 150px;
+  white-space: normal;
+}
 
+.gradebook-preliminary-cell {
+  min-width: 150px;
+}
+
+.gradebook-preliminary-value {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 72px;
+  height: 38px;
+  border-radius: 13px;
+  border: 1px solid rgba(111, 143, 255, 0.22);
+  background: rgba(37, 99, 235, 0.06);
+  color: #3156d4;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.gradebook-final-input[readonly] {
+  cursor: default;
+  color: #111827;
+}
 .gradebook-actions {
   width: min(100%, 1180px);
   display: flex;
