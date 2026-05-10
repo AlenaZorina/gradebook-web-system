@@ -169,6 +169,13 @@ function formatGrade(value?: number | null) {
   return Number(value).toFixed(2).replace(".", ",").replace(",00", "");
 }
 
+function getElementUniqueKey(element: StudentGradebook["elements"][number]) {
+  return (element.elementName ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ");
+}
+
 export function StudentGradebookPage({
   user,
   initialDisciplineId,
@@ -247,6 +254,43 @@ export function StudentGradebookPage({
       ) ?? null,
     [disciplines, selectedDisciplineId]
   );
+
+  const visibleElements = useMemo(() => {
+    if (!gradebook) {
+      return [];
+    }
+
+    const map = new Map<string, StudentGradebook["elements"][number]>();
+
+    [...gradebook.elements]
+      .sort((a, b) => (a.orderNo ?? 0) - (b.orderNo ?? 0))
+      .forEach((element) => {
+        const key = getElementUniqueKey(element);
+
+        if (!key) {
+          return;
+        }
+
+        const existing = map.get(key);
+
+        if (!existing) {
+          map.set(key, element);
+          return;
+        }
+
+        if (
+          (existing.gradeValue === null || existing.gradeValue === undefined) &&
+          element.gradeValue !== null &&
+          element.gradeValue !== undefined
+        ) {
+          map.set(key, element);
+        }
+      });
+
+    return Array.from(map.values()).sort(
+      (a, b) => (a.orderNo ?? 0) - (b.orderNo ?? 0)
+    );
+  }, [gradebook]);
 
   const currentGroupName =
     gradebook?.groupName ?? selectedDiscipline?.groupName ?? "Группа";
@@ -432,9 +476,13 @@ export function StudentGradebookPage({
                     <tr>
                       <th></th>
 
-                      {gradebook.elements.map((element) => (
-                        <th key={element.idElement}>{element.elementName}</th>
+                      {visibleElements.map((element) => (
+                        <th key={`header-${element.idElement}-${element.elementName}`}>
+                          {element.elementName}
+                        </th>
                       ))}
+
+                      <th>Итог</th>
                     </tr>
                   </thead>
 
@@ -442,18 +490,20 @@ export function StudentGradebookPage({
                     <tr>
                       <td>Дата</td>
 
-                      {gradebook.elements.map((element) => (
-                        <td key={`date-${element.idElement}`}>
+                      {visibleElements.map((element) => (
+                        <td key={`date-${element.idElement}-${element.elementName}`}>
                           {element.dateLabel || "—"}
                         </td>
                       ))}
+
+                      <td>—</td>
                     </tr>
 
                     <tr>
                       <td>Оценка</td>
 
-                      {gradebook.elements.map((element) => (
-                        <td key={`grade-${element.idElement}`}>
+                      {visibleElements.map((element) => (
+                        <td key={`grade-${element.idElement}-${element.elementName}`}>
                           <span
                             className={`student-grade-value ${
                               element.gradeValue === null ||
@@ -466,6 +516,19 @@ export function StudentGradebookPage({
                           </span>
                         </td>
                       ))}
+
+                      <td>
+                        <span
+                          className={`student-grade-value ${
+                            gradebook.finalGrade === null ||
+                            gradebook.finalGrade === undefined
+                              ? "empty"
+                              : ""
+                          }`}
+                        >
+                          {formatGrade(gradebook.finalGrade)}
+                        </span>
+                      </td>
                     </tr>
                   </tbody>
                 </table>
@@ -500,7 +563,7 @@ export function StudentGradebookPage({
           !isGradebookLoading &&
           !error &&
           gradebook &&
-          gradebook.elements.length === 0 && (
+          visibleElements.length === 0 && (
             <div className="schedule-state">
               По выбранной дисциплине пока нет элементов контроля.
             </div>
