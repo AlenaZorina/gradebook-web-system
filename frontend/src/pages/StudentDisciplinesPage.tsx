@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { LoginResponse, StudentDiscipline } from "../api";
 import { getStudentDisciplines } from "../api";
 import "./TeacherSchedulePage.css";
+import "./TeacherDisciplinesPage.css";
 import "./StudentDisciplinesPage.css";
 
 type StudentDisciplinesPageProps = {
@@ -139,20 +140,6 @@ function LogoutIcon() {
   );
 }
 
-function SearchIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path
-        d="m15.5 15.5 4 4M10.5 17a6.5 6.5 0 1 1 0-13 6.5 6.5 0 0 1 0 13Z"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
 function getDisciplineLetter(name?: string | null) {
   return name?.trim()?.[0]?.toUpperCase() ?? "Д";
 }
@@ -198,7 +185,9 @@ export function StudentDisciplinesPage({
         const data = await getStudentDisciplines(user.idUser);
         setDisciplines(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Ошибка загрузки дисциплин");
+        setError(
+          err instanceof Error ? err.message : "Ошибка загрузки дисциплин"
+        );
       } finally {
         setIsLoading(false);
       }
@@ -264,6 +253,7 @@ export function StudentDisciplinesPage({
             <div className="avatar-placeholder avatar-initials">
               {getStudentInitials(user)}
             </div>
+
             <div>
               <p>{getStudentShortName(user)}</p>
               <span>
@@ -272,7 +262,7 @@ export function StudentDisciplinesPage({
             </div>
           </div>
 
-          <p className="sidebar-section-title">Общее</p>
+          <p className="sidebar-section-title">ОБЩЕЕ</p>
 
           <nav className="main-nav">
             <button className="nav-item" type="button" onClick={onOpenSchedule}>
@@ -314,7 +304,7 @@ export function StudentDisciplinesPage({
 
           <div className="sidebar-divider" />
 
-          <p className="sidebar-section-title">BI-контур</p>
+          <p className="sidebar-section-title">BI-КОНТУР</p>
 
           <nav className="main-nav">
             <button
@@ -338,59 +328,63 @@ export function StudentDisciplinesPage({
         </button>
       </aside>
 
-      <main className="student-disciplines-content">
-        <section className="student-disciplines-hero">
-          <div>
-            <h1>Дисциплины</h1>
-            {studentInfo && (
-              <p>
-                {studentInfo.courseNo} курс · {studentInfo.groupName}
-              </p>
-            )}
+      <section className="disciplines-content student-disciplines-content">
+        <div className="disciplines-header student-disciplines-header">
+          <h1>Дисциплины</h1>
+
+          {studentInfo && (
+            <p className="student-disciplines-subtitle">
+              {studentInfo.courseNo} курс · {studentInfo.groupName}
+            </p>
+          )}
+
+          <div className="disciplines-toolbar student-disciplines-toolbar">
+            <select
+              value={statusFilter}
+              onChange={(event) => setStatusFilter(event.target.value)}
+            >
+              <option value="current">Текущие</option>
+            </select>
+
+            <select
+              value={sortMode}
+              onChange={(event) => setSortMode(event.target.value)}
+            >
+              <option value="name">Сортировать по названию</option>
+              <option value="module">Сортировать по модулю</option>
+            </select>
+
+            <div className="disciplines-search">
+              <input
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Поиск"
+              />
+              <span>⌕</span>
+            </div>
           </div>
-        </section>
+        </div>
 
-        <section className="student-disciplines-filters">
-          <select
-            value={statusFilter}
-            onChange={(event) => setStatusFilter(event.target.value)}
-          >
-            <option value="current">Текущие</option>
-          </select>
+        {isLoading && (
+          <div className="disciplines-state">Загружаем дисциплины...</div>
+        )}
 
-          <select value={sortMode} onChange={(event) => setSortMode(event.target.value)}>
-            <option value="name">Сортировать по названию</option>
-            <option value="module">Сортировать по модулю</option>
-          </select>
-
-          <label className="student-search">
-            <SearchIcon />
-            <input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Поиск"
-            />
-          </label>
-        </section>
-
-        {isLoading && <div className="schedule-state">Загружаем дисциплины...</div>}
-
-        {error && <div className="schedule-error">{error}</div>}
+        {error && <div className="disciplines-error">{error}</div>}
 
         {!isLoading && !error && filteredDisciplines.length === 0 && (
-          <div className="schedule-state">Дисциплины не найдены</div>
+          <div className="disciplines-state">Дисциплины не найдены</div>
         )}
 
         {!isLoading &&
           !error &&
           groupedByCourse.map(([courseNo, items]) => (
-            <section className="student-course-section" key={courseNo}>
+            <section className="course-section" key={courseNo}>
               <h2>{courseNo} курс</h2>
 
-              <div className="student-disciplines-grid">
+              <div className="disciplines-grid">
                 {items.map((item) => (
                   <article
-                    className="student-discipline-card"
+                    className="discipline-card"
                     key={`${item.idDiscipline}-${item.idGroup}`}
                     role="button"
                     tabIndex={0}
@@ -401,29 +395,23 @@ export function StudentDisciplinesPage({
                       }
                     }}
                   >
-                    <div className="student-discipline-cover">
-                      {getDisciplineLetter(item.disciplineName)}
+                    <div className="discipline-cover">
+                      <span>{getDisciplineLetter(item.disciplineName)}</span>
                     </div>
 
-                    <div className="student-discipline-body">
+                    <div className="discipline-card-body">
                       <h3>{item.disciplineName ?? "Дисциплина"}</h3>
 
-                      <div className="student-discipline-meta">
-                        <span>{item.groupName}</span>
+                      <div className="discipline-meta">
                         <span>{getModuleText(item)}</span>
                       </div>
-
-                      <p>
-                        Преподаватели:{" "}
-                        <strong>{item.teachersShortNames ?? "не указаны"}</strong>
-                      </p>
                     </div>
                   </article>
                 ))}
               </div>
             </section>
           ))}
-      </main>
+      </section>
     </div>
   );
 }

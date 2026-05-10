@@ -1,203 +1,91 @@
-.student-disciplines-content {
-  height: 100vh;
-  padding: 52px 48px 70px;
-  overflow: auto;
-  box-sizing: border-box;
-}
-
-.student-disciplines-hero {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 24px;
+.student-disciplines-header {
   margin-bottom: 28px;
 }
 
-.student-disciplines-hero h1 {
-  margin: 0;
-  color: #111827;
-  font-size: 36px;
-  line-height: 1.1;
+.student-disciplines-subtitle {
+  margin: -10px 0 24px;
+  color: #4b5a78;
+  font-size: 18px;
+  line-height: 1.35;
   font-weight: 900;
-  letter-spacing: -0.05em;
 }
 
-.student-disciplines-hero p {
-  margin: 10px 0 0;
-  color: #6b7692;
-  font-size: 16px;
-  font-weight: 800;
+.student-disciplines-toolbar {
+  margin-bottom: 30px;
 }
 
-.student-disciplines-filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 14px;
-  margin-bottom: 34px;
+.student-disciplines-content .disciplines-toolbar {
+  grid-template-columns: 150px 250px minmax(320px, 520px);
 }
 
-.student-disciplines-filters select,
-.student-search {
-  min-height: 46px;
-  border: 1px solid #dce4f5;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 12px 28px rgba(27, 46, 94, 0.06);
+.student-disciplines-content .discipline-card {
+  min-height: 200px;
 }
 
-.student-disciplines-filters select {
-  padding: 0 42px 0 18px;
-  color: #111827;
-  font-family: "Manrope", system-ui, sans-serif;
-  font-size: 14px;
-  font-weight: 800;
-  outline: none;
-  appearance: none;
-  background-image: linear-gradient(45deg, transparent 50%, #64748b 50%),
-    linear-gradient(135deg, #64748b 50%, transparent 50%);
-  background-position: calc(100% - 22px) 19px, calc(100% - 16px) 19px;
-  background-size: 6px 6px, 6px 6px;
-  background-repeat: no-repeat;
+.student-disciplines-content .discipline-card-body h3 {
+  min-height: 40px;
 }
 
-.student-search {
-  width: min(320px, 100%);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 0 16px;
-  box-sizing: border-box;
-}
-
-.student-search svg {
-  width: 18px;
-  height: 18px;
-  color: #7b87a5;
-  flex: 0 0 auto;
-}
-
-.student-search input {
-  width: 100%;
-  border: none;
-  outline: none;
-  background: transparent;
-  color: #111827;
-  font-family: "Manrope", system-ui, sans-serif;
-  font-size: 14px;
-  font-weight: 800;
-}
-
-.student-search input::placeholder {
-  color: #9aa6bd;
-}
-
-.student-course-section {
-  margin-bottom: 38px;
-}
-
-.student-course-section h2 {
-  margin: 0 0 18px;
-  color: #111827;
-  font-size: 22px;
-  line-height: 1.2;
-  font-weight: 900;
-  letter-spacing: -0.035em;
-}
-
-.student-disciplines-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
-  gap: 20px;
-}
-
-.student-discipline-card {
-  min-height: 238px;
-  border: 1px solid rgba(225, 231, 245, 0.95);
-  border-radius: 30px;
-  background: rgba(255, 255, 255, 0.86);
-  box-shadow: 0 22px 60px rgba(27, 46, 94, 0.08);
-  overflow: hidden;
-  cursor: pointer;
-  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
-}
-
-.student-discipline-card:hover {
-  transform: translateY(-3px);
-  border-color: rgba(37, 99, 235, 0.22);
-  box-shadow: 0 28px 70px rgba(27, 46, 94, 0.12);
-}
-
-.student-discipline-card:focus-visible {
-  outline: 3px solid rgba(37, 99, 235, 0.24);
-  outline-offset: 4px;
-}
-
-.student-discipline-cover {
-  height: 96px;
+.avatar-initials {
   display: grid;
   place-items: center;
-  background: radial-gradient(circle at top left, rgba(255, 255, 255, 0.45), transparent 38%),
-    linear-gradient(135deg, #4f74ff 0%, #8da6ff 100%);
+  background: linear-gradient(135deg, #4f74ff 0%, #8da6ff 100%);
   color: #ffffff;
-  font-size: 38px;
+  font-size: 16px;
   font-weight: 900;
-  letter-spacing: -0.04em;
+  letter-spacing: 0.04em;
+  box-shadow: 0 14px 28px rgba(37, 99, 235, 0.22);
 }
 
-.student-discipline-body {
-  padding: 20px 22px 22px;
+.nav-icon,
+.nav-item > span:first-child {
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  border-radius: 11px;
+  background: rgba(167, 181, 216, 0.5);
+  color: inherit;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  transition: 0.18s ease;
 }
 
-.student-discipline-body h3 {
-  min-height: 56px;
-  margin: 0 0 14px;
-  color: #111827;
-  font-size: 20px;
-  line-height: 1.25;
-  font-weight: 900;
-  letter-spacing: -0.035em;
+.nav-icon svg {
+  width: 18px;
+  height: 18px;
 }
 
-.student-discipline-meta {
+.nav-item.active .nav-icon,
+.nav-item.active > span:first-child {
+  background: linear-gradient(135deg, #2563eb, #6f8fff);
+  color: #ffffff;
+}
+
+.sidebar-main {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 14px;
+  flex-direction: column;
+  min-height: 0;
 }
 
-.student-discipline-meta span {
-  border-radius: 999px;
-  background: #eef2ff;
-  color: #3353b8;
-  padding: 7px 11px;
-  font-size: 12px;
-  font-weight: 900;
+.logout-button {
+  margin-top: auto;
 }
 
-.student-discipline-body p {
-  margin: 0;
-  color: #7b87a5;
-  font-size: 13px;
-  line-height: 1.45;
-  font-weight: 700;
+.logout-button .nav-icon {
+  background: rgba(239, 68, 68, 0.08);
 }
 
-.student-discipline-body strong {
-  color: #39445c;
-  font-weight: 900;
+@media (max-width: 1180px) {
+  .student-disciplines-content .disciplines-toolbar {
+    grid-template-columns: 1fr;
+    max-width: 100%;
+  }
 }
 
 @media (max-width: 780px) {
-  .student-disciplines-content {
-    height: auto;
-    padding: 32px 20px 50px;
-  }
-
-  .student-disciplines-hero h1 {
-    font-size: 30px;
-  }
-
-  .student-disciplines-grid {
-    grid-template-columns: 1fr;
+  .student-disciplines-subtitle {
+    font-size: 16px;
+    margin-bottom: 22px;
   }
 }
