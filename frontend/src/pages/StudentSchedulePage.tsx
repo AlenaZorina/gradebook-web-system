@@ -384,7 +384,7 @@ export function StudentSchedulePage({
               <span className="nav-icon">
                 <GradesIcon />
               </span>
-              Оценки
+              Ведомость
             </button>
           </nav>
 

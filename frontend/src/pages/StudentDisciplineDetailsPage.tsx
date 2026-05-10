@@ -243,7 +243,7 @@ export function StudentDisciplineDetailsPage({
               <span className="nav-icon">
                 <GradesIcon />
               </span>
-              Оценки
+              Ведомость
             </button>
           </nav>
 

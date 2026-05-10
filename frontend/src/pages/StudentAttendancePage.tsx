@@ -337,7 +337,7 @@ export function StudentAttendancePage({
               <span className="nav-icon">
                 <GradesIcon />
               </span>
-              Оценки
+              Ведомость
             </button>
           </nav>
 
