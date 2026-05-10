@@ -96,6 +96,7 @@ export type LoginRequest = {
   };
   
   export type TeacherDisciplineDetail = {
+    formulaElements: TeacherFormulaElement[];
     idAssignment: number;
     teacherUserId: number;
   
@@ -116,6 +117,19 @@ export type LoginRequest = {
     pudUrl?: string | null;
   
     groups: DisciplineGroupOption[];
+  };
+
+  export type TeacherFormulaElement = {
+    idElement?: number | null;
+    elementName: string;
+    weight: number;
+    orderNo: number;
+    controlType: string;
+  };
+  
+  export type TeacherFormulaResponse = {
+    formulaText: string;
+    elements: TeacherFormulaElement[];
   };
   
   export async function getTeacherDisciplineDetails(
@@ -1351,6 +1365,33 @@ export type LoginRequest = {
       throw new Error(
         text || "Не удалось импортировать расписание с сайта ВШЭ"
       );
+    }
+  
+    return response.json();
+  }
+  export async function updateTeacherDisciplineFormula(
+    idUser: number,
+    disciplineId: number,
+    idAssignment: number,
+    elements: TeacherFormulaElement[]
+  ): Promise<TeacherFormulaResponse> {
+    const response = await fetch(
+      `${API_URL}/api/users/${idUser}/teacher-disciplines/${disciplineId}/details/${idAssignment}/formula`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          elements
+        })
+      }
+    );
+  
+    if (!response.ok) {
+      const text = await response.text();
+  
+      throw new Error(text || "Не удалось сохранить формулу оценивания");
     }
   
     return response.json();

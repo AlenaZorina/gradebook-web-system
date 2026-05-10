@@ -1,6 +1,6 @@
 .discipline-detail-content {
   height: 100vh;
-  padding: 52px 48px 70px;
+  padding: 52px 72px 70px;
   overflow-y: auto;
   box-sizing: border-box;
   font-family: "Manrope", system-ui, sans-serif;
@@ -25,7 +25,7 @@
 }
 
 .discipline-detail-header {
-  width: min(100%, 960px);
+  width: min(100%, 1180px);
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
@@ -34,7 +34,7 @@
 }
 
 .discipline-detail-header h1 {
-  max-width: 820px;
+  max-width: 900px;
   margin: 0 0 14px;
   color: #111827;
   font-size: 38px;
@@ -53,6 +53,7 @@
 
 .discipline-detail-badge {
   margin-top: 6px;
+  margin-right: 16px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.86);
   border: 1px solid #dce4f5;
@@ -110,7 +111,7 @@
 }
 
 .discipline-actions {
-  width: min(100%, 980px);
+  width: min(100%, 1180px);
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -133,6 +134,7 @@
 }
 
 .detail-row {
+  width: 100%;
   min-height: 86px;
   padding: 22px 26px;
   display: flex;
@@ -157,6 +159,7 @@
 .action-row:hover {
   background: rgba(255, 255, 255, 0.9);
 }
+
 .detail-row h2 {
   margin: 0 0 7px;
   color: #111827;
@@ -182,12 +185,27 @@
   color: #2563eb;
 }
 
-.detail-arrow {
-  color: #566886 !important;
-  font-size: 32px !important;
-  line-height: 1;
-  font-weight: 700 !important;
+.detail-chevron {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 auto;
+  border-right: 3px solid #566886;
+  border-bottom: 3px solid #566886;
+  transform: rotate(45deg);
+  transition: transform 0.18s ease, border-color 0.18s ease;
   margin-left: 22px;
+}
+
+.detail-chevron-open {
+  transform: rotate(225deg);
+}
+
+.detail-chevron-right {
+  transform: rotate(-45deg);
+}
+
+.detail-row:hover .detail-chevron {
+  border-color: #2563eb;
 }
 
 .formula-body {
@@ -196,22 +214,30 @@
 
 .formula-box {
   width: fit-content;
+  max-width: 100%;
   min-height: 44px;
   display: inline-flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
   border: 1px solid #dce4f5;
   border-radius: 16px;
   background: #f8faff;
-  padding: 10px 16px;
+  padding: 10px 12px 10px 16px;
   color: #111827;
   font-size: 15px;
   font-weight: 900;
+  box-sizing: border-box;
 }
 
-.formula-box button {
+.formula-box span {
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.formula-edit-button {
   width: 32px;
   height: 32px;
+  flex: 0 0 auto;
   border: none;
   border-radius: 11px;
   background: #edf3ff;
@@ -219,6 +245,168 @@
   cursor: pointer;
   font-size: 15px;
   font-weight: 900;
+  transition: 0.18s ease;
+}
+
+.formula-edit-button:hover {
+  background: #dbe8ff;
+}
+
+.formula-editor {
+  margin-top: 16px;
+  border: 1px solid #dce4f5;
+  border-radius: 22px;
+  background: rgba(248, 250, 255, 0.94);
+  padding: 18px;
+  box-sizing: border-box;
+}
+
+.formula-editor-header h3 {
+  margin: 0 0 5px;
+  color: #111827;
+  font-size: 17px;
+  font-weight: 900;
+}
+
+.formula-editor-header p {
+  margin: 0 0 16px;
+  color: #63718f;
+  font-size: 13px;
+  line-height: 1.45;
+  font-weight: 700;
+}
+
+.formula-editor-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.formula-editor-row {
+  display: grid;
+  grid-template-columns: 130px 24px minmax(220px, 1fr) 110px;
+  gap: 10px;
+  align-items: end;
+}
+
+.formula-editor-row label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: #4b5a78;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.formula-editor-row input {
+  height: 42px;
+  border: 1px solid #dce4f5;
+  border-radius: 14px;
+  background: #ffffff;
+  padding: 0 13px;
+  color: #111827;
+  font-family: "Manrope", system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 850;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.formula-editor-row input:focus {
+  border-color: #6f8fff;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
+}
+
+.formula-editor-multiply {
+  height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #63718f;
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.formula-delete-button,
+.formula-add-button,
+.formula-cancel-button,
+.formula-save-button {
+  height: 42px;
+  border: none;
+  border-radius: 999px;
+  padding: 0 16px;
+  font-family: "Manrope", system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: 0.18s ease;
+}
+
+.formula-delete-button {
+  background: #fff1f2;
+  color: #be123c;
+}
+
+.formula-delete-button:hover:not(:disabled) {
+  background: #ffe4e6;
+}
+
+.formula-delete-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.formula-add-button {
+  background: #edf3ff;
+  color: #2563eb;
+}
+
+.formula-add-button:hover {
+  background: #dbe8ff;
+}
+
+.formula-cancel-button {
+  margin-right: 10px;
+  background: #ffffff;
+  color: #566886;
+  border: 1px solid #dce4f5;
+}
+
+.formula-cancel-button:hover:not(:disabled) {
+  background: #f8faff;
+}
+
+.formula-save-button {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.formula-save-button:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+.formula-save-button:disabled,
+.formula-cancel-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.formula-editor-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.formula-editor-error {
+  margin-top: 12px;
+  border-radius: 14px;
+  background: #fee2e2;
+  color: #b91c1c;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 800;
 }
 
 .discipline-detail-state,
@@ -241,12 +429,13 @@
   color: #b91c1c;
 }
 
-@media (max-width: 980px) {
+@media (max-width: 1180px) {
   .discipline-detail-content {
     padding: 42px 32px 60px;
   }
 
   .discipline-detail-header {
+    width: 100%;
     flex-direction: column;
   }
 
@@ -256,6 +445,10 @@
 
   .discipline-actions {
     width: 100%;
+  }
+
+  .formula-editor-row {
+    grid-template-columns: 120px 22px minmax(200px, 1fr) 100px;
   }
 }
 
@@ -281,5 +474,38 @@
 
   .detail-row h2 {
     font-size: 18px;
+  }
+
+  .formula-body {
+    padding: 0 20px 20px;
+  }
+
+  .formula-box {
+    width: 100%;
+  }
+
+  .formula-editor-row {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .formula-editor-multiply {
+    display: none;
+  }
+
+  .formula-editor-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .formula-editor-actions > div {
+    display: flex;
+    gap: 10px;
+  }
+
+  .formula-cancel-button,
+  .formula-save-button {
+    flex: 1;
+    margin-right: 0;
   }
 }

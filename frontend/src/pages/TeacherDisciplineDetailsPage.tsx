@@ -1,6 +1,13 @@
-import { useEffect, useState } from "react";
-import type { LoginResponse, TeacherDisciplineDetail } from "../api";
-import { getTeacherDisciplineDetails } from "../api";
+import { useEffect, useMemo, useState } from "react";
+import type {
+  LoginResponse,
+  TeacherDisciplineDetail,
+  TeacherFormulaElement
+} from "../api";
+import {
+  getTeacherDisciplineDetails,
+  updateTeacherDisciplineFormula
+} from "../api";
 import "./TeacherSchedulePage.css";
 import "./TeacherDisciplineDetailsPage.css";
 import {
@@ -21,6 +28,14 @@ type TeacherDisciplineDetailsPageProps = {
   onOpenAnalytics: () => void;
 };
 
+type FormulaDraftElement = {
+  tempId: string;
+  idElement?: number | null;
+  elementName: string;
+  weight: string;
+  orderNo: number;
+  controlType: string;
+};
 
 function ScheduleIcon() {
   return (
@@ -109,6 +124,57 @@ function getCourseText(courseNo: number) {
   return `${courseNo} курс`;
 }
 
+function buildFormulaText(elements: TeacherFormulaElement[]) {
+  if (elements.length === 0) {
+    return "Формула не задана";
+  }
+
+  return [...elements]
+    .sort((a, b) => a.orderNo - b.orderNo)
+    .map((item) => `${formatWeight(item.weight)}*${item.elementName}`)
+    .join(" + ");
+}
+
+function formatWeight(value: number) {
+  return Number.isInteger(value)
+    ? String(value)
+    : String(Number(value.toFixed(4))).replace(".", ",");
+}
+
+function createDraftElement(index: number): FormulaDraftElement {
+  return {
+    tempId: `${Date.now()}-${Math.random()}-${index}`,
+    idElement: null,
+    elementName: "",
+    weight: "0,1",
+    orderNo: index + 1,
+    controlType: "custom"
+  };
+}
+
+function elementsToDraft(elements: TeacherFormulaElement[]) {
+  return [...elements]
+    .sort((a, b) => a.orderNo - b.orderNo)
+    .map((item, index) => ({
+      tempId: `${item.idElement ?? "new"}-${index}-${Date.now()}`,
+      idElement: item.idElement,
+      elementName: item.elementName,
+      weight: String(item.weight).replace(".", ","),
+      orderNo: index + 1,
+      controlType: item.controlType || "custom"
+    }));
+}
+
+function draftToElements(draft: FormulaDraftElement[]): TeacherFormulaElement[] {
+  return draft.map((item, index) => ({
+    idElement: item.idElement,
+    elementName: item.elementName.trim(),
+    weight: Number(item.weight.replace(",", ".")),
+    orderNo: index + 1,
+    controlType: item.controlType || "custom"
+  }));
+}
+
 export function TeacherDisciplineDetailsPage({
   user,
   disciplineId,
@@ -124,7 +190,14 @@ export function TeacherDisciplineDetailsPage({
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(
     initialGroupId ?? null
   );
+
   const [isFormulaOpen, setIsFormulaOpen] = useState(false);
+  const [formulaElements, setFormulaElements] = useState<TeacherFormulaElement[]>([]);
+  const [isFormulaEditing, setIsFormulaEditing] = useState(false);
+  const [draftElements, setDraftElements] = useState<FormulaDraftElement[]>([]);
+  const [formulaError, setFormulaError] = useState("");
+  const [isFormulaSaving, setIsFormulaSaving] = useState(false);
+
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -141,6 +214,9 @@ export function TeacherDisciplineDetailsPage({
         );
 
         setDetails(data);
+        setFormulaElements(data.formulaElements ?? []);
+        setIsFormulaEditing(false);
+        setFormulaError("");
 
         if (selectedGroupId === null) {
           setSelectedGroupId(data.selectedGroupId);
@@ -156,6 +232,125 @@ export function TeacherDisciplineDetailsPage({
   }, [user.idUser, disciplineId, selectedGroupId]);
 
   const selectedGroup = selectedGroupId ?? details?.selectedGroupId;
+
+  const formulaText = useMemo(() => {
+    if (formulaElements.length > 0) {
+      return buildFormulaText(formulaElements);
+    }
+
+    return details?.formulaText || "Формула не задана";
+  }, [formulaElements, details?.formulaText]);
+
+  function openFormulaEditor() {
+    const sourceElements =
+      formulaElements.length > 0
+        ? formulaElements
+        : [
+            {
+              idElement: null,
+              elementName: "Элемент",
+              weight: 1,
+              orderNo: 1,
+              controlType: "custom"
+            }
+          ];
+
+    setDraftElements(elementsToDraft(sourceElements));
+    setFormulaError("");
+    setIsFormulaEditing(true);
+  }
+
+  function cancelFormulaEditor() {
+    setIsFormulaEditing(false);
+    setFormulaError("");
+  }
+
+  function addFormulaElement() {
+    setDraftElements((current) => [
+      ...current,
+      createDraftElement(current.length)
+    ]);
+  }
+
+  function removeFormulaElement(tempId: string) {
+    setDraftElements((current) =>
+      current.length === 1
+        ? current
+        : current.filter((item) => item.tempId !== tempId)
+    );
+  }
+
+  function updateDraftElement(
+    tempId: string,
+    field: "elementName" | "weight",
+    value: string
+  ) {
+    setDraftElements((current) =>
+      current.map((item) =>
+        item.tempId === tempId
+          ? {
+              ...item,
+              [field]: value
+            }
+          : item
+      )
+    );
+  }
+
+  async function saveFormula() {
+    if (!details) {
+      return;
+    }
+
+    const normalized = draftToElements(draftElements);
+
+    if (normalized.some((item) => !item.elementName)) {
+      setFormulaError("Заполните названия всех элементов контроля.");
+      return;
+    }
+
+    if (
+      normalized.some(
+        (item) => !Number.isFinite(item.weight) || item.weight <= 0
+      )
+    ) {
+      setFormulaError("Вес каждого элемента должен быть больше 0.");
+      return;
+    }
+
+    try {
+      setIsFormulaSaving(true);
+      setFormulaError("");
+
+      const response = await updateTeacherDisciplineFormula(
+        user.idUser,
+        details.idDiscipline,
+        details.idAssignment,
+        normalized
+      );
+
+      setFormulaElements(response.elements);
+      setDetails((current) =>
+        current
+          ? {
+              ...current,
+              formulaText: response.formulaText,
+              formulaElements: response.elements
+            }
+          : current
+      );
+
+      setIsFormulaEditing(false);
+    } catch (err) {
+      setFormulaError(
+        err instanceof Error
+          ? err.message
+          : "Не удалось сохранить формулу оценивания"
+      );
+    } finally {
+      setIsFormulaSaving(false);
+    }
+  }
 
   return (
     <main className="schedule-layout">
@@ -288,17 +483,122 @@ export function TeacherDisciplineDetailsPage({
                     )}
                   </div>
 
-                  <span className="detail-arrow">{isFormulaOpen ? "⌃" : "⌄"}</span>
+                  <span
+                    className={`detail-chevron ${isFormulaOpen ? "detail-chevron-open" : ""}`}
+                    aria-hidden="true"
+                  />
                 </button>
 
                 {isFormulaOpen && (
                   <div className="formula-body">
                     <div className="formula-box">
-                      <span>{details.formulaText}</span>
-                      <button type="button" title="Редактирование формулы">
+                      <span>{formulaText}</span>
+
+                      <button
+                        className="formula-edit-button"
+                        type="button"
+                        onClick={openFormulaEditor}
+                        aria-label="Редактировать формулу"
+                        title="Редактировать формулу"
+                      >
                         ✎
                       </button>
                     </div>
+
+                    {isFormulaEditing && (
+                      <div className="formula-editor">
+                        <div className="formula-editor-header">
+                          <h3>Редактирование формулы</h3>
+                          <p>
+                            Элемент формулы состоит из веса и названия элемента контроля.
+                            Например: 0,3 * ЛР1.
+                          </p>
+                        </div>
+
+                        <div className="formula-editor-list">
+                          {draftElements.map((item, index) => (
+                            <div className="formula-editor-row" key={item.tempId}>
+                              <label>
+                                Вес
+                                <input
+                                  value={item.weight}
+                                  onChange={(event) =>
+                                    updateDraftElement(
+                                      item.tempId,
+                                      "weight",
+                                      event.target.value
+                                    )
+                                  }
+                                  placeholder="0,3"
+                                />
+                              </label>
+
+                              <span className="formula-editor-multiply">*</span>
+
+                              <label>
+                                Элемент контроля
+                                <input
+                                  value={item.elementName}
+                                  onChange={(event) =>
+                                    updateDraftElement(
+                                      item.tempId,
+                                      "elementName",
+                                      event.target.value
+                                    )
+                                  }
+                                  placeholder={`ЛР${index + 1}`}
+                                />
+                              </label>
+
+                              <button
+                                className="formula-delete-button"
+                                type="button"
+                                onClick={() => removeFormulaElement(item.tempId)}
+                                disabled={draftElements.length === 1}
+                              >
+                                Удалить
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+
+                        {formulaError && (
+                          <div className="formula-editor-error">
+                            {formulaError}
+                          </div>
+                        )}
+
+                        <div className="formula-editor-actions">
+                          <button
+                            className="formula-add-button"
+                            type="button"
+                            onClick={addFormulaElement}
+                          >
+                            + Добавить элемент
+                          </button>
+
+                          <div>
+                            <button
+                              className="formula-cancel-button"
+                              type="button"
+                              onClick={cancelFormulaEditor}
+                              disabled={isFormulaSaving}
+                            >
+                              Отменить
+                            </button>
+
+                            <button
+                              className="formula-save-button"
+                              type="button"
+                              onClick={saveFormula}
+                              disabled={isFormulaSaving}
+                            >
+                              {isFormulaSaving ? "Сохраняем..." : "Сохранить"}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </section>
@@ -313,7 +613,7 @@ export function TeacherDisciplineDetailsPage({
                   <span>Отметить посещаемость студентов</span>
                 </div>
 
-                <span className="detail-arrow">›</span>
+                <span className="detail-chevron detail-chevron-right" aria-hidden="true" />
               </button>
 
               <button
@@ -326,7 +626,7 @@ export function TeacherDisciplineDetailsPage({
                   <span>Ведомость по дисциплине</span>
                 </div>
 
-                <span className="detail-arrow">›</span>
+                <span className="detail-chevron detail-chevron-right" aria-hidden="true" />
               </button>
             </div>
           </>
