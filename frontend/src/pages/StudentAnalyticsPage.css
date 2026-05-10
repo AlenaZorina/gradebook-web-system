@@ -10,7 +10,12 @@
   }
   
   .student-analytics-filters {
-    margin-bottom: 24px;
+    width: min(100%, 1180px);
+    margin-bottom: 30px;
+  }
+  
+  .student-analytics-filter select {
+    min-width: 390px;
   }
   
   .student-analytics-kpi-grid {

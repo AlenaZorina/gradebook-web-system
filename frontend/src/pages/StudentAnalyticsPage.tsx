@@ -351,16 +351,19 @@ export function StudentAnalyticsPage({
         </div>
 
         <div className="analytics-filters student-analytics-filters">
-          <label>
-            Дисциплина
+          <label className="analytics-filter student-analytics-filter">
+            <span>Дисциплина</span>
+
             <select
               value={selectedDisciplineId ?? "all"}
               onChange={(event) => {
                 const value = event.target.value;
                 setSelectedDisciplineId(value === "all" ? null : Number(value));
               }}
+              disabled={isDisciplinesLoading || isAnalyticsLoading}
             >
               <option value="all">Все дисциплины</option>
+
               {uniqueDisciplines.map((discipline) => (
                 <option
                   key={discipline.idDiscipline}
