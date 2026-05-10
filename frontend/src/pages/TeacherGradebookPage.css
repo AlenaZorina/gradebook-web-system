@@ -1,13 +1,8 @@
 .gradebook-content {
-  flex: 1;
-  min-width: 0;
   height: 100vh;
-  padding: 48px 72px 80px;
+  padding: 52px 48px 70px;
   overflow-y: auto;
   box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  gap: 26px;
   font-family: "Manrope", system-ui, sans-serif;
   color: #111827;
 }
@@ -21,7 +16,7 @@
   font-size: 14px;
   font-weight: 900;
   cursor: pointer;
-  margin: 0 0 -8px;
+  margin: 0 0 12px;
   padding: 0;
   transition: 0.18s ease;
 }
@@ -36,45 +31,47 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 24px;
-  margin-bottom: 0;
+  margin-bottom: 28px;
 }
 
 .gradebook-topline h1 {
-  margin: 0;
+  margin: 0 0 10px;
   color: #111827;
-  font-size: 40px;
-  line-height: 1.08;
+  font-size: 34px;
+  line-height: 1.12;
   font-weight: 900;
-  letter-spacing: -0.04em;
+  letter-spacing: -0.05em;
 }
 
 .gradebook-topline p {
-  margin: 8px 0 0;
-  color: #566886;
+  margin: 0;
+  color: #4b5a78;
   font-size: 18px;
   line-height: 1.35;
   font-weight: 900;
 }
 
 .export-button {
-  min-width: 112px;
+  margin-top: 2px;
+  min-width: 122px;
   height: 48px;
   border: none;
   border-radius: 18px;
-  background: linear-gradient(135deg, #6f8fff 0%, #3f6df6 100%);
+  padding: 0 24px;
+  background: linear-gradient(135deg, #2563eb, #6f8fff);
   color: #ffffff;
   font-family: "Manrope", system-ui, sans-serif;
   font-size: 14px;
   font-weight: 900;
   line-height: 1;
-  box-shadow: 0 18px 36px rgba(63, 109, 246, 0.22);
+  box-shadow: 0 18px 38px rgba(37, 99, 235, 0.23);
   cursor: pointer;
-  transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+  transition: 0.18s ease;
 }
 
 .export-button:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 22px 42px rgba(63, 109, 246, 0.28);
+  box-shadow: 0 22px 42px rgba(37, 99, 235, 0.28);
 }
 
 .export-button:active:not(:disabled) {
@@ -89,175 +86,187 @@
 }
 
 .gradebook-filters {
-  width: min(100%, 780px);
+  width: min(100%, 1180px);
   display: flex;
-  align-items: flex-end;
-  gap: 24px;
-  margin-top: -2px;
-  margin-bottom: 0;
+  flex-wrap: wrap;
+  gap: 16px 22px;
+  align-items: end;
+  margin-bottom: 30px;
 }
 
 .gradebook-filter {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  align-items: center;
+  gap: 12px;
   min-width: 0;
 }
 
 .gradebook-filter span {
-  color: #566886;
+  color: #5d6a86;
   font-size: 14px;
-  line-height: 1;
   font-weight: 900;
-  letter-spacing: -0.01em;
+}
+
+.gradebook-filter:first-child select {
+  min-width: 350px;
 }
 
 .gradebook-filter select {
-  width: 280px;
-  height: 52px;
+  min-width: 170px;
+  height: 46px;
   border: 1px solid #dce4f5;
   border-radius: 999px;
   background-color: rgba(255, 255, 255, 0.92);
+  padding: 0 44px 0 22px;
   color: #111827;
   font-family: "Manrope", system-ui, sans-serif;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 900;
-  padding: 0 48px 0 24px;
   outline: none;
   cursor: pointer;
-  box-shadow: 0 16px 38px rgba(27, 46, 94, 0.06);
-  transition: border-color 0.18s ease, box-shadow 0.18s ease;
-
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
-
+  box-shadow: 0 12px 28px rgba(27, 46, 94, 0.05);
   background-image:
     linear-gradient(45deg, transparent 50%, #2563eb 50%),
     linear-gradient(135deg, #2563eb 50%, transparent 50%);
   background-position:
-    calc(100% - 27px) 50%,
-    calc(100% - 20px) 50%;
+    calc(100% - 24px) 19px,
+    calc(100% - 18px) 19px;
   background-size:
-    7px 7px,
-    7px 7px;
+    6px 6px,
+    6px 6px;
   background-repeat: no-repeat;
-}
-
-.gradebook-filter select:hover {
-  border-color: #c8d8ff;
-  box-shadow: 0 18px 44px rgba(37, 99, 235, 0.08);
+  transition: 0.18s ease;
 }
 
 .gradebook-filter select:focus {
-  border-color: #8fb0ff;
+  border-color: #6f8fff;
   box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
 }
 
 .gradebook-filter select:disabled {
-  opacity: 0.65;
   cursor: not-allowed;
-}
-
-.gradebook-title {
-  margin: 0 0 18px;
-  text-align: center;
-  font-size: 24px;
-  line-height: 1.2;
-  font-weight: 900;
-  color: #111827;
-  letter-spacing: -0.03em;
+  opacity: 0.65;
 }
 
 .gradebook-table-shell {
   width: min(100%, 1180px);
-  border-radius: 30px;
-  padding: 24px 24px 18px;
-  background: rgba(255, 255, 255, 0.72);
-  border: 1px solid rgba(210, 220, 243, 0.72);
-  box-shadow: 0 24px 60px rgba(57, 76, 120, 0.08);
-  overflow: hidden;
+  border-radius: 32px;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.94);
+  box-shadow: 0 24px 70px rgba(27, 46, 94, 0.09);
+  padding: 28px;
+  box-sizing: border-box;
+  backdrop-filter: blur(14px);
+}
+
+.gradebook-title {
+  margin: 0 0 20px;
+  text-align: center;
+  color: #111827;
+  font-size: 24px;
+  line-height: 1.2;
+  font-weight: 900;
+  letter-spacing: -0.04em;
 }
 
 .gradebook-table-wrapper {
   width: 100%;
   overflow-x: auto;
-  padding-bottom: 6px;
+  border-radius: 22px;
+  border: 1px solid rgba(220, 228, 245, 0.92);
+  background: rgba(255, 255, 255, 0.72);
 }
 
 .gradebook-table {
   width: 100%;
-  min-width: 980px;
+  min-width: 900px;
   border-collapse: separate;
   border-spacing: 0;
 }
 
-.gradebook-table thead th {
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  background: rgba(245, 248, 255, 0.96);
-  color: #1f2937;
+.gradebook-table th,
+.gradebook-table td {
+  padding: 13px 10px;
+  text-align: center;
+  vertical-align: middle;
+  border-bottom: 1px solid rgba(190, 204, 241, 0.7);
+}
+
+.gradebook-table th {
+  color: #111827;
   font-size: 14px;
   font-weight: 900;
-  line-height: 1.2;
-  text-align: center;
-  padding: 16px 12px;
-  border-bottom: 1px solid rgba(173, 186, 217, 0.5);
+  background: rgba(247, 249, 255, 0.92);
   white-space: nowrap;
+}
+
+.gradebook-table th:first-child,
+.gradebook-table td:first-child {
+  width: 260px;
+  min-width: 230px;
+  text-align: left;
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: rgba(255, 255, 255, 0.96);
+  border-right: 1px solid rgba(190, 204, 241, 0.8);
 }
 
 .gradebook-table thead th:first-child {
-  text-align: left;
-  min-width: 220px;
-  border-top-left-radius: 18px;
+  z-index: 3;
+  background: rgba(247, 249, 255, 0.96);
 }
 
-.gradebook-table thead th:last-child {
-  border-top-right-radius: 18px;
-}
-
-.gradebook-table tbody td {
-  padding: 12px 10px;
-  border-bottom: 1px solid rgba(188, 198, 225, 0.45);
-  text-align: center;
-  background: rgba(255, 255, 255, 0.56);
-}
-
-.gradebook-table tbody tr:last-child td {
-  border-bottom: none;
-}
-
-.gradebook-table tbody td:first-child {
-  text-align: left;
+.gradebook-table td:first-child {
   color: #111827;
-  font-size: 15px;
-  font-weight: 800;
+  font-size: 14px;
+  font-weight: 900;
   white-space: nowrap;
 }
 
+.gradebook-table th:last-child,
+.gradebook-table td:last-child {
+  width: 100px;
+  min-width: 90px;
+}
+
+.gradebook-table tr:last-child td {
+  border-bottom: none;
+}
+
+.gradebook-table tbody tr {
+  transition: 0.16s ease;
+}
+
 .gradebook-table tbody tr:hover td {
-  background: rgba(243, 247, 255, 0.82);
+  background: rgba(237, 243, 255, 0.58);
+}
+
+.gradebook-table tbody tr:hover td:first-child {
+  background: rgba(255, 255, 255, 0.98);
 }
 
 .gradebook-input {
-  width: 48px;
-  height: 40px;
-  border-radius: 12px;
-  border: 1px solid rgba(176, 190, 222, 0.55);
+  width: 54px;
+  height: 38px;
+  border-radius: 13px;
+  border: 1px solid rgba(190, 204, 241, 0.9);
   background: rgba(255, 255, 255, 0.96);
   color: #111827;
   text-align: center;
   font-family: "Manrope", system-ui, sans-serif;
   font-size: 14px;
-  font-weight: 800;
+  font-weight: 900;
   outline: none;
-  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+  transition: 0.18s ease;
 }
 
 .gradebook-input:focus {
-  border-color: rgba(79, 124, 255, 0.5);
-  box-shadow: 0 0 0 4px rgba(79, 124, 255, 0.12);
+  border-color: #6f8fff;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
 }
 
 .gradebook-input:hover {
@@ -265,40 +274,10 @@
 }
 
 .gradebook-final-input {
-  background: linear-gradient(180deg, #f8fbff 0%, #eef3ff 100%);
-  border-color: rgba(138, 160, 216, 0.7);
-}
-
-.gradebook-save-message {
-  width: fit-content;
-  padding: 14px 18px;
-  border-radius: 16px;
-  background: rgba(222, 245, 233, 0.95);
-  color: #1f7a4d;
-  font-size: 14px;
-  font-weight: 800;
-  line-height: 1.35;
-}
-
-.gradebook-error {
-  width: fit-content;
-  padding: 14px 18px;
-  border-radius: 16px;
-  background: rgba(255, 235, 238, 0.95);
-  color: #b42318;
-  font-size: 14px;
-  font-weight: 800;
-  line-height: 1.35;
-}
-
-.gradebook-state {
-  width: fit-content;
-  padding: 18px 20px;
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.72);
-  color: #52607d;
-  font-size: 15px;
-  font-weight: 700;
+  color: #111827;
+  background: rgba(37, 99, 235, 0.08);
+  border-color: rgba(37, 99, 235, 0.24);
+  box-shadow: 0 10px 22px rgba(37, 99, 235, 0.1);
 }
 
 .gradebook-actions {
@@ -306,52 +285,74 @@
   display: flex;
   justify-content: flex-end;
   gap: 14px;
-  margin-top: 0;
+  margin-top: 26px;
 }
 
 .secondary-button,
 .primary-button {
-  min-width: 128px;
-  height: 52px;
-  border-radius: 18px;
-  padding: 0 22px;
+  min-width: 130px;
+  height: 48px;
+  border-radius: 999px;
+  padding: 0 24px;
   font-family: "Manrope", system-ui, sans-serif;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 900;
-  border: none;
   cursor: pointer;
-  transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+  transition: 0.18s ease;
+}
+
+.secondary-button:hover:not(:disabled),
+.primary-button:hover:not(:disabled) {
+  transform: translateY(-1px);
 }
 
 .secondary-button {
-  background: rgba(255, 255, 255, 0.82);
-  color: #4c5d7d;
-  border: 1px solid rgba(184, 196, 226, 0.72);
-  box-shadow: 0 10px 24px rgba(85, 103, 145, 0.08);
-}
-
-.secondary-button:hover:not(:disabled) {
-  transform: translateY(-1px);
-  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid #dce4f5;
+  color: #4b5a78;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 12px 28px rgba(27, 46, 94, 0.06);
 }
 
 .primary-button {
-  background: linear-gradient(135deg, #4f7cff 0%, #7f9cff 100%);
+  border: none;
   color: #ffffff;
-  box-shadow: 0 16px 34px rgba(79, 124, 255, 0.24);
-}
-
-.primary-button:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 18px 36px rgba(79, 124, 255, 0.28);
+  background: linear-gradient(135deg, #2563eb, #6f8fff);
+  box-shadow: 0 18px 38px rgba(37, 99, 235, 0.23);
 }
 
 .primary-button:disabled,
 .secondary-button:disabled {
-  opacity: 0.6;
   cursor: not-allowed;
+  opacity: 0.55;
   transform: none;
-  box-shadow: none;
+}
+
+.gradebook-save-message,
+.gradebook-error,
+.gradebook-state {
+  width: fit-content;
+  border-radius: 18px;
+  padding: 14px 18px;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.gradebook-save-message {
+  margin-top: 18px;
+  background: rgba(37, 99, 235, 0.1);
+  color: #3156d4;
+  border: 1px solid rgba(37, 99, 235, 0.16);
+}
+
+.gradebook-error {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.gradebook-state {
+  background: rgba(255, 255, 255, 0.9);
+  color: #64748b;
+  box-shadow: 0 14px 32px rgba(27, 46, 94, 0.08);
 }
 
 .gradebook-modal-overlay {
@@ -410,80 +411,107 @@
   cursor: pointer;
 }
 
-@media (max-width: 1180px) {
-  .gradebook-content {
-    padding: 40px 40px 64px;
-  }
-
-  .gradebook-topline {
-    width: 100%;
-  }
-
-  .gradebook-table-shell,
-  .gradebook-actions {
-    width: 100%;
-  }
+/* sidebar safety styles — такие же, как на странице посещаемости */
+.avatar-initials {
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, #4f74ff 0%, #8da6ff 100%);
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  box-shadow: 0 14px 28px rgba(37, 99, 235, 0.22);
 }
 
-@media (max-width: 900px) {
+.nav-icon,
+.nav-item > span:first-child {
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  border-radius: 11px;
+  background: rgba(167, 181, 216, 0.5);
+  color: inherit;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  transition: 0.18s ease;
+}
+
+.nav-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.nav-item.active .nav-icon,
+.nav-item.active > span:first-child {
+  background: linear-gradient(135deg, #2563eb, #6f8fff);
+  color: #ffffff;
+}
+
+.sidebar-main {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.logout-button {
+  margin-top: auto;
+}
+
+.logout-button .nav-icon {
+  background: rgba(239, 68, 68, 0.08);
+}
+
+@media (max-width: 1180px) {
   .gradebook-content {
-    padding: 36px 28px 64px;
+    padding: 44px 32px 60px;
   }
 
   .gradebook-topline {
     flex-direction: column;
-    align-items: flex-start;
   }
 
-  .export-button {
+  .gradebook-filters,
+  .gradebook-table-shell,
+  .gradebook-actions,
+  .gradebook-topline {
     width: 100%;
-  }
-
-  .gradebook-filters {
-    width: 100%;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 16px;
   }
 
   .gradebook-filter {
     width: 100%;
+    align-items: flex-start;
+    flex-direction: column;
   }
 
-  .gradebook-filter select {
+  .gradebook-filter select,
+  .gradebook-filter:first-child select {
     width: 100%;
-  }
-
-  .gradebook-actions {
-    justify-content: stretch;
-  }
-
-  .primary-button,
-  .secondary-button {
-    flex: 1;
+    min-width: 0;
   }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 780px) {
   .gradebook-content {
-    padding: 32px 20px 56px;
+    height: auto;
+    padding: 32px 20px 50px;
   }
 
   .gradebook-topline h1 {
-    font-size: 32px;
-  }
-
-  .gradebook-topline p {
-    font-size: 16px;
+    font-size: 28px;
   }
 
   .gradebook-table-shell {
-    border-radius: 24px;
-    padding: 18px 14px 14px;
+    padding: 20px;
   }
 
-  .gradebook-title {
-    font-size: 20px;
+  .gradebook-actions {
+    flex-direction: column;
+  }
+
+  .secondary-button,
+  .primary-button {
+    width: 100%;
   }
 
   .gradebook-modal {
