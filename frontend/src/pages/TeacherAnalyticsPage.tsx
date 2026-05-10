@@ -1,13 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import type { LoginResponse, TeacherAnalytics, TeacherDiscipline } from "../api";
 import { getTeacherAnalytics, getTeacherDisciplines } from "../api";
+import { TeacherSidebar } from "../components/TeacherSidebar";
 import "./TeacherSchedulePage.css";
 import "./TeacherAnalyticsPage.css";
-import {
-  getTeacherInitials,
-  getTeacherShortName,
-  getTeacherSubtitle
-} from "../utils/teacherProfile";
 
 type TeacherAnalyticsPageProps = {
   user: LoginResponse;
@@ -39,9 +35,11 @@ export function TeacherAnalyticsPage({
   onOpenGradebook
 }: TeacherAnalyticsPageProps) {
   const [disciplines, setDisciplines] = useState<TeacherDiscipline[]>([]);
+
   const [selectedDisciplineId, setSelectedDisciplineId] = useState<number | null>(
     initialDisciplineId ?? null
   );
+
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(
     initialGroupId ?? null
   );
@@ -86,7 +84,9 @@ export function TeacherAnalyticsPage({
       return disciplines;
     }
 
-    return disciplines.filter((item) => item.idDiscipline === selectedDisciplineId);
+    return disciplines.filter(
+      (item) => item.idDiscipline === selectedDisciplineId
+    );
   }, [disciplines, selectedDisciplineId]);
 
   useEffect(() => {
@@ -94,7 +94,9 @@ export function TeacherAnalyticsPage({
       return;
     }
 
-    const groupExists = groupOptions.some((item) => item.idGroup === selectedGroupId);
+    const groupExists = groupOptions.some(
+      (item) => item.idGroup === selectedGroupId
+    );
 
     if (selectedGroupId && !groupExists) {
       setSelectedGroupId(null);
@@ -131,74 +133,38 @@ export function TeacherAnalyticsPage({
   );
 
   return (
-    <main className="schedule-layout">
-      <aside className="app-sidebar">
-      <div className="user-block">
-        <div className="avatar-placeholder avatar-initials">
-          {getTeacherInitials(user)}
-        </div>
-
-        <div>
-          <p>{getTeacherShortName(user)}</p>
-          <span>{getTeacherSubtitle(user)}</span>
-        </div>
-      </div>
-
-        <div className="sidebar-section-title">ОБЩЕЕ</div>
-
-        <nav className="main-nav">
-          <button className="nav-item" onClick={onOpenSchedule}>
-            <span />
-            Расписание
-          </button>
-
-          <button className="nav-item" onClick={onOpenDisciplines}>
-            <span />
-            Дисциплины
-          </button>
-
-          <button
-            className="nav-item"
-            onClick={() =>
-              onOpenAttendance(selectedDisciplineId ?? undefined, selectedGroupId ?? undefined)
-            }
-          >
-            <span />
-            Посещаемость
-          </button>
-
-          <button
-            className="nav-item"
-            onClick={() =>
-              onOpenGradebook(selectedDisciplineId ?? undefined, selectedGroupId ?? undefined)
-            }
-          >
-            <span />
-            Ведомость
-          </button>
-        </nav>
-
-        <div className="sidebar-divider" />
-
-        <div className="sidebar-section-title">BI-КОНТУР</div>
-
-        <button className="nav-item active">
-          <span />
-          Модуль аналитики
-        </button>
-
-        <button className="logout-button" onClick={onLogout}>
-          Выйти
-        </button>
-      </aside>
+    <div className="schedule-layout">
+      <TeacherSidebar
+        user={user}
+        activePage="analytics"
+        onLogout={onLogout}
+        onOpenSchedule={onOpenSchedule}
+        onOpenDisciplines={onOpenDisciplines}
+        onOpenAttendance={() =>
+          onOpenAttendance(
+            selectedDisciplineId ?? undefined,
+            selectedGroupId ?? undefined
+          )
+        }
+        onOpenGradebook={() =>
+          onOpenGradebook(
+            selectedDisciplineId ?? undefined,
+            selectedGroupId ?? undefined
+          )
+        }
+        onOpenAnalytics={() => undefined}
+      />
 
       <section className="analytics-content">
         <div className="analytics-hero">
           <div>
             <p className="analytics-eyebrow">BI-витрина преподавателя</p>
+
             <h1>Аналитика успеваемости и посещаемости</h1>
+
             <p>
-              Сводные показатели по дисциплинам, группам, рискам и динамике посещаемости.
+              Сводные показатели по дисциплинам, группам, рискам и динамике
+              посещаемости.
             </p>
           </div>
 
@@ -209,37 +175,51 @@ export function TeacherAnalyticsPage({
         </div>
 
         <div className="analytics-filters">
-          <label>
-            Дисциплина
+          <label className="analytics-filter">
+            <span>Дисциплина</span>
+
             <select
               value={selectedDisciplineId ?? "all"}
               onChange={(event) => {
                 const value = event.target.value;
+
                 setSelectedDisciplineId(value === "all" ? null : Number(value));
                 setSelectedGroupId(null);
               }}
+              disabled={isLoading}
             >
               <option value="all">Все дисциплины</option>
+
               {uniqueDisciplines.map((discipline) => (
-                <option key={discipline.idDiscipline} value={discipline.idDiscipline}>
+                <option
+                  key={discipline.idDiscipline}
+                  value={discipline.idDiscipline}
+                >
                   {discipline.disciplineName}
                 </option>
               ))}
             </select>
           </label>
 
-          <label>
-            Группа
+          <label className="analytics-filter">
+            <span>Группа</span>
+
             <select
               value={selectedGroupId ?? "all"}
               onChange={(event) => {
                 const value = event.target.value;
+
                 setSelectedGroupId(value === "all" ? null : Number(value));
               }}
+              disabled={isLoading || groupOptions.length === 0}
             >
               <option value="all">Все группы</option>
+
               {groupOptions.map((item) => (
-                <option key={`${item.idDiscipline}-${item.idGroup}`} value={item.idGroup}>
+                <option
+                  key={`${item.idDiscipline}-${item.idGroup}`}
+                  value={item.idGroup}
+                >
                   {item.groupName}
                 </option>
               ))}
@@ -247,8 +227,14 @@ export function TeacherAnalyticsPage({
           </label>
         </div>
 
-        {isLoading && <div className="analytics-state">Загружаем фильтры...</div>}
-        {isAnalyticsLoading && <div className="analytics-state">Обновляем витрину...</div>}
+        {isLoading && (
+          <div className="analytics-state">Загружаем фильтры...</div>
+        )}
+
+        {isAnalyticsLoading && (
+          <div className="analytics-state">Обновляем витрину...</div>
+        )}
+
         {error && <div className="analytics-error">{error}</div>}
 
         {analytics && !error && (
@@ -263,7 +249,9 @@ export function TeacherAnalyticsPage({
               <article className="analytics-kpi-card">
                 <span>Средний итоговый балл</span>
                 <strong>{formatGrade(analytics.averageFinalGrade)}</strong>
-                <p>{analytics.filledFinalGradesCount} итоговых оценок заполнено</p>
+                <p>
+                  {analytics.filledFinalGradesCount} итоговых оценок заполнено
+                </p>
               </article>
 
               <article className="analytics-kpi-card warning">
@@ -292,7 +280,10 @@ export function TeacherAnalyticsPage({
 
                 <div className="attendance-chart">
                   {analytics.attendanceByDate.map((point) => (
-                    <div className="attendance-chart-item" key={point.lessonDate}>
+                    <div
+                      className="attendance-chart-item"
+                      key={point.lessonDate}
+                    >
                       <div className="attendance-bar-track">
                         <div
                           className="attendance-bar"
@@ -301,6 +292,7 @@ export function TeacherAnalyticsPage({
                           }}
                         />
                       </div>
+
                       <strong>{formatPercent(point.attendancePercent)}</strong>
                       <span>{point.dateLabel}</span>
                     </div>
@@ -320,6 +312,7 @@ export function TeacherAnalyticsPage({
                   {analytics.gradeDistribution.map((item) => (
                     <div className="distribution-row" key={item.label}>
                       <span>{item.label}</span>
+
                       <div>
                         <div
                           style={{
@@ -327,6 +320,7 @@ export function TeacherAnalyticsPage({
                           }}
                         />
                       </div>
+
                       <strong>{item.count}</strong>
                     </div>
                   ))}
@@ -357,7 +351,9 @@ export function TeacherAnalyticsPage({
                       </div>
 
                       <div className="comparison-metrics">
-                        <span>Посещ. {formatPercent(item.averageAttendancePercent)}</span>
+                        <span>
+                          Посещ. {formatPercent(item.averageAttendancePercent)}
+                        </span>
                         <span>Итог {formatGrade(item.averageFinalGrade)}</span>
                         <span>Риск {item.atRiskStudentsCount}</span>
                       </div>
@@ -376,7 +372,9 @@ export function TeacherAnalyticsPage({
 
                 <div className="risk-list">
                   {analytics.riskStudents.length === 0 && (
-                    <div className="empty-risk">Критичных отклонений не найдено</div>
+                    <div className="empty-risk">
+                      Критичных отклонений не найдено
+                    </div>
                   )}
 
                   {analytics.riskStudents.map((student) => (
@@ -386,7 +384,9 @@ export function TeacherAnalyticsPage({
                     >
                       <div>
                         <strong>{student.fullName}</strong>
-                        <span>{student.groupName} · {student.disciplineName}</span>
+                        <span>
+                          {student.groupName} · {student.disciplineName}
+                        </span>
                       </div>
 
                       <p>{student.riskReason}</p>
@@ -398,6 +398,6 @@ export function TeacherAnalyticsPage({
           </>
         )}
       </section>
-    </main>
+    </div>
   );
 }
