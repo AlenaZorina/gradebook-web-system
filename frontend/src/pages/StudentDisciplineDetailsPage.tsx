@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { LoginResponse, StudentDisciplineDetails } from "../api";
 import { getStudentDisciplineDetails } from "../api";
 import "./TeacherSchedulePage.css";
+import "./TeacherDisciplineDetailsPage.css";
 import "./StudentDisciplineDetailsPage.css";
 
 type StudentDisciplineDetailsPageProps = {
@@ -181,7 +182,9 @@ export function StudentDisciplineDetailsPage({
         setDetails(data);
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : "Ошибка загрузки информации о дисциплине"
+          err instanceof Error
+            ? err.message
+            : "Ошибка загрузки информации о дисциплине"
         );
       } finally {
         setIsLoading(false);
@@ -199,6 +202,7 @@ export function StudentDisciplineDetailsPage({
             <div className="avatar-placeholder avatar-initials">
               {getStudentInitials(user)}
             </div>
+
             <div>
               <p>{getStudentShortName(user)}</p>
               <span>{details ? `Студент · ${details.groupName}` : "Студент"}</span>
@@ -215,7 +219,11 @@ export function StudentDisciplineDetailsPage({
               Расписание
             </button>
 
-            <button className="nav-item active" type="button" onClick={onOpenDisciplines}>
+            <button
+              className="nav-item active"
+              type="button"
+              onClick={onOpenDisciplines}
+            >
               <span className="nav-icon">
                 <DisciplineIcon />
               </span>
@@ -238,7 +246,9 @@ export function StudentDisciplineDetailsPage({
             <button
               className="nav-item"
               type="button"
-              onClick={() => onOpenGradebook(details?.idDiscipline, details?.idGroup)}
+              onClick={() =>
+                onOpenGradebook(details?.idDiscipline, details?.idGroup)
+              }
             >
               <span className="nav-icon">
                 <GradesIcon />
@@ -269,22 +279,20 @@ export function StudentDisciplineDetailsPage({
         </button>
       </aside>
 
-      <main className="student-details-content">
-        {isLoading && <div className="schedule-state">Загружаем дисциплину...</div>}
+      <section className="discipline-detail-content student-details-content">
+        {isLoading && (
+          <div className="discipline-detail-state">Загружаем дисциплину...</div>
+        )}
 
-        {error && <div className="schedule-error">{error}</div>}
+        {error && <div className="discipline-detail-error">{error}</div>}
 
         {!isLoading && !error && details && (
           <>
-            <button
-              className="details-back-button"
-              type="button"
-              onClick={onOpenDisciplines}
-            >
+            <button className="back-link" type="button" onClick={onOpenDisciplines}>
               ← Назад к дисциплинам
             </button>
 
-            <section className="student-details-hero">
+            <header className="discipline-detail-header student-detail-header">
               <div>
                 <h1>{details.disciplineName}</h1>
 
@@ -295,17 +303,23 @@ export function StudentDisciplineDetailsPage({
                 </div>
               </div>
 
-              <div className="student-details-year">{details.academicYear}</div>
-            </section>
+              <div className="discipline-detail-badge">
+                {details.academicYear}
+              </div>
+            </header>
 
-            <section className="student-details-actions">
-              <article className={`student-details-card ${isFormulaOpen ? "open" : ""}`}>
+            <div className="discipline-actions student-details-actions">
+              <section
+                className={`detail-card detail-accordion ${
+                  isFormulaOpen ? "open" : ""
+                }`}
+              >
                 <button
-                  className="student-details-card-header"
+                  className="detail-row student-formula-row"
                   type="button"
                   onClick={() => setIsFormulaOpen((value) => !value)}
                 >
-                  <span>
+                  <div>
                     <h2>Формула оценивания</h2>
 
                     {details.pudUrl ? (
@@ -318,58 +332,62 @@ export function StudentDisciplineDetailsPage({
                         Ссылка на ПУД
                       </a>
                     ) : (
-                      <span className="student-details-muted">Ссылка на ПУД</span>
+                      <span>Ссылка на ПУД</span>
                     )}
-                  </span>
+                  </div>
 
-                  <span className="student-details-arrow">
-                    {isFormulaOpen ? "⌃" : "⌄"}
-                  </span>
+                  <span
+                    className={`detail-chevron ${
+                      isFormulaOpen ? "detail-chevron-open" : ""
+                    }`}
+                    aria-hidden="true"
+                  />
                 </button>
 
                 {isFormulaOpen && (
-                  <div className="student-formula-body">
-                    <div className="student-formula-value">
-                      {details.formulaText || "Формула пока не указана"}
+                  <div className="formula-body student-formula-body">
+                    <div className="formula-box student-formula-box">
+                      <span>{details.formulaText || "Формула пока не указана"}</span>
                     </div>
-
-                    <p>
-                      Формула доступна только для просмотра. Редактирование выполняется
-                      преподавателем.
-                    </p>
                   </div>
                 )}
-              </article>
+              </section>
 
               <button
-                className="student-details-card student-details-link-card"
+                className="detail-card detail-row action-row student-details-link-card"
                 type="button"
                 onClick={() => onOpenAttendance(details.idDiscipline, details.idGroup)}
               >
-                <span>
+                <div>
                   <h2>Посещаемость</h2>
-                  <p>Просмотреть посещаемость по дисциплине</p>
-                </span>
+                  <span>Просмотреть посещаемость по дисциплине</span>
+                </div>
 
-                <span className="student-details-arrow">›</span>
+                <span
+                  className="detail-chevron detail-chevron-right"
+                  aria-hidden="true"
+                />
               </button>
 
               <button
-                className="student-details-card student-details-link-card"
+                className="detail-card detail-row action-row student-details-link-card"
                 type="button"
                 onClick={() => onOpenGradebook(details.idDiscipline, details.idGroup)}
               >
-                <span>
+                <div>
                   <h2>Ведомость</h2>
-                  <p>Просмотреть оценки и итоговый результат</p>
-                </span>
+                  <span>Просмотреть оценки и итоговый результат</span>
+                </div>
 
-                <span className="student-details-arrow">›</span>
+                <span
+                  className="detail-chevron detail-chevron-right"
+                  aria-hidden="true"
+                />
               </button>
-            </section>
+            </div>
           </>
         )}
-      </main>
+      </section>
     </div>
   );
 }
