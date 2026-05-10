@@ -59,7 +59,9 @@ public class TeacherDisciplineDetailsController : ControllerBase
             ? records.FirstOrDefault(item => item.IdGroup == groupId.Value) ?? records.First()
             : records.First();
 
-        var formula = await LoadFormulaAsync(selectedRecord.IdAssignment);
+        var formula = await LoadDisciplineFormulaAsync(
+    records.Select(item => item.IdAssignment).Distinct().ToList()
+);
 
         var groups = records
             .GroupBy(item => new { item.IdGroup, item.GroupName })
@@ -189,11 +191,21 @@ public async Task<ActionResult<TeacherFormulaResponseDto>> UpdateFormula(
     });
 }
 
-    private async Task<TeacherFormulaResponseDto> LoadFormulaAsync(int idAssignment)
+private async Task<TeacherFormulaResponseDto> LoadDisciplineFormulaAsync(
+    List<int> assignmentIds
+)
 {
+    if (assignmentIds.Count == 0)
+    {
+        return new TeacherFormulaResponseDto();
+    }
+
+    var ids = string.Join(",", assignmentIds);
+
     var query = "grading_formulas"
-        + "?select=id_formula,formula_text,control_elements(id_element,element_name,weight,order_no,control_type)"
-        + $"&id_assignment=eq.{idAssignment}"
+        + "?select=id_formula,id_assignment,formula_text,updated_at,control_elements(id_element,element_name,weight,order_no,control_type)"
+        + $"&id_assignment=in.({ids})"
+        + "&order=updated_at.desc"
         + "&limit=1";
 
     var result = await _supabase.GetAsync(query);
@@ -254,13 +266,19 @@ private static string FormatWeight(decimal value)
     return value.ToString("0.####", CultureInfo.InvariantCulture);
 }
 
-    private class SupabaseFormulaRecord
+private class SupabaseFormulaRecord
 {
     [JsonPropertyName("id_formula")]
     public int IdFormula { get; set; }
 
+    [JsonPropertyName("id_assignment")]
+    public int IdAssignment { get; set; }
+
     [JsonPropertyName("formula_text")]
     public string? FormulaText { get; set; }
+
+    [JsonPropertyName("updated_at")]
+    public string? UpdatedAt { get; set; }
 
     [JsonPropertyName("control_elements")]
     public List<SupabaseControlElementRecord> ControlElements { get; set; } = new();
