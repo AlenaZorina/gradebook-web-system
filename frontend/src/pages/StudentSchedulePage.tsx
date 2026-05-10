@@ -64,12 +64,45 @@ function getStudentShortName(user: LoginResponse) {
   return `${user.surname} ${nameInitial}${fathernameInitial}`;
 }
 
+function isUnknownTeacherName(value?: string | null) {
+  if (!value) {
+    return true;
+  }
+
+  const normalized = value.trim().toLowerCase();
+
+  return (
+    normalized === "" ||
+    normalized === "не указан н." ||
+    normalized === "не указан" ||
+    normalized.startsWith("не указан")
+  );
+}
+
 function ScheduleIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <rect x="4" y="5" width="16" height="15" rx="3" stroke="currentColor" strokeWidth="1.8" />
-      <path d="M8 3.5V7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <path d="M16 3.5V7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <rect
+        x="4"
+        y="5"
+        width="16"
+        height="15"
+        rx="3"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      />
+      <path
+        d="M8 3.5V7"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      <path
+        d="M16 3.5V7"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
       <path d="M4 9.5H20" stroke="currentColor" strokeWidth="1.8" />
     </svg>
   );
@@ -83,8 +116,18 @@ function DisciplineIcon() {
         stroke="currentColor"
         strokeWidth="1.8"
       />
-      <path d="M8 9H16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <path d="M8 13H14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path
+        d="M8 9H16"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      <path
+        d="M8 13H14"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
@@ -92,7 +135,15 @@ function DisciplineIcon() {
 function AttendanceIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <rect x="4" y="5" width="16" height="15" rx="3" stroke="currentColor" strokeWidth="1.8" />
+      <rect
+        x="4"
+        y="5"
+        width="16"
+        height="15"
+        rx="3"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      />
       <path
         d="M8 12L10.4 14.4L16.2 8.6"
         stroke="currentColor"
@@ -107,10 +158,33 @@ function AttendanceIcon() {
 function GradesIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <rect x="5" y="4" width="14" height="16" rx="3" stroke="currentColor" strokeWidth="1.8" />
-      <path d="M8 9H16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <path d="M8 12.5H15" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <path d="M8 16H12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <rect
+        x="5"
+        y="4"
+        width="14"
+        height="16"
+        rx="3"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      />
+      <path
+        d="M8 9H16"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      <path
+        d="M8 12.5H15"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      <path
+        d="M8 16H12"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
@@ -118,10 +192,30 @@ function GradesIcon() {
 function AnalyticsIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M5 18.5V11" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <path d="M12 18.5V5.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <path d="M19 18.5V14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <path d="M4 19H20" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path
+        d="M5 18.5V11"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      <path
+        d="M12 18.5V5.5"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      <path
+        d="M19 18.5V14"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      <path
+        d="M4 19H20"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
@@ -142,7 +236,12 @@ function LogoutIcon() {
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <path d="M18 12H10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path
+        d="M18 12H10"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
@@ -168,7 +267,9 @@ export function StudentSchedulePage({
         const data = await getStudentSchedule(user.idUser);
         setSchedule(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Ошибка загрузки расписания");
+        setError(
+          err instanceof Error ? err.message : "Ошибка загрузки расписания"
+        );
       } finally {
         setIsLoading(false);
       }
@@ -179,31 +280,32 @@ export function StudentSchedulePage({
 
   const weeks = useMemo(() => {
     const grouped = new Map<string, StudentScheduleItem[]>();
-  
+
     schedule.forEach((item) => {
       const monday = new Date(item.lessonDate);
       const day = monday.getDay() === 0 ? 7 : monday.getDay();
       monday.setDate(monday.getDate() - day + 1);
-  
+
       const weekKey = `${item.moduleNo ?? "-"}-${item.weekNo ?? "-"}-${monday
         .toISOString()
         .slice(0, 10)}`;
-  
+
       if (!grouped.has(weekKey)) {
         grouped.set(weekKey, []);
       }
-  
+
       grouped.get(weekKey)!.push(item);
     });
-  
+
     const allWeeks = Array.from(grouped.entries()).map(([key, items]) => {
       const sortedItems = [...items].sort(
         (a, b) =>
-          new Date(a.lessonDate).getTime() - new Date(b.lessonDate).getTime()
+          new Date(a.lessonDate).getTime() -
+          new Date(b.lessonDate).getTime()
       );
-  
+
       const first = sortedItems[0];
-  
+
       return {
         key,
         moduleNo: first.moduleNo,
@@ -213,11 +315,12 @@ export function StudentSchedulePage({
         items: sortedItems
       };
     });
-  
+
     return allWeeks
       .sort(
         (a, b) =>
-          new Date(b.firstDate).getTime() - new Date(a.firstDate).getTime()
+          new Date(b.firstDate).getTime() -
+          new Date(a.firstDate).getTime()
       )
       .slice(0, 1);
   }, [schedule]);
@@ -251,21 +354,33 @@ export function StudentSchedulePage({
               Расписание
             </button>
 
-            <button className="nav-item" type="button" onClick={onOpenDisciplines}>
-            <span className="nav-icon">
+            <button
+              className="nav-item"
+              type="button"
+              onClick={onOpenDisciplines}
+            >
+              <span className="nav-icon">
                 <DisciplineIcon />
-            </span>
-            Дисциплины
+              </span>
+              Дисциплины
             </button>
 
-            <button className="nav-item" type="button" onClick={onOpenAttendance}>
+            <button
+              className="nav-item"
+              type="button"
+              onClick={onOpenAttendance}
+            >
               <span className="nav-icon">
                 <AttendanceIcon />
               </span>
               Посещаемость
             </button>
 
-            <button className="nav-item" type="button" onClick={onOpenGradebook}>
+            <button
+              className="nav-item"
+              type="button"
+              onClick={onOpenGradebook}
+            >
               <span className="nav-icon">
                 <GradesIcon />
               </span>
@@ -277,7 +392,11 @@ export function StudentSchedulePage({
 
           <div className="sidebar-section-title">BI-КОНТУР</div>
 
-          <button className="nav-item" type="button" onClick={onOpenAnalytics}>
+          <button
+            className="nav-item"
+            type="button"
+            onClick={onOpenAnalytics}
+          >
             <span className="nav-icon">
               <AnalyticsIcon />
             </span>
@@ -304,16 +423,11 @@ export function StudentSchedulePage({
               </p>
             )}
           </div>
-
-          {studentInfo && (
-            <div className="student-program-card">
-              <span>Образовательная программа</span>
-              <strong>{studentInfo.programName}</strong>
-            </div>
-          )}
         </header>
 
-        {isLoading && <div className="schedule-state">Загружаем расписание...</div>}
+        {isLoading && (
+          <div className="schedule-state">Загружаем расписание...</div>
+        )}
 
         {error && <div className="schedule-error">{error}</div>}
 
@@ -347,7 +461,10 @@ export function StudentSchedulePage({
                       {dayItems.length === 0 && <div className="empty-day" />}
 
                       {dayItems.map((item) => (
-                        <article className="lesson-card student-lesson-card" key={item.idEntry}>
+                        <article
+                          className="lesson-card student-lesson-card"
+                          key={item.idEntry}
+                        >
                           <time>{item.startTime?.slice(0, 5)}</time>
 
                           <div className="lesson-card-content">
@@ -355,12 +472,8 @@ export function StudentSchedulePage({
                               {item.disciplineName}
                             </strong>
 
-                            <p>{item.teacherShortName}</p>
-
-                            {item.position && (
-                              <span className="student-lesson-position">
-                                {item.position}
-                              </span>
+                            {!isUnknownTeacherName(item.teacherShortName) && (
+                              <p>{item.teacherShortName}</p>
                             )}
                           </div>
                         </article>

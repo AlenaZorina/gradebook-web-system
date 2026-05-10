@@ -3,12 +3,12 @@
   }
   
   .student-schedule-header {
-    width: min(100%, 1360px);
+    width: min(100%, 1180px);
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: flex-start;
     gap: 28px;
-    margin-bottom: 26px;
+    margin-bottom: 34px;
   }
   
   .student-schedule-header h1 {
@@ -28,36 +28,10 @@
     font-weight: 900;
   }
   
-  .student-program-card {
-    width: min(100%, 390px);
-    border-radius: 26px;
-    background: rgba(255, 255, 255, 0.82);
-    border: 1px solid rgba(255, 255, 255, 0.94);
-    box-shadow: 0 18px 46px rgba(27, 46, 94, 0.08);
-    padding: 18px 20px;
-    box-sizing: border-box;
-  }
-  
-  .student-program-card span {
-    display: block;
-    margin-bottom: 7px;
-    color: #7b87a5;
-    font-size: 12px;
-    font-weight: 900;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-  
-  .student-program-card strong {
-    display: block;
-    color: #111827;
-    font-size: 15px;
-    line-height: 1.35;
-    font-weight: 900;
-  }
+
   
   .student-schedule-content .week-block {
-    width: min(100%, 1360px);
+    width: min(100%, 1180px);
   }
   
   .student-schedule-content .days-header,
@@ -72,7 +46,7 @@
   }
   
   .student-lesson-card {
-    min-height: 112px;
+    min-height: 104px;
     grid-template-columns: 48px minmax(0, 1fr);
     padding: 13px 12px;
   }
@@ -102,14 +76,7 @@
     font-weight: 900;
   }
   
-  .student-lesson-position {
-    display: block;
-    margin-top: 4px;
-    color: #1f2937;
-    font-size: 15px;
-    line-height: 1.25;
-    font-weight: 500;
-  }
+ 
   
   @media (max-width: 1280px) {
     .student-schedule-content .days-header,
@@ -123,9 +90,7 @@
       flex-direction: column;
     }
   
-    .student-program-card {
-      width: 100%;
-    }
+    
   }
   
   @media (max-width: 780px) {
