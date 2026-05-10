@@ -20,6 +20,7 @@ type OfficeAttendanceSheetPageProps = {
 function getOfficeInitials(user: LoginResponse) {
   const surnameInitial = user.surname?.trim()?.[0] ?? "";
   const nameInitial = user.name?.trim()?.[0] ?? "";
+
   return `${surnameInitial}${nameInitial}`.toUpperCase();
 }
 
@@ -184,7 +185,12 @@ export function OfficeAttendanceSheetPage({
         setIsLoading(true);
         setError("");
 
-        const data = await getOfficeAttendanceSheet(user.idUser, disciplineId, groupId);
+        const data = await getOfficeAttendanceSheet(
+          user.idUser,
+          disciplineId,
+          groupId
+        );
+
         setSheet(data);
       } catch (err) {
         setError(
@@ -217,9 +223,10 @@ export function OfficeAttendanceSheetPage({
       sheet.groupName,
       sheet.programName,
       ...sheet.sessions.map((session) => {
-        const status = student.attendance.find(
-          (item) => item.idSession === session.idSession
-        )?.status ?? "unknown";
+        const status =
+          student.attendance.find(
+            (item) => item.idSession === session.idSession
+          )?.status ?? "unknown";
 
         return getStatusText(status);
       })
@@ -268,14 +275,22 @@ export function OfficeAttendanceSheetPage({
               Пересдачи
             </button>
 
-            <button className="nav-item active" type="button" onClick={onOpenAttendance}>
+            <button
+              className="nav-item active"
+              type="button"
+              onClick={onOpenAttendance}
+            >
               <span className="nav-icon">
                 <AttendanceIcon />
               </span>
               Посещаемость
             </button>
 
-            <button className="nav-item" type="button" onClick={onOpenFinalSheets}>
+            <button
+              className="nav-item"
+              type="button"
+              onClick={onOpenFinalSheets}
+            >
               <span className="nav-icon">
                 <FinalSheetsIcon />
               </span>
@@ -313,7 +328,11 @@ export function OfficeAttendanceSheetPage({
       </aside>
 
       <main className="office-attendance-sheet-content">
-        <button className="details-back-button" type="button" onClick={onBack}>
+        <button
+          className="office-attendance-sheet-back-link"
+          type="button"
+          onClick={onBack}
+        >
           ← Назад к группам
         </button>
 
@@ -322,31 +341,53 @@ export function OfficeAttendanceSheetPage({
 
           {sheet && (
             <div className="office-attendance-sheet-heading">
-              <div>
+              <div className="office-attendance-sheet-title-row">
                 <h2>{sheet.disciplineName}</h2>
-                <p>{sheet.teacherShortName}</p>
+
+                <div className="office-attendance-sheet-badges">
+                  <span>{sheet.courseNo} курс</span>
+                  <span>{sheet.groupName}</span>
+                </div>
               </div>
 
-              <span>{sheet.courseNo} курс</span>
-              <span>{sheet.groupName}</span>
+              <p>{sheet.teacherShortName}</p>
             </div>
           )}
         </section>
 
         {isLoading && (
-          <div className="schedule-state">Загружаем ведомость посещаемости...</div>
+          <div className="schedule-state">
+            Загружаем ведомость посещаемости...
+          </div>
         )}
 
         {error && <div className="schedule-error">{error}</div>}
 
         {!isLoading && !error && sheet && (
           <>
+            <button
+              className="office-attendance-export-button"
+              type="button"
+              onClick={handleExport}
+              disabled={sheet.students.length === 0 || sheet.sessions.length === 0}
+            >
+              Экспорт
+            </button>
+
             <section className="office-attendance-table-card">
+              <div className="office-attendance-table-header">
+                <div>
+                  <h2>Посещаемость</h2>
+                  <p>Статусы студентов по датам занятий</p>
+                </div>
+              </div>
+
               <div className="office-attendance-table-scroll">
                 <table className="office-attendance-table">
                   <thead>
                     <tr>
                       <th>ФИО</th>
+
                       {sheet.sessions.map((session) => (
                         <th key={session.idSession}>{session.dateLabel}</th>
                       ))}
@@ -392,15 +433,6 @@ export function OfficeAttendanceSheetPage({
                 </table>
               </div>
             </section>
-
-            <button
-              className="office-attendance-export-button"
-              type="button"
-              onClick={handleExport}
-              disabled={sheet.students.length === 0 || sheet.sessions.length === 0}
-            >
-              Экспорт
-            </button>
           </>
         )}
       </main>
