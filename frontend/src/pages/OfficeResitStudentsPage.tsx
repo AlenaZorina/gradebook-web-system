@@ -28,6 +28,7 @@ function getOfficeShortName(user: LoginResponse) {
   const fathernameInitial = user.fathername?.trim()?.[0]
     ? `${user.fathername.trim()[0]}.`
     : "";
+
   return `${user.surname} ${nameInitial}${fathernameInitial}`;
 }
 
@@ -229,6 +230,7 @@ export function OfficeResitStudentsPage({
             <div className="avatar-placeholder avatar-initials">
               {getOfficeInitials(user)}
             </div>
+
             <div>
               <p>{getOfficeShortName(user)}</p>
               <span>Сотрудник учебного офиса</span>
@@ -290,7 +292,11 @@ export function OfficeResitStudentsPage({
       </aside>
 
       <main className="office-resit-students-content">
-        <button className="details-back-button" type="button" onClick={onBack}>
+        <button
+          className="office-resit-students-back-link"
+          type="button"
+          onClick={onBack}
+        >
           ← Назад к группам
         </button>
 
@@ -299,13 +305,16 @@ export function OfficeResitStudentsPage({
 
           {data && (
             <div className="office-resit-students-heading">
-              <div>
+              <div className="office-resit-students-title-row">
                 <h2>{data.disciplineName}</h2>
-                <p>{data.teacherShortName}</p>
+
+                <div className="office-resit-students-badges">
+                  <span>{data.courseNo} курс</span>
+                  <span>{data.groupName}</span>
+                </div>
               </div>
 
-              <span>{data.courseNo} курс</span>
-              <span>{data.groupName}</span>
+              <p>{data.teacherShortName}</p>
             </div>
           )}
         </section>
@@ -318,7 +327,23 @@ export function OfficeResitStudentsPage({
 
         {!isLoading && !error && data && (
           <>
+            <button
+              className="office-resit-export-button"
+              type="button"
+              onClick={handleExport}
+              disabled={data.students.length === 0}
+            >
+              Экспорт
+            </button>
+
             <section className="office-resit-table-card">
+              <div className="office-resit-table-header">
+                <div>
+                  <h2>Студенты на пересдачу</h2>
+                  <p>Список студентов с итоговой оценкой ниже проходного значения</p>
+                </div>
+              </div>
+
               <div className="office-resit-table-scroll">
                 <table className="office-resit-table">
                   <thead>
@@ -355,15 +380,6 @@ export function OfficeResitStudentsPage({
                 </table>
               </div>
             </section>
-
-            <button
-              className="office-resit-export-button"
-              type="button"
-              onClick={handleExport}
-              disabled={data.students.length === 0}
-            >
-              Экспорт
-            </button>
           </>
         )}
       </main>
