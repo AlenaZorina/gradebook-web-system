@@ -19,6 +19,7 @@ type StudentAttendancePageProps = {
   onOpenDisciplines: () => void;
   onOpenGradebook: (disciplineId?: number, groupId?: number) => void;
   onOpenAnalytics: () => void;
+  onBackToDiscipline?: () => void;
 };
 
 function getStudentInitials(user: LoginResponse) {
@@ -191,7 +192,8 @@ export function StudentAttendancePage({
   onOpenSchedule,
   onOpenDisciplines,
   onOpenGradebook,
-  onOpenAnalytics
+  onOpenAnalytics,
+  onBackToDiscipline
 }: StudentAttendancePageProps) {
   const [disciplines, setDisciplines] = useState<StudentDiscipline[]>([]);
   const [selectedDisciplineId, setSelectedDisciplineId] = useState<number | null>(
@@ -217,8 +219,12 @@ export function StudentAttendancePage({
         const data = await getStudentDisciplines(user.idUser);
         setDisciplines(data);
 
-        if (!selectedDisciplineId && data.length > 0) {
-          setSelectedDisciplineId(data[0].idDiscipline);
+        const initialDiscipline =
+          data.find((item) => item.idDiscipline === initialDisciplineId) ??
+          data[0];
+
+        if (!selectedDisciplineId && initialDiscipline) {
+          setSelectedDisciplineId(initialDiscipline.idDiscipline);
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : "Ошибка загрузки дисциплин");
@@ -228,7 +234,8 @@ export function StudentAttendancePage({
     }
 
     loadDisciplines();
-  }, [user.idUser, selectedDisciplineId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user.idUser]);
 
   useEffect(() => {
     async function loadAttendance() {
@@ -297,6 +304,7 @@ export function StudentAttendancePage({
             <div className="avatar-placeholder avatar-initials">
               {getStudentInitials(user)}
             </div>
+
             <div>
               <p>{getStudentShortName(user)}</p>
               <span>Студент · {currentGroupName}</span>
@@ -364,6 +372,16 @@ export function StudentAttendancePage({
       </aside>
 
       <main className="student-attendance-content">
+        {onBackToDiscipline && selectedDisciplineId && (
+          <button
+            className="student-attendance-back-link"
+            type="button"
+            onClick={onBackToDiscipline}
+          >
+            ← Назад к дисциплине
+          </button>
+        )}
+
         <section className="student-attendance-hero">
           <div>
             <h1>
@@ -377,15 +395,19 @@ export function StudentAttendancePage({
               <span>{currentGroupName}</span>
             </div>
           </div>
+        </section>
 
-          {disciplines.length > 1 && (
-            <label className="student-attendance-select">
+        {disciplines.length > 1 && (
+          <section className="student-attendance-filters">
+            <label className="student-attendance-filter">
               <span>Дисциплина</span>
+
               <select
                 value={selectedDisciplineId ?? ""}
                 onChange={(event) =>
                   setSelectedDisciplineId(Number(event.target.value))
                 }
+                disabled={isDisciplinesLoading}
               >
                 {disciplines.map((discipline) => (
                   <option
@@ -397,8 +419,16 @@ export function StudentAttendancePage({
                 ))}
               </select>
             </label>
-          )}
-        </section>
+          </section>
+        )}
+
+        <button
+          className="student-attendance-report-button"
+          type="button"
+          onClick={openReportModal}
+        >
+          Сообщить об ошибке
+        </button>
 
         {(isDisciplinesLoading || isAttendanceLoading) && (
           <div className="schedule-state">Загружаем посещаемость...</div>
@@ -411,11 +441,19 @@ export function StudentAttendancePage({
         {!isDisciplinesLoading && !isAttendanceLoading && !error && attendance && (
           <section className="student-attendance-panel">
             <div className="student-attendance-table-card">
+              <div className="student-attendance-table-header">
+                <div>
+                  <h2>Посещаемость</h2>
+                  <p>Статусы по датам занятий</p>
+                </div>
+              </div>
+
               <div className="student-attendance-table-scroll">
                 <table className="student-attendance-table">
                   <thead>
                     <tr>
                       <th>Дата</th>
+
                       {attendance.sessions.map((session) => (
                         <th key={session.idSession}>{session.dateLabel}</th>
                       ))}
@@ -425,6 +463,7 @@ export function StudentAttendancePage({
                   <tbody>
                     <tr>
                       <td>Статус</td>
+
                       {attendance.sessions.map((session) => (
                         <td key={session.idSession}>
                           <span
@@ -461,14 +500,6 @@ export function StudentAttendancePage({
               По выбранной дисциплине пока нет занятий.
             </div>
           )}
-
-        <button
-          className="student-attendance-report-button"
-          type="button"
-          onClick={openReportModal}
-        >
-          Сообщить об ошибке
-        </button>
       </main>
 
       {isReportOpen && (
@@ -491,8 +522,10 @@ export function StudentAttendancePage({
 
             <label className="student-attendance-date-field">
               <span>Выбрать день</span>
+
               <div>
                 <CalendarIcon />
+
                 <input
                   type="date"
                   value={reportDate}

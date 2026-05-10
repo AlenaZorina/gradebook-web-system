@@ -550,6 +550,11 @@ function App() {
           onOpenDisciplines={() => setStudentPage("disciplines")}
           onOpenGradebook={openStudentGradebook}
           onOpenAnalytics={() => openStudentAnalytics(selectedDisciplineId ?? undefined)}
+          onBackToDiscipline={() =>
+            selectedDisciplineId
+              ? setStudentPage("disciplineDetails")
+              : setStudentPage("disciplines")
+          }
         />
       );
     }
