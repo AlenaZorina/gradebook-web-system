@@ -21,32 +21,66 @@ public class TeacherGradebookController : ControllerBase
     public async Task<ActionResult<TeacherGradebookDto>> GetGradebook(
         int idUser,
         [FromQuery] int? disciplineId,
-        [FromQuery] int? groupId)
+        [FromQuery] int? groupId
+    )
     {
         if (!disciplineId.HasValue || !groupId.HasValue)
         {
-            return BadRequest(new
-            {
-                message = "Необходимо выбрать дисциплину и группу"
-            });
+            return BadRequest(new { message = "Необходимо выбрать дисциплину и группу" });
         }
 
-        var query =
-            "teacher_gradebook_view" +
-            "?select=id_sheet,sheet_status,teacher_user_id,id_assignment,id_discipline,discipline_name,id_group,group_name,course_no,id_student,student_surname,student_name,student_fathername,record_book_no,id_element,element_name,element_order_no,id_grade,grade_value,id_final_grade,final_grade" +
-            $"&teacher_user_id=eq.{idUser}" +
-            $"&id_discipline=eq.{disciplineId.Value}" +
-            $"&id_group=eq.{groupId.Value}";
+        var ensureResult = await EnsureGradebookAsync(
+            idUser,
+            disciplineId.Value,
+            groupId.Value
+        );
+
+        if (!ensureResult.Success)
+        {
+            return StatusCode(
+                ensureResult.StatusCode,
+                new
+                {
+                    message = "Ошибка подготовки ведомости",
+                    details = ensureResult.Body
+                }
+            );
+        }
+
+        var ensurePayload = DeserializeEnsurePayload(ensureResult.Body);
+
+        if (ensurePayload is null || ensurePayload.IdAssignment <= 0 || ensurePayload.IdSheet <= 0)
+        {
+            return StatusCode(
+                500,
+                new
+                {
+                    message = "Не удалось определить ведомость для выбранной дисциплины и группы",
+                    details = ensureResult.Body
+                }
+            );
+        }
+
+        var query = "teacher_gradebook_view"
+            + "?select=id_sheet,sheet_status,teacher_user_id,id_assignment,id_discipline,discipline_name,id_group,group_name,course_no,id_student,student_surname,student_name,student_fathername,record_book_no,id_element,element_name,element_order_no,id_grade,grade_value,id_final_grade,final_grade"
+            + $"&teacher_user_id=eq.{idUser}"
+            + $"&id_discipline=eq.{disciplineId.Value}"
+            + $"&id_group=eq.{groupId.Value}"
+            + $"&id_assignment=eq.{ensurePayload.IdAssignment}"
+            + $"&id_sheet=eq.{ensurePayload.IdSheet}";
 
         var result = await _supabase.GetAsync(query);
 
         if (!result.Success)
         {
-            return StatusCode(result.StatusCode, new
-            {
-                message = "Ошибка получения ведомости из Supabase",
-                details = result.Body
-            });
+            return StatusCode(
+                result.StatusCode,
+                new
+                {
+                    message = "Ошибка получения ведомости из Supabase",
+                    details = result.Body
+                }
+            );
         }
 
         var options = new JsonSerializerOptions
@@ -54,15 +88,20 @@ public class TeacherGradebookController : ControllerBase
             PropertyNameCaseInsensitive = true
         };
 
-        var records = JsonSerializer.Deserialize<List<SupabaseGradebookRecord>>(result.Body, options)
-                      ?? new List<SupabaseGradebookRecord>();
+        var records = JsonSerializer.Deserialize<List<SupabaseGradebookRecord>>(
+            result.Body,
+            options
+        ) ?? new List<SupabaseGradebookRecord>();
 
         if (records.Count == 0)
         {
-            return NotFound(new
-            {
-                message = "Ведомость для выбранной дисциплины и группы не найдена"
-            });
+            return NotFound(
+                new
+                {
+                    message = "Ведомость для выбранной дисциплины и группы не найдена",
+                    details = "Данные были подготовлены, но teacher_gradebook_view не вернул строки. Проверьте view teacher_gradebook_view."
+                }
+            );
         }
 
         var first = records.First();
@@ -97,20 +136,22 @@ public class TeacherGradebookController : ControllerBase
             .Select(group =>
             {
                 var fullName =
-                    $"{group.Key.StudentSurname} {group.Key.StudentName.FirstOrDefault()}." +
-                    $"{(string.IsNullOrWhiteSpace(group.Key.StudentFathername) ? "" : group.Key.StudentFathername![0] + ".")}";
+                    $"{group.Key.StudentSurname} {group.Key.StudentName.FirstOrDefault()}."
+                    + $"{(string.IsNullOrWhiteSpace(group.Key.StudentFathername) ? "" : group.Key.StudentFathername![0] + ".")}";
 
-                var grades = elements.Select(element =>
-                {
-                    var record = group.First(item => item.IdElement == element.IdElement);
-
-                    return new GradebookGradeDto
+                var grades = elements
+                    .Select(element =>
                     {
-                        IdGrade = record.IdGrade,
-                        IdElement = record.IdElement,
-                        GradeValue = record.GradeValue
-                    };
-                }).ToList();
+                        var record = group.First(item => item.IdElement == element.IdElement);
+
+                        return new GradebookGradeDto
+                        {
+                            IdGrade = record.IdGrade,
+                            IdElement = record.IdElement,
+                            GradeValue = record.GradeValue
+                        };
+                    })
+                    .ToList();
 
                 return new GradebookStudentDto
                 {
@@ -147,41 +188,38 @@ public class TeacherGradebookController : ControllerBase
         int idUser,
         [FromQuery] int? disciplineId,
         [FromQuery] int? groupId,
-        [FromBody] UpdateTeacherGradebookRequestDto request)
+        [FromBody] UpdateTeacherGradebookRequestDto request
+    )
     {
         if (!disciplineId.HasValue || !groupId.HasValue)
         {
-            return BadRequest(new
-            {
-                message = "Необходимо выбрать дисциплину и группу"
-            });
+            return BadRequest(new { message = "Необходимо выбрать дисциплину и группу" });
         }
 
         if (request.IdSheet <= 0)
         {
-            return BadRequest(new
-            {
-                message = "Не передан идентификатор ведомости"
-            });
+            return BadRequest(new { message = "Не передан идентификатор ведомости" });
         }
 
-        var allowedQuery =
-            "teacher_gradebook_view" +
-            "?select=id_sheet,id_grade,id_final_grade,id_student,id_element" +
-            $"&teacher_user_id=eq.{idUser}" +
-            $"&id_discipline=eq.{disciplineId.Value}" +
-            $"&id_group=eq.{groupId.Value}" +
-            $"&id_sheet=eq.{request.IdSheet}";
+        var allowedQuery = "teacher_gradebook_view"
+            + "?select=id_sheet,id_grade,id_final_grade,id_student,id_element"
+            + $"&teacher_user_id=eq.{idUser}"
+            + $"&id_discipline=eq.{disciplineId.Value}"
+            + $"&id_group=eq.{groupId.Value}"
+            + $"&id_sheet=eq.{request.IdSheet}";
 
         var allowedResult = await _supabase.GetAsync(allowedQuery);
 
         if (!allowedResult.Success)
         {
-            return StatusCode(allowedResult.StatusCode, new
-            {
-                message = "Ошибка проверки ведомости",
-                details = allowedResult.Body
-            });
+            return StatusCode(
+                allowedResult.StatusCode,
+                new
+                {
+                    message = "Ошибка проверки ведомости",
+                    details = allowedResult.Body
+                }
+            );
         }
 
         var options = new JsonSerializerOptions
@@ -196,14 +234,16 @@ public class TeacherGradebookController : ControllerBase
 
         if (allowedRows.Count == 0)
         {
-            return NotFound(new
-            {
-                message = "Ведомость для выбранной дисциплины и группы не найдена"
-            });
+            return NotFound(new { message = "Ведомость для выбранной дисциплины и группы не найдена" });
         }
 
-        var allowedGradeIds = allowedRows.Select(item => item.IdGrade).ToHashSet();
-        var allowedFinalIds = allowedRows.Select(item => item.IdFinalGrade).ToHashSet();
+        var allowedGradeIds = allowedRows
+            .Select(item => item.IdGrade)
+            .ToHashSet();
+
+        var allowedFinalIds = allowedRows
+            .Select(item => item.IdFinalGrade)
+            .ToHashSet();
 
         var updated = 0;
 
@@ -223,18 +263,24 @@ public class TeacherGradebookController : ControllerBase
 
                 var updatePath = $"grades?id_grade=eq.{grade.IdGrade}";
 
-                var updateResult = await _supabase.PatchAsync(updatePath, new
-                {
-                    grade_value = grade.GradeValue
-                });
+                var updateResult = await _supabase.PatchAsync(
+                    updatePath,
+                    new
+                    {
+                        grade_value = grade.GradeValue
+                    }
+                );
 
                 if (!updateResult.Success)
                 {
-                    return StatusCode(updateResult.StatusCode, new
-                    {
-                        message = "Ошибка сохранения оценки",
-                        details = updateResult.Body
-                    });
+                    return StatusCode(
+                        updateResult.StatusCode,
+                        new
+                        {
+                            message = "Ошибка сохранения оценки",
+                            details = updateResult.Body
+                        }
+                    );
                 }
 
                 updated++;
@@ -252,28 +298,30 @@ public class TeacherGradebookController : ControllerBase
 
             var finalUpdatePath = $"final_grades?id_final_grade=eq.{student.IdFinalGrade}";
 
-            var finalUpdateResult = await _supabase.PatchAsync(finalUpdatePath, new
-            {
-                final_grade = student.FinalGrade
-            });
+            var finalUpdateResult = await _supabase.PatchAsync(
+                finalUpdatePath,
+                new
+                {
+                    final_grade = student.FinalGrade
+                }
+            );
 
             if (!finalUpdateResult.Success)
             {
-                return StatusCode(finalUpdateResult.StatusCode, new
-                {
-                    message = "Ошибка сохранения итоговой оценки",
-                    details = finalUpdateResult.Body
-                });
+                return StatusCode(
+                    finalUpdateResult.StatusCode,
+                    new
+                    {
+                        message = "Ошибка сохранения итоговой оценки",
+                        details = finalUpdateResult.Body
+                    }
+                );
             }
 
             updated++;
         }
 
-        return Ok(new
-        {
-            message = "Ведомость сохранена",
-            updated
-        });
+        return Ok(new { message = "Ведомость сохранена", updated });
     }
 
     [HttpPost("{idUser:int}/gradebook/{idSheet:int}/submit")]
@@ -281,33 +329,33 @@ public class TeacherGradebookController : ControllerBase
         int idUser,
         int idSheet,
         [FromQuery] int? disciplineId,
-        [FromQuery] int? groupId)
+        [FromQuery] int? groupId
+    )
     {
         if (!disciplineId.HasValue || !groupId.HasValue)
         {
-            return BadRequest(new
-            {
-                message = "Необходимо выбрать дисциплину и группу"
-            });
+            return BadRequest(new { message = "Необходимо выбрать дисциплину и группу" });
         }
 
-        var sheetQuery =
-            "teacher_gradebook_view" +
-            "?select=id_sheet,final_grade" +
-            $"&teacher_user_id=eq.{idUser}" +
-            $"&id_discipline=eq.{disciplineId.Value}" +
-            $"&id_group=eq.{groupId.Value}" +
-            $"&id_sheet=eq.{idSheet}";
+        var sheetQuery = "teacher_gradebook_view"
+            + "?select=id_sheet,final_grade"
+            + $"&teacher_user_id=eq.{idUser}"
+            + $"&id_discipline=eq.{disciplineId.Value}"
+            + $"&id_group=eq.{groupId.Value}"
+            + $"&id_sheet=eq.{idSheet}";
 
         var sheetResult = await _supabase.GetAsync(sheetQuery);
 
         if (!sheetResult.Success)
         {
-            return StatusCode(sheetResult.StatusCode, new
-            {
-                message = "Ошибка проверки ведомости",
-                details = sheetResult.Body
-            });
+            return StatusCode(
+                sheetResult.StatusCode,
+                new
+                {
+                    message = "Ошибка проверки ведомости",
+                    details = sheetResult.Body
+                }
+            );
         }
 
         var options = new JsonSerializerOptions
@@ -322,39 +370,72 @@ public class TeacherGradebookController : ControllerBase
 
         if (rows.Count == 0)
         {
-            return NotFound(new
-            {
-                message = "Ведомость не найдена"
-            });
+            return NotFound(new { message = "Ведомость не найдена" });
         }
 
         if (rows.Any(item => !item.FinalGrade.HasValue))
         {
-            return BadRequest(new
-            {
-                message = "Нельзя отправить ведомость: не у всех студентов проставлена итоговая оценка"
-            });
+            return BadRequest(new { message = "Нельзя отправить ведомость: не у всех студентов проставлена итоговая оценка" });
         }
 
-        var submitResult = await _supabase.PatchAsync($"grade_sheets?id_sheet=eq.{idSheet}", new
-        {
-            status = "submitted",
-            submitted_at = DateTime.UtcNow
-        });
+        var submitResult = await _supabase.PatchAsync(
+            $"grade_sheets?id_sheet=eq.{idSheet}",
+            new
+            {
+                status = "submitted",
+                submitted_at = DateTime.UtcNow
+            }
+        );
 
         if (!submitResult.Success)
         {
-            return StatusCode(submitResult.StatusCode, new
-            {
-                message = "Ошибка отправки ведомости на утверждение",
-                details = submitResult.Body
-            });
+            return StatusCode(
+                submitResult.StatusCode,
+                new
+                {
+                    message = "Ошибка отправки ведомости на утверждение",
+                    details = submitResult.Body
+                }
+            );
         }
 
-        return Ok(new
+        return Ok(new { message = "Ведомость отправлена на утверждение" });
+    }
+
+    private async Task<(bool Success, int StatusCode, string Body)> EnsureGradebookAsync(
+        int idUser,
+        int disciplineId,
+        int groupId
+    )
+    {
+        return await _supabase.RpcAsync(
+            "ensure_teacher_gradebook",
+            new
+            {
+                p_teacher_user_id = idUser,
+                p_id_discipline = disciplineId,
+                p_id_group = groupId
+            }
+        );
+    }
+
+    private static EnsureGradebookResponse? DeserializeEnsurePayload(string body)
+    {
+        var options = new JsonSerializerOptions
         {
-            message = "Ведомость отправлена на утверждение"
-        });
+            PropertyNameCaseInsensitive = true
+        };
+
+        return JsonSerializer.Deserialize<EnsureGradebookResponse>(body, options);
+    }
+
+    private class EnsureGradebookResponse
+    {
+        [JsonPropertyName("idAssignment")]
+        public int IdAssignment { get; set; }
+
+        [JsonPropertyName("idSheet")]
+        public int IdSheet { get; set; }
     }
 
     private class SupabaseGradebookRecord
