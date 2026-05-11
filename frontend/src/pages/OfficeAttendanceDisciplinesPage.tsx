@@ -172,6 +172,29 @@ function formatPercent(value: number | null) {
   return `${value}%`;
 }
 
+function pluralize(value: number, one: string, few: string, many: string) {
+  const absValue = Math.abs(value) % 100;
+  const lastDigit = absValue % 10;
+
+  if (absValue > 10 && absValue < 20) {
+    return many;
+  }
+
+  if (lastDigit === 1) {
+    return one;
+  }
+
+  if (lastDigit >= 2 && lastDigit <= 4) {
+    return few;
+  }
+
+  return many;
+}
+
+function formatCount(value: number, one: string, few: string, many: string) {
+  return `${value} ${pluralize(value, one, few, many)}`;
+}
+
 function formatPrograms(discipline: OfficeAttendanceDiscipline) {
   const programNames = discipline.programs
     .map((program) => program.programName)
@@ -454,8 +477,24 @@ export function OfficeAttendanceDisciplinesPage({
                   </p>
 
                   <div className="office-attendance-discipline-stats">
-                    <span>{discipline.groupsCount} групп</span>
-                    <span>{discipline.sessionsCount} занятий</span>
+                    <span>
+                      {formatCount(
+                        discipline.groupsCount,
+                        "группа",
+                        "группы",
+                        "групп"
+                      )}
+                    </span>
+
+                    <span>
+                      {formatCount(
+                        discipline.sessionsCount,
+                        "занятие",
+                        "занятия",
+                        "занятий"
+                      )}
+                    </span>
+
                     <span className="accent">
                       Посещ. {formatPercent(discipline.attendancePercent)}
                     </span>
