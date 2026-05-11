@@ -165,6 +165,48 @@ function formatCount(value: number, one: string, few: string, many: string) {
   return `${value} ${pluralize(value, one, few, many)}`;
 }
 
+function getGroupKey(group: OfficeAttendanceGroup) {
+  return group.groupName.trim().toLowerCase() || `id:${group.idGroup}`;
+}
+
+function mergeAttendanceGroups(groups: OfficeAttendanceGroup[]) {
+  const map = new Map<string, OfficeAttendanceGroup>();
+
+  groups.forEach((group) => {
+    const key = getGroupKey(group);
+    const existing = map.get(key);
+
+    if (!existing) {
+      map.set(key, { ...group });
+      return;
+    }
+
+    const markedAttendanceCount =
+      existing.markedAttendanceCount + group.markedAttendanceCount;
+    const presentAttendanceCount =
+      existing.presentAttendanceCount + group.presentAttendanceCount;
+    const absentAttendanceCount =
+      existing.absentAttendanceCount + group.absentAttendanceCount;
+
+    map.set(key, {
+      ...existing,
+      studentsCount: Math.max(existing.studentsCount, group.studentsCount),
+      sessionsCount: existing.sessionsCount + group.sessionsCount,
+      markedAttendanceCount,
+      presentAttendanceCount,
+      absentAttendanceCount,
+      attendancePercent:
+        markedAttendanceCount === 0
+          ? null
+          : Number(((presentAttendanceCount / markedAttendanceCount) * 100).toFixed(1))
+    });
+  });
+
+  return Array.from(map.values()).sort((a, b) =>
+    a.groupName.localeCompare(b.groupName, "ru")
+  );
+}
+
 export function OfficeAttendanceGroupsPage({
   user,
   disciplineId,
@@ -198,7 +240,11 @@ export function OfficeAttendanceGroupsPage({
     loadGroups();
   }, [user.idUser, disciplineId]);
 
-  const headerInfo = useMemo(() => groups[0] ?? null, [groups]);
+  const displayGroups = useMemo(() => mergeAttendanceGroups(groups), [groups]);
+  const headerInfo = useMemo(() => displayGroups[0] ?? groups[0] ?? null, [
+    displayGroups,
+    groups
+  ]);
 
   return (
     <div className="schedule-layout">
@@ -293,16 +339,16 @@ export function OfficeAttendanceGroupsPage({
 
         {error && <div className="schedule-error">{error}</div>}
 
-        {!isLoading && !error && groups.length === 0 && (
+        {!isLoading && !error && displayGroups.length === 0 && (
           <div className="schedule-state">Группы по дисциплине не найдены</div>
         )}
 
-        {!isLoading && !error && groups.length > 0 && (
+        {!isLoading && !error && displayGroups.length > 0 && (
           <section className="office-attendance-groups-list">
-            {groups.map((group) => (
+            {displayGroups.map((group) => (
               <button
                 className="office-attendance-group-card"
-                key={`${group.idDiscipline}-${group.idGroup}-${group.idAssignment}`}
+                key={`${group.idDiscipline}-${getGroupKey(group)}`}
                 type="button"
                 onClick={() => onSelectGroup(group.idGroup)}
               >
