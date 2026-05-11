@@ -22,13 +22,6 @@ public class OfficeResitsController : ControllerBase
         int idUser
     )
     {
-        /*
-         * Первый экран "Пересдачи / дисциплины" строим из той же view,
-         * что и следующий экран со списком групп.
-         *
-         * Это нужно, чтобы количество групп на карточке дисциплины
-         * совпадало с количеством групп, которые реально открываются после клика.
-         */
         var query =
             "office_resit_groups_view"
             + "?select=id_discipline,discipline_name,id_group,group_name,course_no,id_program,program_name,start_module_no,end_module_no,id_assignment,academic_year,teacher_short_name,id_sheet,sheet_status,students_count,retake_students_count"
@@ -64,15 +57,26 @@ public class OfficeResitsController : ControllerBase
                 row.IdDiscipline,
                 row.DisciplineName
             })
-            .Select(group =>
+            .Select(disciplineGroup =>
             {
-                var uniqueGroupRows = group
+                var groupSummaries = disciplineGroup
                     .Where(row => row.IdGroup > 0)
                     .GroupBy(row => row.IdGroup)
-                    .Select(groupRows => groupRows.First())
+                    .Select(groupRows =>
+                    {
+                        var first = groupRows.First();
+
+                        return new
+                        {
+                            Row = first,
+                            StudentsCount = groupRows.Max(row => row.StudentsCount),
+                            RetakeStudentsCount = groupRows.Max(row => row.RetakeStudentsCount)
+                        };
+                    })
                     .ToList();
 
-                var programs = uniqueGroupRows
+                var programs = groupSummaries
+                    .Select(summary => summary.Row)
                     .GroupBy(row => row.IdProgram)
                     .Select(programGroup => new OfficeProgramOptionDto
                     {
@@ -84,26 +88,28 @@ public class OfficeResitsController : ControllerBase
                     .OrderBy(program => program.ProgramName)
                     .ToList();
 
-                var courseNos = uniqueGroupRows
-                    .Select(row => row.CourseNo)
+                var courseNos = groupSummaries
+                    .Select(summary => summary.Row.CourseNo)
                     .Distinct()
                     .OrderBy(value => value)
                     .ToList();
 
-                var moduleNos = uniqueGroupRows
-                    .SelectMany(row => ExpandModules(row.StartModuleNo, row.EndModuleNo))
+                var moduleNos = groupSummaries
+                    .SelectMany(summary =>
+                        ExpandModules(summary.Row.StartModuleNo, summary.Row.EndModuleNo)
+                    )
                     .Distinct()
                     .OrderBy(value => value)
                     .ToList();
 
-                var groupsCount = uniqueGroupRows.Count;
-                var studentsCount = uniqueGroupRows.Sum(row => row.StudentsCount);
-                var retakeStudentsCount = uniqueGroupRows.Sum(row => row.RetakeStudentsCount);
+                var groupsCount = groupSummaries.Count;
+                var studentsCount = groupSummaries.Sum(summary => summary.StudentsCount);
+                var retakeStudentsCount = groupSummaries.Sum(summary => summary.RetakeStudentsCount);
 
                 return new OfficeResitDisciplineDto
                 {
-                    IdDiscipline = group.Key.IdDiscipline,
-                    DisciplineName = group.Key.DisciplineName,
+                    IdDiscipline = disciplineGroup.Key.IdDiscipline,
+                    DisciplineName = disciplineGroup.Key.DisciplineName,
                     PudUrl = null,
                     Programs = programs,
                     CourseNos = courseNos,
