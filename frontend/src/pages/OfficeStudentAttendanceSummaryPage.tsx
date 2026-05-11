@@ -26,6 +26,7 @@ type OfficeStudentAttendanceSummaryPageProps = {
 function getOfficeInitials(user: LoginResponse) {
   const surnameInitial = user.surname?.trim()?.[0] ?? "";
   const nameInitial = user.name?.trim()?.[0] ?? "";
+
   return `${surnameInitial}${nameInitial}`.toUpperCase();
 }
 
@@ -36,6 +37,18 @@ function getOfficeShortName(user: LoginResponse) {
     : "";
 
   return `${user.surname} ${nameInitial}${fathernameInitial}`;
+}
+
+function getStudentInitials(fullName?: string | null) {
+  const parts = (fullName ?? "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+
+  const surnameInitial = parts[0]?.[0] ?? "";
+  const nameInitial = parts[1]?.[0] ?? "";
+
+  return `${surnameInitial}${nameInitial}`.toUpperCase() || "СТ";
 }
 
 function ResitIcon() {
@@ -145,15 +158,30 @@ function formatPercent(value: number | null) {
     return "—";
   }
 
-  return `${value}%`;
+  return `${Number(value).toFixed(1).replace(".", ",").replace(",0", "")}%`;
 }
 
-function escapeHtml(value: string | number) {
-  return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;");
+function formatModuleNos(moduleNos: number[]) {
+  if (!moduleNos || moduleNos.length === 0) {
+    return "—";
+  }
+
+  if (moduleNos.length === 1) {
+    return `${moduleNos[0]} модуль`;
+  }
+
+  return `${moduleNos.join(", ")} модули`;
+}
+
+function makeSafeFileName(value: string) {
+  return value
+    .replace(/[<>:"/\\|?*]+/g, "-")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function escapeCsvCell(value: string | number) {
+  return `"${String(value).replaceAll('"', '""')}"`;
 }
 
 export function OfficeStudentAttendanceSummaryPage({
@@ -200,7 +228,7 @@ export function OfficeStudentAttendanceSummaryPage({
 
   const moduleOptions = useMemo(() => {
     return Array.from(
-      new Set(attendance.flatMap((item) => item.moduleNos))
+      new Set(attendance.flatMap((item) => item.moduleNos ?? []))
     ).sort((a, b) => a - b);
   }, [attendance]);
 
@@ -210,7 +238,7 @@ export function OfficeStudentAttendanceSummaryPage({
     }
 
     return attendance.filter((item) =>
-      item.moduleNos.includes(Number(selectedModuleNo))
+      (item.moduleNos ?? []).includes(Number(selectedModuleNo))
     );
   }, [attendance, selectedModuleNo]);
 
@@ -218,54 +246,44 @@ export function OfficeStudentAttendanceSummaryPage({
     if (!student) {
       return;
     }
-
+  
+    const header = [
+      "Студент",
+      "Группа",
+      "Дисциплина",
+      "Модуль",
+      "Занятий",
+      "Присутствий",
+      "Пропусков",
+      "% посещаемости"
+    ];
+  
     const rows = filteredAttendance.map((item) => [
+      student.fullName,
+      student.groupName,
       item.disciplineName,
-      formatPercent(item.attendancePercent),
+      formatModuleNos(item.moduleNos ?? []),
       item.sessionsCount,
       item.presentAttendanceCount,
-      item.absenceCount
+      item.absenceCount,
+      formatPercent(item.attendancePercent)
     ]);
-
-    const htmlRows = [
-      ["Дисциплина", "% посещаемости", "Занятий", "Присутствий", "Пропусков"],
-      ...rows
-    ]
-      .map(
-        (row) =>
-          `<tr>${row
-            .map((cell) => `<td>${escapeHtml(cell)}</td>`)
-            .join("")}</tr>`
-      )
-      .join("");
-
-    const html = `
-      <html>
-        <head>
-          <meta charset="UTF-8" />
-        </head>
-        <body>
-          <h2>Посещаемость студента</h2>
-          <p>${escapeHtml(student.fullName)}</p>
-          <p>Группа: ${escapeHtml(student.groupName)}</p>
-          <table border="1">
-            ${htmlRows}
-          </table>
-        </body>
-      </html>
-    `;
-
-    const blob = new Blob([html], {
-      type: "application/vnd.ms-excel;charset=utf-8;"
+  
+    const csv = [header, ...rows]
+      .map((row) => row.map(escapeCsvCell).join(";"))
+      .join("\n");
+  
+    const blob = new Blob([`\uFEFF${csv}`], {
+      type: "text/csv;charset=utf-8;"
     });
-
+  
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
-
+  
     link.href = url;
-    link.download = `student-attendance-${student.fullName}.xls`;
+    link.download = `student-attendance-${makeSafeFileName(student.fullName)}.csv`;
     link.click();
-
+  
     URL.revokeObjectURL(url);
   }
 
@@ -339,31 +357,41 @@ export function OfficeStudentAttendanceSummaryPage({
       </aside>
 
       <main className="office-student-attendance-content">
-        <button className="details-back-button" type="button" onClick={onBack}>
+        <button
+          className="office-student-attendance-back-button"
+          type="button"
+          onClick={onBack}
+        >
           ← Назад к студенту
         </button>
 
-        <div className="office-student-attendance-top">
-          <div>
+        <section className="office-student-attendance-hero">
+          <div className="office-student-attendance-heading">
             <h1>Студенты / посещаемость</h1>
 
-            <select
-              value={selectedModuleNo}
-              onChange={(event) => setSelectedModuleNo(event.target.value)}
-            >
-              <option value="all">Модуль</option>
+            <label className="office-student-attendance-filter">
+              <span>Модуль</span>
 
-              {moduleOptions.map((moduleNo) => (
-                <option key={moduleNo} value={moduleNo}>
-                  {moduleNo} модуль
-                </option>
-              ))}
-            </select>
+              <select
+                value={selectedModuleNo}
+                onChange={(event) => setSelectedModuleNo(event.target.value)}
+              >
+                <option value="all">Все модули</option>
+
+                {moduleOptions.map((moduleNo) => (
+                  <option key={moduleNo} value={moduleNo}>
+                    {moduleNo} модуль
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
 
           {student && (
             <section className="office-student-mini-card">
-              <div className="office-student-mini-avatar" />
+              <div className="office-student-mini-avatar">
+                {getStudentInitials(student.fullName)}
+              </div>
 
               <div>
                 <h2>{student.fullName}</h2>
@@ -372,7 +400,7 @@ export function OfficeStudentAttendanceSummaryPage({
               </div>
             </section>
           )}
-        </div>
+        </section>
 
         {isLoading && (
           <div className="schedule-state">Загружаем посещаемость студента...</div>
@@ -381,12 +409,32 @@ export function OfficeStudentAttendanceSummaryPage({
         {error && <div className="schedule-error">{error}</div>}
 
         {!isLoading && !error && (
-          <>
-            <section className="office-student-attendance-table-wrap">
+          <section className="office-student-attendance-table-card">
+            <div className="office-student-attendance-table-toolbar">
+              <div>
+                <h2>Посещаемость по дисциплинам</h2>
+                <p>Сводная посещаемость студента по выбранному модулю</p>
+              </div>
+
+              <button
+                className="office-student-attendance-export"
+                type="button"
+                onClick={handleExport}
+                disabled={!student}
+              >
+                Экспорт
+              </button>
+            </div>
+
+            <div className="office-student-attendance-table-scroll">
               <table className="office-student-attendance-table">
                 <thead>
                   <tr>
                     <th>Дисциплина</th>
+                    <th>Модуль</th>
+                    <th>Занятий</th>
+                    <th>Присутствий</th>
+                    <th>Пропусков</th>
                     <th>% посещаемости</th>
                   </tr>
                 </thead>
@@ -394,31 +442,30 @@ export function OfficeStudentAttendanceSummaryPage({
                 <tbody>
                   {filteredAttendance.length === 0 ? (
                     <tr>
-                      <td colSpan={2} className="office-student-attendance-empty">
+                      <td colSpan={6} className="office-student-attendance-empty">
                         Данные по посещаемости не найдены
                       </td>
                     </tr>
                   ) : (
                     filteredAttendance.map((item) => (
-                      <tr key={item.idAssignment}>
+                      <tr key={`${item.idDiscipline}-${item.idAssignment}`}>
                         <td>{item.disciplineName}</td>
-                        <td>{formatPercent(item.attendancePercent)}</td>
+                        <td>{formatModuleNos(item.moduleNos ?? [])}</td>
+                        <td>{item.sessionsCount}</td>
+                        <td>{item.presentAttendanceCount}</td>
+                        <td>{item.absenceCount}</td>
+                        <td>
+                          <span className="office-student-attendance-percent">
+                            {formatPercent(item.attendancePercent)}
+                          </span>
+                        </td>
                       </tr>
                     ))
                   )}
                 </tbody>
               </table>
-            </section>
-
-            <button
-              className="office-student-attendance-export"
-              type="button"
-              onClick={handleExport}
-              disabled={filteredAttendance.length === 0}
-            >
-              Экспорт
-            </button>
-          </>
+            </div>
+          </section>
         )}
       </main>
     </div>
