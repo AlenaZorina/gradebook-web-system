@@ -165,6 +165,10 @@ function formatCount(value: number, one: string, few: string, many: string) {
   return `${value} ${pluralize(value, one, few, many)}`;
 }
 
+function formatFailedCount(value: number) {
+  return formatCount(value, "неуд", "неуда", "неудов");
+}
+
 function getGroupKey(group: OfficeFinalSheetGroup) {
   return group.groupName.trim().toLowerCase() || `id:${group.idGroup}`;
 }
@@ -318,7 +322,11 @@ export function OfficeFinalSheetGroupsPage({
       </aside>
 
       <main className="office-final-groups-content">
-        <button className="details-back-button" type="button" onClick={onBack}>
+        <button
+          className="office-final-groups-back-button"
+          type="button"
+          onClick={onBack}
+        >
           ← Назад к дисциплинам
         </button>
 
@@ -327,12 +335,12 @@ export function OfficeFinalSheetGroupsPage({
 
           {headerInfo && (
             <div className="office-final-groups-heading">
-              <div>
+              <div className="office-final-groups-title-row">
                 <h2>{headerInfo.disciplineName}</h2>
-                <p>{headerInfo.teacherShortName}</p>
+                <span>{headerInfo.courseNo} курс</span>
               </div>
 
-              <span>{headerInfo.courseNo} курс</span>
+              <p>{headerInfo.teacherShortName}</p>
             </div>
           )}
         </section>
@@ -364,8 +372,8 @@ export function OfficeFinalSheetGroupsPage({
                       "студента",
                       "студентов"
                     )}{" "}
-                    · заполнено {formatPercent(group.filledPercent)} · неудов:{" "}
-                    {group.failedStudentsCount}
+                    · заполнено {formatPercent(group.filledPercent)} ·{" "}
+                    {formatFailedCount(group.failedStudentsCount)}
                   </small>
                 </span>
 
