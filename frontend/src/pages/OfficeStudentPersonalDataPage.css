@@ -1,182 +1,283 @@
 .office-student-personal-content {
-    height: 100vh;
-    padding: 52px 48px 70px;
-    overflow: auto;
-    box-sizing: border-box;
-  }
-  
-  .office-student-personal-content h1 {
-    margin: 0 0 42px;
-    color: #111827;
-    font-size: 34px;
-    line-height: 1.1;
-    font-weight: 900;
-    letter-spacing: -0.05em;
-  }
-  
-  .office-student-personal-profile {
-    width: min(100%, 420px);
-    margin: 0 auto 44px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-  }
-  
-  .office-student-personal-avatar {
-    width: 112px;
-    height: 112px;
-    border-radius: 999px;
-    background: #d9d9d9;
-    margin-bottom: 24px;
-  }
-  
-  .office-student-personal-profile h2 {
-    margin: 0 0 6px;
-    color: #111827;
-    font-size: 25px;
-    line-height: 1.15;
-    font-weight: 900;
-    letter-spacing: -0.04em;
-  }
-  
-  .office-student-personal-profile p {
-    margin: 0 0 4px;
-    color: #111827;
-    font-size: 16px;
-    font-weight: 750;
-  }
-  
-  .office-student-personal-profile span {
-    color: #111827;
-    font-size: 15px;
-    font-weight: 650;
-  }
-  
+  height: 100vh;
+  padding: 52px 48px 70px;
+  overflow: auto;
+  box-sizing: border-box;
+}
+
+.office-student-personal-back-button {
+  border: none;
+  background: transparent;
+  color: #7b87a5;
+  font-family: "Manrope", system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 850;
+  cursor: pointer;
+  padding: 0;
+  margin: 0 0 10px;
+  transition: color 0.18s ease, transform 0.18s ease;
+}
+
+.office-student-personal-back-button:hover {
+  color: #2563eb;
+  transform: translateX(-2px);
+}
+
+.office-student-personal-content h1 {
+  margin: 0 0 28px;
+  color: #111827;
+  font-size: 36px;
+  line-height: 1.1;
+  font-weight: 950;
+  letter-spacing: -0.055em;
+}
+
+.office-student-personal-profile-card {
+  width: min(100%, 1180px);
+  min-height: 160px;
+  border: 1px solid rgba(225, 231, 245, 0.95);
+  border-radius: 34px;
+  background:
+    radial-gradient(circle at top right, rgba(111, 143, 255, 0.15), transparent 34%),
+    rgba(255, 255, 255, 0.9);
+  box-shadow: 0 22px 60px rgba(27, 46, 94, 0.08);
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  padding: 28px 38px;
+  box-sizing: border-box;
+  margin-bottom: 26px;
+}
+
+.office-student-personal-avatar {
+  width: 92px;
+  height: 92px;
+  flex: 0 0 auto;
+  border-radius: 28px;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.38), transparent 38%),
+    linear-gradient(135deg, #4f74ff 0%, #6f8fff 100%);
+  color: #ffffff;
+  font-size: 31px;
+  line-height: 1;
+  font-weight: 950;
+  letter-spacing: -0.05em;
+  box-shadow: 0 18px 40px rgba(79, 116, 255, 0.3);
+}
+
+.office-student-personal-profile-info {
+  min-width: 0;
+}
+
+.office-student-personal-profile-info h2 {
+  margin: 0 0 12px;
+  color: #111827;
+  font-size: 30px;
+  line-height: 1.12;
+  font-weight: 950;
+  letter-spacing: -0.055em;
+}
+
+.office-student-personal-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.office-student-personal-badges span {
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid #dce4f5;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 12px 28px rgba(27, 46, 94, 0.06);
+  padding: 0 18px;
+  color: #39445c;
+  font-size: 14px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.office-student-personal-profile-info p {
+  margin: 0;
+  color: #6b7692;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.office-student-personal-grid {
+  width: min(100%, 1180px);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(320px, 1fr));
+  gap: 18px;
+  padding-bottom: 40px;
+}
+
+.office-student-personal-card {
+  border: 1px solid rgba(225, 231, 245, 0.95);
+  border-radius: 30px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 18px 46px rgba(27, 46, 94, 0.07);
+  padding: 28px 32px;
+  box-sizing: border-box;
+}
+
+.office-student-personal-card.actions {
+  grid-column: 1 / -1;
+}
+
+.office-student-personal-card h3 {
+  margin: 0 0 22px;
+  color: #111827;
+  font-size: 22px;
+  line-height: 1.15;
+  font-weight: 950;
+  letter-spacing: -0.04em;
+}
+
+.office-student-personal-card dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(180px, 1fr));
+  gap: 18px 24px;
+  margin: 0;
+}
+
+.office-student-personal-card dl div {
+  display: grid;
+  gap: 5px;
+}
+
+.office-student-personal-card dt {
+  color: #7b87a5;
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.office-student-personal-card dd {
+  margin: 0;
+  color: #111827;
+  font-size: 16px;
+  line-height: 1.3;
+  font-weight: 900;
+}
+
+.office-student-personal-actions-header {
+  margin-bottom: 18px;
+}
+
+.office-student-personal-actions-header h3 {
+  margin-bottom: 8px;
+}
+
+.office-student-personal-actions-header p {
+  max-width: 760px;
+  margin: 0;
+  color: #6b7692;
+  font-size: 14px;
+  line-height: 1.45;
+  font-weight: 750;
+}
+
+.office-student-personal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.office-student-personal-actions button {
+  min-height: 44px;
+  border: none;
+  border-radius: 999px;
+  padding: 0 22px;
+  font-family: "Manrope", system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    opacity 0.18s ease;
+}
+
+.office-student-personal-actions button:hover {
+  transform: translateY(-2px);
+}
+
+.office-student-personal-actions .secondary {
+  background: #edf3ff;
+  color: #2454c7;
+  box-shadow: 0 12px 26px rgba(37, 99, 235, 0.12);
+}
+
+.office-student-personal-actions .danger {
+  background: #fff1f2;
+  color: #be123c;
+  box-shadow: 0 12px 26px rgba(190, 18, 60, 0.1);
+}
+
+.office-student-personal-actions .success {
+  background: #ecfdf5;
+  color: #047857;
+  box-shadow: 0 12px 26px rgba(4, 120, 87, 0.1);
+}
+
+.office-student-personal-message {
+  margin-top: 18px;
+  border-radius: 20px;
+  background: #f8faff;
+  border: 1px solid #e1e7f5;
+  color: #39445c;
+  padding: 15px 18px;
+  font-size: 14px;
+  line-height: 1.45;
+  font-weight: 750;
+}
+
+@media (max-width: 1100px) {
+  .office-student-personal-profile-card,
   .office-student-personal-grid {
-    width: min(100%, 980px);
-    margin: 0 auto;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(260px, 1fr));
-    gap: 18px;
+    width: 100%;
   }
-  
-  .office-student-personal-card {
-    border: 1px solid rgba(197, 204, 216, 0.95);
-    border-radius: 28px;
-    background: rgba(255, 255, 255, 0.92);
-    box-shadow: 0 18px 46px rgba(27, 46, 94, 0.06);
-    padding: 24px 28px;
-    box-sizing: border-box;
-  }
-  
-  .office-student-personal-card.actions {
-    grid-column: 1 / -1;
-  }
-  
-  .office-student-personal-card h3 {
-    margin: 0 0 20px;
-    color: #111827;
-    font-size: 21px;
-    line-height: 1.2;
-    font-weight: 900;
-    letter-spacing: -0.035em;
-  }
-  
+
   .office-student-personal-card dl {
-    display: grid;
-    gap: 14px;
-    margin: 0;
+    grid-template-columns: 1fr;
   }
-  
-  .office-student-personal-card dl div {
-    display: grid;
-    gap: 4px;
+}
+
+@media (max-width: 780px) {
+  .office-student-personal-content {
+    height: auto;
+    padding: 32px 20px 50px;
   }
-  
-  .office-student-personal-card dt {
-    color: #7b87a5;
-    font-size: 13px;
-    font-weight: 800;
+
+  .office-student-personal-content h1 {
+    font-size: 30px;
   }
-  
-  .office-student-personal-card dd {
-    margin: 0;
-    color: #111827;
-    font-size: 16px;
-    font-weight: 850;
+
+  .office-student-personal-profile-card {
+    flex-direction: column;
+    text-align: center;
+    padding: 28px 22px;
   }
-  
-  .office-student-personal-card.actions p {
-    max-width: 720px;
-    margin: 0 0 20px;
-    color: #6b7692;
-    font-size: 14px;
-    line-height: 1.45;
-    font-weight: 750;
+
+  .office-student-personal-profile-info h2 {
+    font-size: 25px;
   }
-  
-  .office-student-personal-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
+
+  .office-student-personal-badges {
+    justify-content: center;
   }
-  
-  .office-student-personal-actions button {
-    min-height: 42px;
-    border: none;
-    border-radius: 999px;
-    padding: 0 20px;
-    color: #ffffff;
-    font-family: "Manrope", system-ui, sans-serif;
-    font-size: 14px;
-    font-weight: 850;
-    cursor: pointer;
-    transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+
+  .office-student-personal-grid {
+    grid-template-columns: 1fr;
   }
-  
-  .office-student-personal-actions button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 16px 34px rgba(64, 64, 64, 0.16);
+
+  .office-student-personal-card {
+    padding: 22px;
   }
-  
-  .office-student-personal-actions .secondary {
-    background: #6f6a6a;
-  }
-  
-  .office-student-personal-actions .danger {
-    background: #c75f5f;
-  }
-  
-  .office-student-personal-actions .success {
-    background: #4f8f63;
-  }
-  
-  .office-student-personal-message {
-    margin-top: 18px;
-    border-radius: 18px;
-    background: #f8faff;
-    border: 1px solid #e1e7f5;
-    color: #39445c;
-    padding: 14px 16px;
-    font-size: 14px;
-    line-height: 1.45;
-    font-weight: 750;
-  }
-  
-  @media (max-width: 900px) {
-    .office-student-personal-grid {
-      grid-template-columns: 1fr;
-    }
-  }
-  
-  @media (max-width: 780px) {
-    .office-student-personal-content {
-      height: auto;
-      padding: 32px 20px 50px;
-    }
-  
-    .office-student-personal-content h1 {
-      font-size: 30px;
-    }
-  }
+}

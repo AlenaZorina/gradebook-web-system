@@ -19,6 +19,7 @@ type OfficeStudentPersonalDataPageProps = {
 function getOfficeInitials(user: LoginResponse) {
   const surnameInitial = user.surname?.trim()?.[0] ?? "";
   const nameInitial = user.name?.trim()?.[0] ?? "";
+
   return `${surnameInitial}${nameInitial}`.toUpperCase();
 }
 
@@ -29,6 +30,18 @@ function getOfficeShortName(user: LoginResponse) {
     : "";
 
   return `${user.surname} ${nameInitial}${fathernameInitial}`;
+}
+
+function getStudentInitials(fullName?: string | null) {
+  const parts = (fullName ?? "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+
+  const surnameInitial = parts[0]?.[0] ?? "";
+  const nameInitial = parts[1]?.[0] ?? "";
+
+  return `${surnameInitial}${nameInitial}`.toUpperCase() || "СТ";
 }
 
 function ResitIcon() {
@@ -254,7 +267,11 @@ export function OfficeStudentPersonalDataPage({
       </aside>
 
       <main className="office-student-personal-content">
-        <button className="details-back-button" type="button" onClick={onBack}>
+        <button
+          className="office-student-personal-back-button"
+          type="button"
+          onClick={onBack}
+        >
           ← Назад к студенту
         </button>
 
@@ -268,12 +285,21 @@ export function OfficeStudentPersonalDataPage({
 
         {!isLoading && !error && student && (
           <>
-            <section className="office-student-personal-profile">
-              <div className="office-student-personal-avatar" />
+            <section className="office-student-personal-profile-card">
+              <div className="office-student-personal-avatar">
+                {getStudentInitials(student.fullName)}
+              </div>
 
-              <h2>{student.fullName}</h2>
-              <p>{student.groupName}</p>
-              <span>{student.email || "email не указан"}</span>
+              <div className="office-student-personal-profile-info">
+                <h2>{student.fullName}</h2>
+
+                <div className="office-student-personal-badges">
+                  <span>{student.groupName}</span>
+                  <span>{student.courseNo} курс</span>
+                </div>
+
+                <p>{student.email || "email не указан"}</p>
+              </div>
             </section>
 
             <section className="office-student-personal-grid">
@@ -335,12 +361,15 @@ export function OfficeStudentPersonalDataPage({
               </article>
 
               <article className="office-student-personal-card actions">
-                <h3>Административные действия</h3>
-
-                <p>
-                  Эти действия относятся к учебному офису, поэтому логичнее
-                  размещать их именно на экране личных данных студента.
-                </p>
+                <div className="office-student-personal-actions-header">
+                  <div>
+                    <h3>Административные действия</h3>
+                    <p>
+                      Действия учебного офиса по изменению статуса и учебной группы
+                      студента.
+                    </p>
+                  </div>
+                </div>
 
                 <div className="office-student-personal-actions">
                   <button
