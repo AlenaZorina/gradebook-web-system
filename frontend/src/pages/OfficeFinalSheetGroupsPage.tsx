@@ -142,6 +142,72 @@ function formatPercent(value: number | null) {
   return `${value}%`;
 }
 
+function pluralize(value: number, one: string, few: string, many: string) {
+  const absValue = Math.abs(value) % 100;
+  const lastDigit = absValue % 10;
+
+  if (absValue > 10 && absValue < 20) {
+    return many;
+  }
+
+  if (lastDigit === 1) {
+    return one;
+  }
+
+  if (lastDigit >= 2 && lastDigit <= 4) {
+    return few;
+  }
+
+  return many;
+}
+
+function formatCount(value: number, one: string, few: string, many: string) {
+  return `${value} ${pluralize(value, one, few, many)}`;
+}
+
+function getGroupKey(group: OfficeFinalSheetGroup) {
+  return group.groupName.trim().toLowerCase() || `id:${group.idGroup}`;
+}
+
+function mergeFinalSheetGroups(groups: OfficeFinalSheetGroup[]) {
+  const map = new Map<string, OfficeFinalSheetGroup>();
+
+  groups.forEach((group) => {
+    const key = getGroupKey(group);
+    const existing = map.get(key);
+
+    if (!existing) {
+      map.set(key, { ...group });
+      return;
+    }
+
+    const studentsCount = Math.max(existing.studentsCount, group.studentsCount);
+    const filledFinalGradesCount = Math.max(
+      existing.filledFinalGradesCount,
+      group.filledFinalGradesCount
+    );
+    const failedStudentsCount = Math.max(
+      existing.failedStudentsCount,
+      group.failedStudentsCount
+    );
+
+    map.set(key, {
+      ...existing,
+      studentsCount,
+      filledFinalGradesCount,
+      failedStudentsCount,
+      filledPercent:
+        studentsCount === 0
+          ? null
+          : Number(((filledFinalGradesCount / studentsCount) * 100).toFixed(1))
+    });
+  });
+
+  return Array.from(map.values()).sort((a, b) =>
+    a.groupName.localeCompare(b.groupName, "ru")
+  );
+}
+
 export function OfficeFinalSheetGroupsPage({
   user,
   disciplineId,
@@ -175,7 +241,12 @@ export function OfficeFinalSheetGroupsPage({
     loadGroups();
   }, [user.idUser, disciplineId]);
 
-  const headerInfo = useMemo(() => groups[0] ?? null, [groups]);
+  const displayGroups = useMemo(() => mergeFinalSheetGroups(groups), [groups]);
+
+  const headerInfo = useMemo(
+    () => displayGroups[0] ?? groups[0] ?? null,
+    [displayGroups, groups]
+  );
 
   return (
     <div className="schedule-layout">
@@ -270,25 +341,30 @@ export function OfficeFinalSheetGroupsPage({
 
         {error && <div className="schedule-error">{error}</div>}
 
-        {!isLoading && !error && groups.length === 0 && (
+        {!isLoading && !error && displayGroups.length === 0 && (
           <div className="schedule-state">Группы по дисциплине не найдены</div>
         )}
 
-        {!isLoading && !error && groups.length > 0 && (
+        {!isLoading && !error && displayGroups.length > 0 && (
           <section className="office-final-groups-list">
-            {groups.map((group) => (
+            {displayGroups.map((group) => (
               <button
                 className="office-final-group-card"
-                key={`${group.idDiscipline}-${group.idGroup}-${group.idAssignment}`}
+                key={`${group.idDiscipline}-${getGroupKey(group)}`}
                 type="button"
                 onClick={() => onSelectGroup(group.idGroup)}
               >
                 <span>
-                  <h3>Итоговая ведомость</h3>
-                  <p>Группа: {group.groupName}</p>
+                  <h3>{group.groupName}</h3>
+
                   <small>
-                    {group.studentsCount} студентов · заполнено{" "}
-                    {formatPercent(group.filledPercent)} · неудов:{" "}
+                    {formatCount(
+                      group.studentsCount,
+                      "студент",
+                      "студента",
+                      "студентов"
+                    )}{" "}
+                    · заполнено {formatPercent(group.filledPercent)} · неудов:{" "}
                     {group.failedStudentsCount}
                   </small>
                 </span>
