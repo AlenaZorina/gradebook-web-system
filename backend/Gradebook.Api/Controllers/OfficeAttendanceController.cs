@@ -23,11 +23,12 @@ public class OfficeAttendanceController : ControllerBase
     )
     {
         /*
-         * Важно:
-         * экран "Посещаемость / дисциплины" строим из office_attendance_groups_view,
-         * то есть из того же источника, из которого открывается следующий экран групп.
-         * Это устраняет баг, когда на карточке написано 5 групп,
-         * а после клика открывается другое количество.
+         * Первый экран "Посещаемость / дисциплины" строим из той же view,
+         * из которой формируется следующий экран со списком групп.
+         *
+         * Важно: группируем не только по id_group, а по group_name.
+         * В данных могут быть технические дубли одной и той же группы с разными id,
+         * но для пользователя это одна группа, например "РИС-25-1".
          */
         var query =
             "office_attendance_groups_view"
@@ -65,15 +66,35 @@ public class OfficeAttendanceController : ControllerBase
                 row.DisciplineName,
                 row.PudUrl
             })
-            .Select(group =>
+            .Select(disciplineGroup =>
             {
-                var uniqueGroupRows = group
-                    .Where(row => row.IdGroup > 0)
-                    .GroupBy(row => row.IdGroup)
-                    .Select(groupRows => groupRows.First())
+                var groupSummaries = disciplineGroup
+                    .Where(row => row.IdGroup > 0 || !string.IsNullOrWhiteSpace(row.GroupName))
+                    .GroupBy(row => NormalizeGroupKey(row))
+                    .Select(groupRows =>
+                    {
+                        var first = groupRows.First();
+
+                        var studentsCount = groupRows.Max(row => row.StudentsCount);
+                        var sessionsCount = groupRows.Sum(row => row.SessionsCount);
+                        var markedAttendanceCount = groupRows.Sum(row => row.MarkedAttendanceCount);
+                        var presentAttendanceCount = groupRows.Sum(row => row.PresentAttendanceCount);
+                        var absentAttendanceCount = groupRows.Sum(row => row.AbsentAttendanceCount);
+
+                        return new
+                        {
+                            Row = first,
+                            StudentsCount = studentsCount,
+                            SessionsCount = sessionsCount,
+                            MarkedAttendanceCount = markedAttendanceCount,
+                            PresentAttendanceCount = presentAttendanceCount,
+                            AbsentAttendanceCount = absentAttendanceCount
+                        };
+                    })
                     .ToList();
 
-                var programs = uniqueGroupRows
+                var programs = groupSummaries
+                    .Select(summary => summary.Row)
                     .GroupBy(row => row.IdProgram)
                     .Select(programGroup => new OfficeAttendanceProgramOptionDto
                     {
@@ -85,25 +106,27 @@ public class OfficeAttendanceController : ControllerBase
                     .OrderBy(program => program.ProgramName)
                     .ToList();
 
-                var courseNos = uniqueGroupRows
-                    .Select(row => row.CourseNo)
+                var courseNos = groupSummaries
+                    .Select(summary => summary.Row.CourseNo)
                     .Distinct()
                     .OrderBy(value => value)
                     .ToList();
 
-                var moduleNos = uniqueGroupRows
-                    .SelectMany(row => ExpandModules(row.StartModuleNo, row.EndModuleNo))
+                var moduleNos = groupSummaries
+                    .SelectMany(summary =>
+                        ExpandModules(summary.Row.StartModuleNo, summary.Row.EndModuleNo)
+                    )
                     .Distinct()
                     .OrderBy(value => value)
                     .ToList();
 
-                var groupsCount = uniqueGroupRows.Count;
+                var groupsCount = groupSummaries.Count;
 
-                var studentsCount = uniqueGroupRows.Sum(row => row.StudentsCount);
-                var sessionsCount = uniqueGroupRows.Sum(row => row.SessionsCount);
-                var markedAttendanceCount = uniqueGroupRows.Sum(row => row.MarkedAttendanceCount);
-                var presentAttendanceCount = uniqueGroupRows.Sum(row => row.PresentAttendanceCount);
-                var absentAttendanceCount = uniqueGroupRows.Sum(row => row.AbsentAttendanceCount);
+                var studentsCount = groupSummaries.Sum(summary => summary.StudentsCount);
+                var sessionsCount = groupSummaries.Sum(summary => summary.SessionsCount);
+                var markedAttendanceCount = groupSummaries.Sum(summary => summary.MarkedAttendanceCount);
+                var presentAttendanceCount = groupSummaries.Sum(summary => summary.PresentAttendanceCount);
+                var absentAttendanceCount = groupSummaries.Sum(summary => summary.AbsentAttendanceCount);
 
                 decimal? attendancePercent = markedAttendanceCount == 0
                     ? null
@@ -111,9 +134,9 @@ public class OfficeAttendanceController : ControllerBase
 
                 return new OfficeAttendanceDisciplineDto
                 {
-                    IdDiscipline = group.Key.IdDiscipline,
-                    DisciplineName = group.Key.DisciplineName,
-                    PudUrl = group.Key.PudUrl,
+                    IdDiscipline = disciplineGroup.Key.IdDiscipline,
+                    DisciplineName = disciplineGroup.Key.DisciplineName,
+                    PudUrl = disciplineGroup.Key.PudUrl,
                     Programs = programs,
                     CourseNos = courseNos,
                     ModuleNos = moduleNos,
@@ -130,6 +153,16 @@ public class OfficeAttendanceController : ControllerBase
             .ToList();
 
         return Ok(response);
+    }
+
+    private static string NormalizeGroupKey(SupabaseOfficeAttendanceGroupRow row)
+    {
+        if (!string.IsNullOrWhiteSpace(row.GroupName))
+        {
+            return row.GroupName.Trim().ToLowerInvariant();
+        }
+
+        return $"id:{row.IdGroup}";
     }
 
     private static IEnumerable<int> ExpandModules(int? startModuleNo, int? endModuleNo)
