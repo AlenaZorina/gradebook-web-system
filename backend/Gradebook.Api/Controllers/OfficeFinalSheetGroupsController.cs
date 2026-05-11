@@ -143,11 +143,17 @@ public class OfficeFinalSheetGroupsController : ControllerBase
             return NotFound(new { message = "Группа по выбранной дисциплине не найдена" });
         }
 
+        /*
+         * Важно: фильтруем не только по дисциплине и группе, но и по id_assignment.
+         * Без этого у некоторых дисциплин подтягиваются строки нескольких назначений,
+         * из-за чего элементы контроля визуально задваиваются: ЛР1, ЛР1, ЛР2, ЛР2 и т.д.
+         */
         var sheetQuery =
             "office_final_sheet_rows_view"
             + "?select=id_discipline,discipline_name,id_group,group_name,course_no,id_program,program_name,id_assignment,academic_year,teacher_short_name,id_sheet,sheet_status,formula_text,id_element,element_name,control_type,weight,element_order_no,id_student,student_surname,student_name,student_fathername,record_book_no,grade_value,final_grade"
             + $"&id_discipline=eq.{disciplineId}"
             + $"&id_group=eq.{groupId}"
+            + $"&id_assignment=eq.{groupInfo.IdAssignment}"
             + "&order=student_surname.asc,student_name.asc,element_order_no.asc";
 
         var sheetResult = await _supabase.GetAsync(sheetQuery);
@@ -169,25 +175,48 @@ public class OfficeFinalSheetGroupsController : ControllerBase
             options
         ) ?? new List<SupabaseOfficeFinalSheetRow>();
 
-        var elements = rows
+        /*
+         * Элементы контроля схлопываем по нормализованному названию.
+         * Это убирает дубли вроде "ЛР1", "ЛР1", если они пришли с разными техническими idElement.
+         */
+        var elementGroups = rows
             .Where(row => row.IdElement.HasValue)
-            .GroupBy(row => new
+            .GroupBy(NormalizeElementKey)
+            .Select(group =>
             {
-                IdElement = row.IdElement!.Value,
-                row.ElementName,
-                row.ControlType,
-                row.Weight,
-                row.ElementOrderNo
-            })
-            .Select(group => new OfficeFinalSheetElementDto
-            {
-                IdElement = group.Key.IdElement,
-                ElementName = group.Key.ElementName ?? string.Empty,
-                ControlType = group.Key.ControlType,
-                Weight = group.Key.Weight,
-                OrderNo = group.Key.ElementOrderNo ?? 0
+                var orderedRows = group
+                    .OrderBy(row => row.ElementOrderNo ?? int.MaxValue)
+                    .ThenBy(row => row.IdElement!.Value)
+                    .ToList();
+
+                var first = orderedRows.First();
+
+                return new OfficeFinalSheetElementGroupForCalc
+                {
+                    IdElement = first.IdElement!.Value,
+                    ElementIds = orderedRows
+                        .Select(row => row.IdElement!.Value)
+                        .Distinct()
+                        .ToHashSet(),
+                    ElementName = first.ElementName ?? string.Empty,
+                    ControlType = first.ControlType,
+                    Weight = first.Weight,
+                    OrderNo = first.ElementOrderNo ?? 0
+                };
             })
             .OrderBy(item => item.OrderNo)
+            .ThenBy(item => item.IdElement)
+            .ToList();
+
+        var elements = elementGroups
+            .Select(group => new OfficeFinalSheetElementDto
+            {
+                IdElement = group.IdElement,
+                ElementName = group.ElementName,
+                ControlType = group.ControlType,
+                Weight = group.Weight,
+                OrderNo = group.OrderNo
+            })
             .ToList();
 
         var students = rows
@@ -201,33 +230,31 @@ public class OfficeFinalSheetGroupsController : ControllerBase
             })
             .Select(group =>
             {
-                var grades = elements
-                    .Select(element =>
+                var grades = elementGroups
+                    .Select(elementGroup =>
                     {
-                        var gradeValue = group
-                            .FirstOrDefault(row => row.IdElement == element.IdElement)
-                            ?.GradeValue;
+                        var gradeValue = GetFirstGradeValue(group, elementGroup.ElementIds);
 
                         return new OfficeFinalSheetStudentGradeDto
                         {
-                            IdElement = element.IdElement,
+                            IdElement = elementGroup.IdElement,
                             GradeValue = gradeValue
                         };
                     })
                     .ToList();
 
-                var studentElements = elements
-                    .Select(element =>
+                var studentElements = elementGroups
+                    .Select(elementGroup =>
                     {
                         var gradeValue = grades
-                            .FirstOrDefault(grade => grade.IdElement == element.IdElement)
+                            .FirstOrDefault(grade => grade.IdElement == elementGroup.IdElement)
                             ?.GradeValue;
 
                         return new OfficeFinalSheetStudentElementForCalc
                         {
-                            ElementName = element.ElementName,
-                            ControlType = element.ControlType,
-                            Weight = element.Weight,
+                            ElementName = elementGroup.ElementName,
+                            ControlType = elementGroup.ControlType,
+                            Weight = elementGroup.Weight,
                             GradeValue = gradeValue
                         };
                     })
@@ -501,6 +528,48 @@ public class OfficeFinalSheetGroupsController : ControllerBase
         return $"id:{row.IdGroup}";
     }
 
+    private static string NormalizeElementKey(SupabaseOfficeFinalSheetRow row)
+    {
+        var normalizedName = NormalizeKeyPart(row.ElementName);
+
+        if (!string.IsNullOrWhiteSpace(normalizedName))
+        {
+            return normalizedName;
+        }
+
+        return row.IdElement.HasValue
+            ? $"id:{row.IdElement.Value}"
+            : "empty-element";
+    }
+
+    private static string NormalizeKeyPart(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
+        }
+
+        return string.Join(
+            " ",
+            value
+                .Trim()
+                .ToLowerInvariant()
+                .Replace('ё', 'е')
+                .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+        );
+    }
+
+    private static decimal? GetFirstGradeValue(
+        IEnumerable<SupabaseOfficeFinalSheetRow> rows,
+        HashSet<int> elementIds
+    )
+    {
+        return rows
+            .Where(row => row.IdElement.HasValue && elementIds.Contains(row.IdElement.Value))
+            .Select(row => row.GradeValue)
+            .FirstOrDefault(value => value.HasValue);
+    }
+
     private static string BuildFullName(string surname, string name, string? fathername)
     {
         return string.IsNullOrWhiteSpace(fathername)
@@ -580,6 +649,21 @@ public class OfficeFinalSheetGroupsController : ControllerBase
             || type.Contains("exam")
             || type.Contains("экз")
             || type.Contains("экзамен");
+    }
+
+    private class OfficeFinalSheetElementGroupForCalc
+    {
+        public int IdElement { get; set; }
+
+        public HashSet<int> ElementIds { get; set; } = new();
+
+        public string ElementName { get; set; } = string.Empty;
+
+        public string? ControlType { get; set; }
+
+        public decimal? Weight { get; set; }
+
+        public int OrderNo { get; set; }
     }
 
     private class OfficeFinalSheetStudentElementForCalc
