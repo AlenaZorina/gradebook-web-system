@@ -55,23 +55,11 @@ public class OfficeAttendanceSheetsController : ControllerBase
         ) ?? new List<SupabaseOfficeAttendanceGroupRow>();
 
         var response = rows
-            .GroupBy(row => new
-            {
-                row.IdDiscipline,
-                row.DisciplineName,
-                row.IdGroup,
-                row.GroupName,
-                row.CourseNo,
-                row.IdProgram,
-                row.ProgramName,
-                row.StartModuleNo,
-                row.EndModuleNo,
-                row.IdAssignment,
-                row.AcademicYear,
-                row.TeacherShortName
-            })
+            .GroupBy(row => NormalizeGroupKey(row))
             .Select(group =>
             {
+                var first = group.First();
+
                 var markedAttendanceCount = group.Sum(item => item.MarkedAttendanceCount);
                 var presentAttendanceCount = group.Sum(item => item.PresentAttendanceCount);
 
@@ -81,19 +69,19 @@ public class OfficeAttendanceSheetsController : ControllerBase
 
                 return new OfficeAttendanceGroupDto
                 {
-                    IdDiscipline = group.Key.IdDiscipline,
-                    DisciplineName = group.Key.DisciplineName,
-                    IdGroup = group.Key.IdGroup,
-                    GroupName = group.Key.GroupName,
-                    CourseNo = group.Key.CourseNo,
-                    IdProgram = group.Key.IdProgram,
-                    ProgramName = group.Key.ProgramName,
-                    StartModuleNo = group.Key.StartModuleNo,
-                    EndModuleNo = group.Key.EndModuleNo,
-                    IdAssignment = group.Key.IdAssignment,
-                    AcademicYear = group.Key.AcademicYear,
-                    TeacherShortName = group.Key.TeacherShortName,
-                    StudentsCount = group.Sum(item => item.StudentsCount),
+                    IdDiscipline = first.IdDiscipline,
+                    DisciplineName = first.DisciplineName,
+                    IdGroup = first.IdGroup,
+                    GroupName = first.GroupName,
+                    CourseNo = first.CourseNo,
+                    IdProgram = first.IdProgram,
+                    ProgramName = first.ProgramName,
+                    StartModuleNo = first.StartModuleNo,
+                    EndModuleNo = first.EndModuleNo,
+                    IdAssignment = first.IdAssignment,
+                    AcademicYear = first.AcademicYear,
+                    TeacherShortName = first.TeacherShortName,
+                    StudentsCount = group.Max(item => item.StudentsCount),
                     SessionsCount = group.Sum(item => item.SessionsCount),
                     MarkedAttendanceCount = markedAttendanceCount,
                     PresentAttendanceCount = presentAttendanceCount,
@@ -178,25 +166,34 @@ public class OfficeAttendanceSheetsController : ControllerBase
             options
         ) ?? new List<SupabaseOfficeAttendanceSheetRow>();
 
+        /*
+         * ВАЖНО:
+         * раньше sessions группировались по id_session, поэтому если в один день
+         * было несколько занятий, фронт получал несколько колонок с одинаковой датой.
+         *
+         * Теперь для экрана УО группируем занятия по lesson_date:
+         * одна дата = одна колонка таблицы.
+         */
         var sessions = rows
-            .GroupBy(row => new
-            {
-                row.IdSession,
-                row.LessonDate,
-                row.StartTime,
-                row.EndTime
-            })
+            .Where(row => !string.IsNullOrWhiteSpace(row.LessonDate))
+            .GroupBy(row => row.LessonDate)
             .Select(group =>
             {
-                var date = DateOnly.Parse(group.Key.LessonDate);
+                var orderedRows = group
+                    .OrderBy(row => row.StartTime)
+                    .ThenBy(row => row.IdSession)
+                    .ToList();
+
+                var first = orderedRows.First();
+                var date = DateOnly.Parse(first.LessonDate);
 
                 return new OfficeAttendanceSessionDto
                 {
-                    IdSession = group.Key.IdSession,
-                    LessonDate = group.Key.LessonDate,
+                    IdSession = first.IdSession,
+                    LessonDate = first.LessonDate,
                     DateLabel = date.ToString("dd.MM", CultureInfo.GetCultureInfo("ru-RU")),
-                    StartTime = group.Key.StartTime,
-                    EndTime = group.Key.EndTime
+                    StartTime = first.StartTime,
+                    EndTime = first.EndTime
                 };
             })
             .OrderBy(item => DateOnly.Parse(item.LessonDate))
@@ -223,22 +220,27 @@ public class OfficeAttendanceSheetsController : ControllerBase
                 RecordBookNo = group.Key.RecordBookNo,
                 Attendance = sessions.Select(session =>
                 {
-                    var status = group
-                        .FirstOrDefault(item => item.IdSession == session.IdSession)
-                        ?.AttendanceStatus ?? "unknown";
+                    var statusesForDate = group
+                        .Where(item => item.LessonDate == session.LessonDate)
+                        .Select(item => item.AttendanceStatus);
 
                     return new OfficeAttendanceStudentStatusDto
                     {
                         IdSession = session.IdSession,
-                        Status = string.IsNullOrWhiteSpace(status) ? "unknown" : status
+                        Status = MergeAttendanceStatuses(statusesForDate)
                     };
                 }).ToList()
             })
             .OrderBy(item => item.FullName)
             .ToList();
 
-        var marked = rows.Count(item => item.AttendanceStatus == "present" || item.AttendanceStatus == "absent");
-        var present = rows.Count(item => item.AttendanceStatus == "present");
+        var allStatuses = students
+            .SelectMany(student => student.Attendance)
+            .Select(item => item.Status)
+            .ToList();
+
+        var marked = allStatuses.Count(status => status == "present" || status == "absent");
+        var present = allStatuses.Count(status => status == "present");
 
         decimal? attendancePercent = marked == 0
             ? null
@@ -262,6 +264,41 @@ public class OfficeAttendanceSheetsController : ControllerBase
         };
 
         return Ok(response);
+    }
+
+    private static string NormalizeGroupKey(SupabaseOfficeAttendanceGroupRow row)
+    {
+        if (!string.IsNullOrWhiteSpace(row.GroupName))
+        {
+            return row.GroupName.Trim().ToLowerInvariant();
+        }
+
+        return $"id:{row.IdGroup}";
+    }
+
+    private static string MergeAttendanceStatuses(IEnumerable<string?> statuses)
+    {
+        var normalizedStatuses = statuses
+            .Select(status => (status ?? string.Empty).Trim().ToLowerInvariant())
+            .ToList();
+
+        /*
+         * Если в один день у студента несколько занятий:
+         * - если хотя бы одно отсутствие, показываем absence за дату;
+         * - если отсутствий нет, но есть присутствие, показываем present;
+         * - иначе unknown.
+         */
+        if (normalizedStatuses.Any(status => status == "absent"))
+        {
+            return "absent";
+        }
+
+        if (normalizedStatuses.Any(status => status == "present"))
+        {
+            return "present";
+        }
+
+        return "unknown";
     }
 
     private static string BuildFullName(string surname, string name, string? fathername)
