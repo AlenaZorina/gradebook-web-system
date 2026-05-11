@@ -162,6 +162,29 @@ function formatArray(values: number[]) {
   return values.join(", ");
 }
 
+function pluralize(value: number, one: string, few: string, many: string) {
+  const absValue = Math.abs(value) % 100;
+  const lastDigit = absValue % 10;
+
+  if (absValue > 10 && absValue < 20) {
+    return many;
+  }
+
+  if (lastDigit === 1) {
+    return one;
+  }
+
+  if (lastDigit >= 2 && lastDigit <= 4) {
+    return few;
+  }
+
+  return many;
+}
+
+function formatCount(value: number, one: string, few: string, many: string) {
+  return `${value} ${pluralize(value, one, few, many)}`;
+}
+
 function formatPrograms(discipline: OfficeResitDiscipline) {
   const programNames = discipline.programs
     .map((program) => program.programName)
@@ -444,9 +467,23 @@ export function OfficeResitsPage({
                   </p>
 
                   <div className="office-resit-card-stats">
-                    <span>{discipline.groupsCount} групп</span>
+                    <span>
+                      {formatCount(
+                        discipline.groupsCount,
+                        "группа",
+                        "группы",
+                        "групп"
+                      )}
+                    </span>
+
                     <span className="accent">
-                      {discipline.retakeStudentsCount} на пересдачу
+                      {formatCount(
+                        discipline.retakeStudentsCount,
+                        "студент",
+                        "студента",
+                        "студентов"
+                      )}{" "}
+                      на пересдачу
                     </span>
                   </div>
                 </div>
