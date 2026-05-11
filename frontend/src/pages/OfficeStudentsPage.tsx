@@ -146,6 +146,44 @@ function SearchIcon() {
   );
 }
 
+function normalizeSearchValue(value?: string | null) {
+  return (value ?? "")
+    .trim()
+    .toLowerCase()
+    .replaceAll("ё", "е");
+}
+
+function getStudentDuplicateKey(student: OfficeStudent) {
+  if (student.idUser) {
+    return `user:${student.idUser}`;
+  }
+
+  return [
+    normalizeSearchValue(student.fullName),
+    normalizeSearchValue(student.recordBookNo)
+  ].join("|");
+}
+
+function deduplicateStudents(students: OfficeStudent[]) {
+  const map = new Map<string, OfficeStudent>();
+
+  students.forEach((student) => {
+    const key = getStudentDuplicateKey(student);
+    const existing = map.get(key);
+
+    if (!existing) {
+      map.set(key, student);
+      return;
+    }
+
+    if (student.courseNo > existing.courseNo) {
+      map.set(key, student);
+    }
+  });
+
+  return Array.from(map.values());
+}
+
 export function OfficeStudentsPage({
   user,
   onLogout,
@@ -182,28 +220,30 @@ export function OfficeStudentsPage({
     loadStudents();
   }, [user.idUser]);
 
+  const displayStudents = useMemo(() => deduplicateStudents(students), [students]);
+
   const programOptions = useMemo(() => {
     const map = new Map<number, string>();
 
-    students.forEach((student) => {
+    displayStudents.forEach((student) => {
       map.set(student.idProgram, student.programName);
     });
 
     return Array.from(map.entries())
       .map(([idProgram, programName]) => ({ idProgram, programName }))
       .sort((a, b) => a.programName.localeCompare(b.programName, "ru"));
-  }, [students]);
+  }, [displayStudents]);
 
   const courseOptions = useMemo(() => {
-    return Array.from(new Set(students.map((student) => student.courseNo))).sort(
-      (a, b) => a - b
-    );
-  }, [students]);
+    return Array.from(
+      new Set(displayStudents.map((student) => student.courseNo))
+    ).sort((a, b) => a - b);
+  }, [displayStudents]);
 
   const filteredStudents = useMemo(() => {
-    const normalizedSearch = search.trim().toLowerCase();
+    const normalizedSearch = normalizeSearchValue(search);
 
-    return students
+    return displayStudents
       .filter((student) => {
         const matchesProgram =
           selectedProgramId === "all" ||
@@ -220,8 +260,8 @@ export function OfficeStudentsPage({
           student.recordBookNo,
           student.studentStatus ?? ""
         ]
-          .join(" ")
-          .toLowerCase();
+          .map(normalizeSearchValue)
+          .join(" ");
 
         const matchesSearch =
           normalizedSearch.length === 0 || searchTarget.includes(normalizedSearch);
@@ -229,7 +269,7 @@ export function OfficeStudentsPage({
         return matchesProgram && matchesCourse && matchesSearch;
       })
       .sort((a, b) => a.fullName.localeCompare(b.fullName, "ru"));
-  }, [students, selectedProgramId, selectedCourseNo, search]);
+  }, [displayStudents, selectedProgramId, selectedCourseNo, search]);
 
   return (
     <div className="schedule-layout">
@@ -302,7 +342,13 @@ export function OfficeStudentsPage({
 
       <main className="office-students-content">
         <section className="office-students-hero">
-          <h1>Студенты</h1>
+          <div>
+            <h1>Студенты</h1>
+            <p>
+              Поиск и просмотр карточек студентов по образовательной программе,
+              курсу и группе.
+            </p>
+          </div>
         </section>
 
         <section className="office-students-filters">
@@ -356,14 +402,16 @@ export function OfficeStudentsPage({
             {filteredStudents.map((student) => (
               <button
                 className="office-student-card"
-                key={student.idStudent}
+                key={`${student.idStudent}-${student.idUser}`}
                 type="button"
                 onClick={() => onSelectStudent(student.idStudent)}
               >
-                <span>
+                <span className="office-student-card-main">
                   <h2>{student.fullName}</h2>
 
-                  <p>Группа: {student.groupName}</p>
+                  <span className="office-student-group">
+                    Группа: {student.groupName}
+                  </span>
 
                   <small>
                     {student.programName} · {student.courseNo} курс
@@ -373,7 +421,7 @@ export function OfficeStudentsPage({
                   </small>
                 </span>
 
-                <strong>›</strong>
+                <strong aria-hidden="true">›</strong>
               </button>
             ))}
           </section>
