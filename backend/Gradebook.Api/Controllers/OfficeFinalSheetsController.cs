@@ -86,24 +86,29 @@ public class OfficeFinalSheetsController : ControllerBase
                     .OrderBy(value => value)
                     .ToList();
 
-                var groupsCount = group
-                    .Where(row => row.IdGroup.HasValue)
-                    .Select(row => row.IdGroup!.Value)
-                    .Distinct()
-                    .Count();
+                var uniqueGroupRows = group
+    .Where(row => row.IdGroup.HasValue || !string.IsNullOrWhiteSpace(row.GroupName))
+    .GroupBy(row =>
+        !string.IsNullOrWhiteSpace(row.GroupName)
+            ? row.GroupName.Trim().ToLowerInvariant()
+            : $"id:{row.IdGroup}"
+    )
+    .Select(groupRows => groupRows.First())
+    .ToList();
 
-                var studentsCount = group.Sum(row => row.StudentsCount);
+var groupsCount = uniqueGroupRows.Count;
 
-                var finalSheetsCount = group
-                    .Where(row => row.IdSheet.HasValue)
-                    .Select(row => row.IdSheet!.Value)
-                    .Distinct()
-                    .Count();
+// В интерфейсе УО одна группа по дисциплине соответствует одной итоговой ведомости.
+// Поэтому количество ведомостей на карточке считаем по уникальным группам,
+// а не по количеству строк/id_sheet во view.
+var finalSheetsCount = groupsCount;
 
-                var submittedSheetsCount = group.Sum(row => row.SubmittedSheetsCount);
-                var approvedSheetsCount = group.Sum(row => row.ApprovedSheetsCount);
-                var filledFinalGradesCount = group.Sum(row => row.FilledFinalGradesCount);
-                var failedStudentsCount = group.Sum(row => row.FailedStudentsCount);
+var studentsCount = uniqueGroupRows.Sum(row => row.StudentsCount);
+var submittedSheetsCount = uniqueGroupRows.Sum(row => row.SubmittedSheetsCount);
+var approvedSheetsCount = uniqueGroupRows.Sum(row => row.ApprovedSheetsCount);
+var filledFinalGradesCount = uniqueGroupRows.Sum(row => row.FilledFinalGradesCount);
+var failedStudentsCount = uniqueGroupRows.Sum(row => row.FailedStudentsCount);
+
 
                 decimal? filledPercent = studentsCount == 0
                     ? null

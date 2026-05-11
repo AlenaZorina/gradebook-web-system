@@ -86,14 +86,20 @@ public class OfficeResitsController : ControllerBase
                     .OrderBy(value => value)
                     .ToList();
 
-                var groupsCount = group
-                    .Where(row => row.IdGroup.HasValue)
-                    .Select(row => row.IdGroup!.Value)
-                    .Distinct()
-                    .Count();
+                var uniqueGroupRows = group
+    .Where(row => row.IdGroup.HasValue || !string.IsNullOrWhiteSpace(row.GroupName))
+    .GroupBy(row =>
+        !string.IsNullOrWhiteSpace(row.GroupName)
+            ? row.GroupName.Trim().ToLowerInvariant()
+            : $"id:{row.IdGroup}"
+    )
+    .Select(groupRows => groupRows.First())
+    .ToList();
 
-                var studentsCount = group.Sum(row => row.StudentsCount);
-                var retakeStudentsCount = group.Sum(row => row.RetakeStudentsCount);
+var groupsCount = uniqueGroupRows.Count;
+
+var studentsCount = uniqueGroupRows.Sum(row => row.StudentsCount);
+var retakeStudentsCount = uniqueGroupRows.Sum(row => row.RetakeStudentsCount);
 
                 return new OfficeResitDisciplineDto
                 {

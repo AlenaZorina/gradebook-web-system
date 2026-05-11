@@ -86,17 +86,23 @@ public class OfficeAttendanceController : ControllerBase
                     .OrderBy(value => value)
                     .ToList();
 
-                var groupsCount = group
-                    .Where(row => row.IdGroup.HasValue)
-                    .Select(row => row.IdGroup!.Value)
-                    .Distinct()
-                    .Count();
+                var uniqueGroupRows = group
+    .Where(row => row.IdGroup.HasValue || !string.IsNullOrWhiteSpace(row.GroupName))
+    .GroupBy(row =>
+        !string.IsNullOrWhiteSpace(row.GroupName)
+            ? row.GroupName.Trim().ToLowerInvariant()
+            : $"id:{row.IdGroup}"
+    )
+    .Select(groupRows => groupRows.First())
+    .ToList();
 
-                var studentsCount = group.Sum(row => row.StudentsCount);
-                var sessionsCount = group.Sum(row => row.SessionsCount);
-                var markedAttendanceCount = group.Sum(row => row.MarkedAttendanceCount);
-                var presentAttendanceCount = group.Sum(row => row.PresentAttendanceCount);
-                var absentAttendanceCount = group.Sum(row => row.AbsentAttendanceCount);
+var groupsCount = uniqueGroupRows.Count;
+
+var studentsCount = uniqueGroupRows.Sum(row => row.StudentsCount);
+var sessionsCount = uniqueGroupRows.Sum(row => row.SessionsCount);
+var markedAttendanceCount = uniqueGroupRows.Sum(row => row.MarkedAttendanceCount);
+var presentAttendanceCount = uniqueGroupRows.Sum(row => row.PresentAttendanceCount);
+var absentAttendanceCount = uniqueGroupRows.Sum(row => row.AbsentAttendanceCount);
 
                 decimal? attendancePercent = markedAttendanceCount == 0
                     ? null
