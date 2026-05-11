@@ -26,6 +26,7 @@ type OfficeStudentGradebookSummaryPageProps = {
 function getOfficeInitials(user: LoginResponse) {
   const surnameInitial = user.surname?.trim()?.[0] ?? "";
   const nameInitial = user.name?.trim()?.[0] ?? "";
+
   return `${surnameInitial}${nameInitial}`.toUpperCase();
 }
 
@@ -36,6 +37,18 @@ function getOfficeShortName(user: LoginResponse) {
     : "";
 
   return `${user.surname} ${nameInitial}${fathernameInitial}`;
+}
+
+function getStudentInitials(fullName?: string | null) {
+  const parts = (fullName ?? "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+
+  const surnameInitial = parts[0]?.[0] ?? "";
+  const nameInitial = parts[1]?.[0] ?? "";
+
+  return `${surnameInitial}${nameInitial}`.toUpperCase() || "СТ";
 }
 
 function ResitIcon() {
@@ -148,12 +161,27 @@ function formatGrade(value?: number | null) {
   return Number(value).toFixed(2).replace(".", ",").replace(",00", "");
 }
 
-function escapeHtml(value: string | number) {
-  return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;");
+function formatModuleNos(moduleNos: number[]) {
+  if (!moduleNos || moduleNos.length === 0) {
+    return "—";
+  }
+
+  if (moduleNos.length === 1) {
+    return `${moduleNos[0]} модуль`;
+  }
+
+  return `${moduleNos.join(", ")} модули`;
+}
+
+function makeSafeFileName(value: string) {
+  return value
+    .replace(/[<>:"/\\|?*]+/g, "-")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function escapeCsvCell(value: string | number) {
+  return `"${String(value).replaceAll('"', '""')}"`;
 }
 
 export function OfficeStudentGradebookSummaryPage({
@@ -168,7 +196,9 @@ export function OfficeStudentGradebookSummaryPage({
   onOpenAnalytics
 }: OfficeStudentGradebookSummaryPageProps) {
   const [student, setStudent] = useState<OfficeStudentDetails | null>(null);
-  const [gradebook, setGradebook] = useState<OfficeStudentGradebookDiscipline[]>([]);
+  const [gradebook, setGradebook] = useState<OfficeStudentGradebookDiscipline[]>(
+    []
+  );
   const [selectedModuleNo, setSelectedModuleNo] = useState("all");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -200,7 +230,7 @@ export function OfficeStudentGradebookSummaryPage({
 
   const moduleOptions = useMemo(() => {
     return Array.from(
-      new Set(gradebook.flatMap((item) => item.moduleNos))
+      new Set(gradebook.flatMap((item) => item.moduleNos ?? []))
     ).sort((a, b) => a - b);
   }, [gradebook]);
 
@@ -210,7 +240,7 @@ export function OfficeStudentGradebookSummaryPage({
     }
 
     return gradebook.filter((item) =>
-      item.moduleNos.includes(Number(selectedModuleNo))
+      (item.moduleNos ?? []).includes(Number(selectedModuleNo))
     );
   }, [gradebook, selectedModuleNo]);
 
@@ -219,45 +249,35 @@ export function OfficeStudentGradebookSummaryPage({
       return;
     }
 
+    const header = [
+      "Студент",
+      "Группа",
+      "Дисциплина",
+      "Модуль",
+      "Итоговая оценка"
+    ];
+
     const rows = filteredGradebook.map((item) => [
+      student.fullName,
+      student.groupName,
       item.disciplineName,
+      formatModuleNos(item.moduleNos ?? []),
       formatGrade(item.finalGrade)
     ]);
 
-    const htmlRows = [["Дисциплина", "Итоговая оценка"], ...rows]
-      .map(
-        (row) =>
-          `<tr>${row
-            .map((cell) => `<td>${escapeHtml(cell)}</td>`)
-            .join("")}</tr>`
-      )
-      .join("");
+    const csv = [header, ...rows]
+      .map((row) => row.map(escapeCsvCell).join(";"))
+      .join("\n");
 
-    const html = `
-      <html>
-        <head>
-          <meta charset="UTF-8" />
-        </head>
-        <body>
-          <h2>Ведомость студента</h2>
-          <p>${escapeHtml(student.fullName)}</p>
-          <p>Группа: ${escapeHtml(student.groupName)}</p>
-          <table border="1">
-            ${htmlRows}
-          </table>
-        </body>
-      </html>
-    `;
-
-    const blob = new Blob([html], {
-      type: "application/vnd.ms-excel;charset=utf-8;"
+    const blob = new Blob([`\uFEFF${csv}`], {
+      type: "text/csv;charset=utf-8;"
     });
 
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
 
     link.href = url;
-    link.download = `student-gradebook-${student.fullName}.xls`;
+    link.download = `student-gradebook-${makeSafeFileName(student.fullName)}.csv`;
     link.click();
 
     URL.revokeObjectURL(url);
@@ -333,31 +353,41 @@ export function OfficeStudentGradebookSummaryPage({
       </aside>
 
       <main className="office-student-gradebook-content">
-        <button className="details-back-button" type="button" onClick={onBack}>
+        <button
+          className="office-student-gradebook-back-button"
+          type="button"
+          onClick={onBack}
+        >
           ← Назад к студенту
         </button>
 
-        <div className="office-student-gradebook-top">
-          <div>
+        <section className="office-student-gradebook-hero">
+          <div className="office-student-gradebook-heading">
             <h1>Студенты / ведомость</h1>
 
-            <select
-              value={selectedModuleNo}
-              onChange={(event) => setSelectedModuleNo(event.target.value)}
-            >
-              <option value="all">Модуль</option>
+            <label className="office-student-gradebook-filter">
+              <span>Модуль</span>
 
-              {moduleOptions.map((moduleNo) => (
-                <option key={moduleNo} value={moduleNo}>
-                  {moduleNo} модуль
-                </option>
-              ))}
-            </select>
+              <select
+                value={selectedModuleNo}
+                onChange={(event) => setSelectedModuleNo(event.target.value)}
+              >
+                <option value="all">Все модули</option>
+
+                {moduleOptions.map((moduleNo) => (
+                  <option key={moduleNo} value={moduleNo}>
+                    {moduleNo} модуль
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
 
           {student && (
             <section className="office-student-gradebook-mini-card">
-              <div className="office-student-gradebook-mini-avatar" />
+              <div className="office-student-gradebook-mini-avatar">
+                {getStudentInitials(student.fullName)}
+              </div>
 
               <div>
                 <h2>{student.fullName}</h2>
@@ -366,7 +396,7 @@ export function OfficeStudentGradebookSummaryPage({
               </div>
             </section>
           )}
-        </div>
+        </section>
 
         {isLoading && (
           <div className="schedule-state">Загружаем ведомость студента...</div>
@@ -375,12 +405,29 @@ export function OfficeStudentGradebookSummaryPage({
         {error && <div className="schedule-error">{error}</div>}
 
         {!isLoading && !error && (
-          <>
-            <section className="office-student-gradebook-table-wrap">
+          <section className="office-student-gradebook-table-card">
+            <div className="office-student-gradebook-table-toolbar">
+              <div>
+                <h2>Итоговые оценки по дисциплинам</h2>
+                <p>Сводная ведомость студента по выбранному модулю</p>
+              </div>
+
+              <button
+                className="office-student-gradebook-export"
+                type="button"
+                onClick={handleExport}
+                disabled={!student}
+              >
+                Экспорт
+              </button>
+            </div>
+
+            <div className="office-student-gradebook-table-scroll">
               <table className="office-student-gradebook-table">
                 <thead>
                   <tr>
                     <th>Дисциплина</th>
+                    <th>Модуль</th>
                     <th>Итоговая оценка</th>
                   </tr>
                 </thead>
@@ -388,31 +435,27 @@ export function OfficeStudentGradebookSummaryPage({
                 <tbody>
                   {filteredGradebook.length === 0 ? (
                     <tr>
-                      <td colSpan={2} className="office-student-gradebook-empty">
+                      <td colSpan={3} className="office-student-gradebook-empty">
                         Данные по ведомости не найдены
                       </td>
                     </tr>
                   ) : (
                     filteredGradebook.map((item) => (
-                      <tr key={item.idAssignment}>
+                      <tr key={`${item.idDiscipline}-${item.idAssignment}`}>
                         <td>{item.disciplineName}</td>
-                        <td>{formatGrade(item.finalGrade)}</td>
+                        <td>{formatModuleNos(item.moduleNos ?? [])}</td>
+                        <td>
+                          <span className="office-student-gradebook-grade">
+                            {formatGrade(item.finalGrade)}
+                          </span>
+                        </td>
                       </tr>
                     ))
                   )}
                 </tbody>
               </table>
-            </section>
-
-            <button
-              className="office-student-gradebook-export"
-              type="button"
-              onClick={handleExport}
-              disabled={filteredGradebook.length === 0}
-            >
-              Экспорт
-            </button>
-          </>
+            </div>
+          </section>
         )}
       </main>
     </div>
