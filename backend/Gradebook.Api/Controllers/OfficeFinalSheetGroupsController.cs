@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using Gradebook.Api.Dtos;
 using Gradebook.Api.Services;
 using Microsoft.AspNetCore.Mvc;
+using ClosedXML.Excel;
 
 namespace Gradebook.Api.Controllers;
 
@@ -282,6 +283,204 @@ public async Task<ActionResult<List<OfficeFinalSheetGroupDto>>> GetFinalSheetGro
 
         return Ok(response);
     }
+
+    [HttpGet("{idUser:int}/office/final-sheet-disciplines/{disciplineId:int}/groups/{groupId:int}/sheet/export")]
+public async Task<IActionResult> ExportFinalSheet(
+    int idUser,
+    int disciplineId,
+    int groupId
+)
+{
+    var sheetResult = await GetFinalSheet(idUser, disciplineId, groupId);
+
+    if (sheetResult.Result is ObjectResult errorResult)
+    {
+        return StatusCode(
+            errorResult.StatusCode ?? StatusCodes.Status500InternalServerError,
+            errorResult.Value
+        );
+    }
+
+    if (sheetResult.Result is NotFoundObjectResult notFoundResult)
+    {
+        return NotFound(notFoundResult.Value);
+    }
+
+    OfficeFinalSheetDto? sheet = null;
+
+    if (sheetResult.Value is not null)
+    {
+        sheet = sheetResult.Value;
+    }
+    else if (sheetResult.Result is OkObjectResult okResult)
+    {
+        sheet = okResult.Value as OfficeFinalSheetDto;
+    }
+
+    if (sheet is null)
+    {
+        return StatusCode(
+            StatusCodes.Status500InternalServerError,
+            new { message = "Не удалось подготовить данные итоговой ведомости для экспорта" }
+        );
+    }
+
+    var fileBytes = BuildFinalSheetExcel(sheet);
+
+    var fileName =
+        $"final-sheet-{SanitizeFileName(sheet.DisciplineName)}-{SanitizeFileName(sheet.GroupName)}.xlsx";
+
+    return File(
+        fileBytes,
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        fileName
+    );
+}
+
+    private static byte[] BuildFinalSheetExcel(OfficeFinalSheetDto sheet)
+{
+    var templatePath = Path.Combine(
+        AppContext.BaseDirectory,
+        "Templates",
+        "Рабочая ведомость шаблон.xlsx"
+    );
+
+    using var workbook = System.IO.File.Exists(templatePath)
+        ? new XLWorkbook(templatePath)
+        : new XLWorkbook();
+
+    var worksheet = workbook.Worksheets.FirstOrDefault()
+        ?? workbook.Worksheets.Add("Ведомость");
+
+    FillFinalSheetTemplate(worksheet, sheet);
+
+    using var stream = new MemoryStream();
+    workbook.SaveAs(stream);
+
+    return stream.ToArray();
+}
+
+private static void FillFinalSheetTemplate(IXLWorksheet worksheet, OfficeFinalSheetDto sheet)
+{
+    worksheet.Cell("A5").Value = $"Курс: Бакалавриат {sheet.CourseNo} курс";
+    worksheet.Cell("C5").Value = $"{sheet.AcademicYear} учебный год";
+    worksheet.Cell("A7").Value = $"Группа: {sheet.GroupName}";
+    worksheet.Cell("C7").Value = $"Дисциплина: {sheet.DisciplineName}";
+
+    var teacherShortName = (sheet.TeacherShortName ?? string.Empty).Trim();
+
+    worksheet.Cell("A8").Value = IsUnknownTeacher(teacherShortName)
+        ? "Фамилия, имя, отчество преподавателя:"
+        : $"Фамилия, имя, отчество преподавателя: {teacherShortName}";
+
+    var orderedElements = sheet.Elements
+        .OrderBy(element => element.OrderNo)
+        .ThenBy(element => element.IdElement)
+        .ToList();
+
+    // В шаблоне под элементы контроля отведены колонки C:Z.
+    // AA — накопленная оценка, AB — экзамен/зачет, AC — итог.
+    const int firstElementColumn = 3; // C
+    const int lastElementColumn = 26; // Z
+    const int accumulatedColumn = 27; // AA
+    const int examColumn = 28; // AB
+    const int finalColumn = 29; // AC
+    const int headerRow = 14;
+    const int firstStudentRow = 15;
+
+    var exportElements = orderedElements
+        .Take(lastElementColumn - firstElementColumn + 1)
+        .ToList();
+
+    for (var index = 0; index < exportElements.Count; index++)
+    {
+        var column = firstElementColumn + index;
+        worksheet.Cell(headerRow, column).Value = exportElements[index].ElementName;
+        worksheet.Cell(headerRow, column).Style.Alignment.WrapText = true;
+        worksheet.Cell(headerRow, column).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+        worksheet.Cell(headerRow, column).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+    }
+
+    worksheet.Cell(headerRow, accumulatedColumn).Value = "накоп";
+    worksheet.Cell(headerRow, examColumn).Value = "экз";
+    worksheet.Cell(headerRow, finalColumn).Value = "итог";
+
+    for (var rowIndex = 0; rowIndex < sheet.Students.Count; rowIndex++)
+    {
+        var student = sheet.Students[rowIndex];
+        var row = firstStudentRow + rowIndex;
+
+        worksheet.Cell(row, 1).Value = rowIndex + 1;
+        worksheet.Cell(row, 2).Value = student.FullName;
+
+        for (var elementIndex = 0; elementIndex < exportElements.Count; elementIndex++)
+        {
+            var element = exportElements[elementIndex];
+            var column = firstElementColumn + elementIndex;
+
+            var grade = student.Grades
+                .FirstOrDefault(item => item.IdElement == element.IdElement)
+                ?.GradeValue;
+
+            SetGradeCell(worksheet.Cell(row, column), grade);
+        }
+
+        SetGradeCell(worksheet.Cell(row, accumulatedColumn), student.AccumulatedGrade);
+        SetGradeCell(worksheet.Cell(row, examColumn), student.ExamGrade);
+        SetGradeCell(worksheet.Cell(row, finalColumn), student.FinalGrade);
+    }
+
+    var usedRange = worksheet.Range(
+        firstStudentRow,
+        1,
+        Math.Max(firstStudentRow, firstStudentRow + sheet.Students.Count - 1),
+        finalColumn
+    );
+
+    usedRange.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+    usedRange.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+    usedRange.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+
+    worksheet.Columns(1, finalColumn).AdjustToContents();
+}
+
+private static void SetGradeCell(IXLCell cell, decimal? value)
+{
+    if (!value.HasValue)
+    {
+        cell.Value = string.Empty;
+        return;
+    }
+
+    cell.Value = Math.Round(value.Value, 2);
+}
+
+private static bool IsUnknownTeacher(string? teacherShortName)
+{
+    var normalized = (teacherShortName ?? string.Empty)
+        .Trim()
+        .ToLowerInvariant();
+
+    return string.IsNullOrWhiteSpace(normalized)
+        || normalized == "не указан н."
+        || normalized == "не указан"
+        || normalized.StartsWith("не указан");
+}
+
+private static string SanitizeFileName(string value)
+{
+    var invalidChars = Path.GetInvalidFileNameChars();
+
+    var sanitized = new string(
+        value
+            .Select(character => invalidChars.Contains(character) ? '-' : character)
+            .ToArray()
+    );
+
+    return string.IsNullOrWhiteSpace(sanitized)
+        ? "sheet"
+        : sanitized.Trim();
+}
 
     private static string NormalizeGroupKey(SupabaseOfficeFinalSheetGroupRow row)
 {
