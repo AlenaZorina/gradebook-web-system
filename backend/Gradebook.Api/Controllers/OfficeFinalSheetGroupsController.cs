@@ -1,9 +1,10 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using ClosedXML.Excel;
 using Gradebook.Api.Dtos;
 using Gradebook.Api.Services;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using ClosedXML.Excel;
 
 namespace Gradebook.Api.Controllers;
 
@@ -19,86 +20,83 @@ public class OfficeFinalSheetGroupsController : ControllerBase
     }
 
     [HttpGet("{idUser:int}/office/final-sheet-disciplines/{disciplineId:int}/groups")]
-public async Task<ActionResult<List<OfficeFinalSheetGroupDto>>> GetFinalSheetGroups(
-    int idUser,
-    int disciplineId
-)
-{
-    var query =
-        "office_final_sheet_groups_view"
-        + "?select=id_discipline,discipline_name,id_group,group_name,course_no,id_program,program_name,start_module_no,end_module_no,id_assignment,academic_year,teacher_short_name,id_sheet,sheet_status,students_count,filled_final_grades_count,failed_students_count"
-        + $"&id_discipline=eq.{disciplineId}"
-        + "&order=group_name.asc";
-
-    var result = await _supabase.GetAsync(query);
-
-    if (!result.Success)
+    public async Task<ActionResult<List<OfficeFinalSheetGroupDto>>> GetFinalSheetGroups(
+        int idUser,
+        int disciplineId
+    )
     {
-        return StatusCode(
-            result.StatusCode,
-            new
-            {
-                message = "Ошибка получения групп для итоговых ведомостей из Supabase",
-                details = result.Body
-            }
-        );
-    }
+        var query =
+            "office_final_sheet_groups_view"
+            + "?select=id_discipline,discipline_name,id_group,group_name,course_no,id_program,program_name,start_module_no,end_module_no,id_assignment,academic_year,teacher_short_name,id_sheet,sheet_status,students_count,filled_final_grades_count,failed_students_count"
+            + $"&id_discipline=eq.{disciplineId}"
+            + "&order=group_name.asc";
 
-    var options = new JsonSerializerOptions
-    {
-        PropertyNameCaseInsensitive = true
-    };
+        var result = await _supabase.GetAsync(query);
 
-    var rows = JsonSerializer.Deserialize<List<SupabaseOfficeFinalSheetGroupRow>>(
-        result.Body,
-        options
-    ) ?? new List<SupabaseOfficeFinalSheetGroupRow>();
-
-    var response = rows
-        .Where(row => row.IdGroup > 0 || !string.IsNullOrWhiteSpace(row.GroupName))
-        .GroupBy(row => NormalizeGroupKey(row))
-        .Select(group =>
+        if (!result.Success)
         {
-            var first = group.First();
+            return StatusCode(
+                result.StatusCode,
+                new
+                {
+                    message = "Ошибка получения групп для итоговых ведомостей из Supabase",
+                    details = result.Body
+                }
+            );
+        }
 
-            var startModuleNo = first.StartModuleNo;
-            var endModuleNo = first.EndModuleNo;
+        var options = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        };
 
-            var studentsCount = group.Max(item => item.StudentsCount);
-            var filledFinalGradesCount = group.Max(item => item.FilledFinalGradesCount);
-            var failedStudentsCount = group.Max(item => item.FailedStudentsCount);
+        var rows = JsonSerializer.Deserialize<List<SupabaseOfficeFinalSheetGroupRow>>(
+            result.Body,
+            options
+        ) ?? new List<SupabaseOfficeFinalSheetGroupRow>();
 
-            decimal? filledPercent = studentsCount == 0
-                ? null
-                : Math.Round((decimal)filledFinalGradesCount / studentsCount * 100m, 1);
-
-            return new OfficeFinalSheetGroupDto
+        var response = rows
+            .Where(row => row.IdGroup > 0 || !string.IsNullOrWhiteSpace(row.GroupName))
+            .GroupBy(row => NormalizeGroupKey(row))
+            .Select(group =>
             {
-                IdDiscipline = first.IdDiscipline,
-                DisciplineName = first.DisciplineName,
-                IdGroup = first.IdGroup,
-                GroupName = first.GroupName,
-                CourseNo = first.CourseNo,
-                IdProgram = first.IdProgram,
-                ProgramName = first.ProgramName,
-                StartModuleNo = startModuleNo,
-                EndModuleNo = endModuleNo,
-                IdAssignment = first.IdAssignment,
-                AcademicYear = first.AcademicYear,
-                TeacherShortName = first.TeacherShortName,
-                IdSheet = first.IdSheet,
-                SheetStatus = first.SheetStatus ?? string.Empty,
-                StudentsCount = studentsCount,
-                FilledFinalGradesCount = filledFinalGradesCount,
-                FailedStudentsCount = failedStudentsCount,
-                FilledPercent = filledPercent
-            };
-        })
-        .OrderBy(item => item.GroupName)
-        .ToList();
+                var first = group.First();
 
-    return Ok(response);
-}
+                var studentsCount = group.Max(item => item.StudentsCount);
+                var filledFinalGradesCount = group.Max(item => item.FilledFinalGradesCount);
+                var failedStudentsCount = group.Max(item => item.FailedStudentsCount);
+
+                decimal? filledPercent = studentsCount == 0
+                    ? null
+                    : Math.Round((decimal)filledFinalGradesCount / studentsCount * 100m, 1);
+
+                return new OfficeFinalSheetGroupDto
+                {
+                    IdDiscipline = first.IdDiscipline,
+                    DisciplineName = first.DisciplineName,
+                    IdGroup = first.IdGroup,
+                    GroupName = first.GroupName,
+                    CourseNo = first.CourseNo,
+                    IdProgram = first.IdProgram,
+                    ProgramName = first.ProgramName,
+                    StartModuleNo = first.StartModuleNo,
+                    EndModuleNo = first.EndModuleNo,
+                    IdAssignment = first.IdAssignment,
+                    AcademicYear = first.AcademicYear,
+                    TeacherShortName = first.TeacherShortName,
+                    IdSheet = first.IdSheet,
+                    SheetStatus = first.SheetStatus ?? string.Empty,
+                    StudentsCount = studentsCount,
+                    FilledFinalGradesCount = filledFinalGradesCount,
+                    FailedStudentsCount = failedStudentsCount,
+                    FilledPercent = filledPercent
+                };
+            })
+            .OrderBy(item => item.GroupName)
+            .ToList();
+
+        return Ok(response);
+    }
 
     [HttpGet("{idUser:int}/office/final-sheet-disciplines/{disciplineId:int}/groups/{groupId:int}/sheet")]
     public async Task<ActionResult<OfficeFinalSheetDto>> GetFinalSheet(
@@ -285,212 +283,223 @@ public async Task<ActionResult<List<OfficeFinalSheetGroupDto>>> GetFinalSheetGro
     }
 
     [HttpGet("{idUser:int}/office/final-sheet-disciplines/{disciplineId:int}/groups/{groupId:int}/sheet/export")]
-public async Task<IActionResult> ExportFinalSheet(
-    int idUser,
-    int disciplineId,
-    int groupId
-)
-{
-    var sheetResult = await GetFinalSheet(idUser, disciplineId, groupId);
-
-    if (sheetResult.Result is ObjectResult errorResult)
+    public async Task<IActionResult> ExportFinalSheet(
+        int idUser,
+        int disciplineId,
+        int groupId
+    )
     {
-        return StatusCode(
-            errorResult.StatusCode ?? StatusCodes.Status500InternalServerError,
-            errorResult.Value
-        );
-    }
+        var sheetResult = await GetFinalSheet(idUser, disciplineId, groupId);
 
-    if (sheetResult.Result is NotFoundObjectResult notFoundResult)
-    {
-        return NotFound(notFoundResult.Value);
-    }
+        OfficeFinalSheetDto? sheet = null;
 
-    OfficeFinalSheetDto? sheet = null;
-
-    if (sheetResult.Value is not null)
-    {
-        sheet = sheetResult.Value;
-    }
-    else if (sheetResult.Result is OkObjectResult okResult)
-    {
-        sheet = okResult.Value as OfficeFinalSheetDto;
-    }
-
-    if (sheet is null)
-    {
-        return StatusCode(
-            StatusCodes.Status500InternalServerError,
-            new { message = "Не удалось подготовить данные итоговой ведомости для экспорта" }
-        );
-    }
-
-    var fileBytes = BuildFinalSheetExcel(sheet);
-
-    var fileName =
-        $"final-sheet-{SanitizeFileName(sheet.DisciplineName)}-{SanitizeFileName(sheet.GroupName)}.xlsx";
-
-    return File(
-        fileBytes,
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        fileName
-    );
-}
-
-    private static byte[] BuildFinalSheetExcel(OfficeFinalSheetDto sheet)
-{
-    var templatePath = Path.Combine(
-        AppContext.BaseDirectory,
-        "Templates",
-        "Рабочая ведомость шаблон.xlsx"
-    );
-
-    using var workbook = System.IO.File.Exists(templatePath)
-        ? new XLWorkbook(templatePath)
-        : new XLWorkbook();
-
-    var worksheet = workbook.Worksheets.FirstOrDefault()
-        ?? workbook.Worksheets.Add("Ведомость");
-
-    FillFinalSheetTemplate(worksheet, sheet);
-
-    using var stream = new MemoryStream();
-    workbook.SaveAs(stream);
-
-    return stream.ToArray();
-}
-
-private static void FillFinalSheetTemplate(IXLWorksheet worksheet, OfficeFinalSheetDto sheet)
-{
-    worksheet.Cell("A5").Value = $"Курс: Бакалавриат {sheet.CourseNo} курс";
-    worksheet.Cell("C5").Value = $"{sheet.AcademicYear} учебный год";
-    worksheet.Cell("A7").Value = $"Группа: {sheet.GroupName}";
-    worksheet.Cell("C7").Value = $"Дисциплина: {sheet.DisciplineName}";
-
-    var teacherShortName = (sheet.TeacherShortName ?? string.Empty).Trim();
-
-    worksheet.Cell("A8").Value = IsUnknownTeacher(teacherShortName)
-        ? "Фамилия, имя, отчество преподавателя:"
-        : $"Фамилия, имя, отчество преподавателя: {teacherShortName}";
-
-    var orderedElements = sheet.Elements
-        .OrderBy(element => element.OrderNo)
-        .ThenBy(element => element.IdElement)
-        .ToList();
-
-    // В шаблоне под элементы контроля отведены колонки C:Z.
-    // AA — накопленная оценка, AB — экзамен/зачет, AC — итог.
-    const int firstElementColumn = 3; // C
-    const int lastElementColumn = 26; // Z
-    const int accumulatedColumn = 27; // AA
-    const int examColumn = 28; // AB
-    const int finalColumn = 29; // AC
-    const int headerRow = 14;
-    const int firstStudentRow = 15;
-
-    var exportElements = orderedElements
-        .Take(lastElementColumn - firstElementColumn + 1)
-        .ToList();
-
-    for (var index = 0; index < exportElements.Count; index++)
-    {
-        var column = firstElementColumn + index;
-        worksheet.Cell(headerRow, column).Value = exportElements[index].ElementName;
-        worksheet.Cell(headerRow, column).Style.Alignment.WrapText = true;
-        worksheet.Cell(headerRow, column).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-        worksheet.Cell(headerRow, column).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
-    }
-
-    worksheet.Cell(headerRow, accumulatedColumn).Value = "накоп";
-    worksheet.Cell(headerRow, examColumn).Value = "экз";
-    worksheet.Cell(headerRow, finalColumn).Value = "итог";
-
-    for (var rowIndex = 0; rowIndex < sheet.Students.Count; rowIndex++)
-    {
-        var student = sheet.Students[rowIndex];
-        var row = firstStudentRow + rowIndex;
-
-        worksheet.Cell(row, 1).Value = rowIndex + 1;
-        worksheet.Cell(row, 2).Value = student.FullName;
-
-        for (var elementIndex = 0; elementIndex < exportElements.Count; elementIndex++)
+        if (sheetResult.Value is not null)
         {
-            var element = exportElements[elementIndex];
-            var column = firstElementColumn + elementIndex;
-
-            var grade = student.Grades
-                .FirstOrDefault(item => item.IdElement == element.IdElement)
-                ?.GradeValue;
-
-            SetGradeCell(worksheet.Cell(row, column), grade);
+            sheet = sheetResult.Value;
+        }
+        else if (sheetResult.Result is OkObjectResult okResult)
+        {
+            sheet = okResult.Value as OfficeFinalSheetDto;
         }
 
-        SetGradeCell(worksheet.Cell(row, accumulatedColumn), student.AccumulatedGrade);
-        SetGradeCell(worksheet.Cell(row, examColumn), student.ExamGrade);
-        SetGradeCell(worksheet.Cell(row, finalColumn), student.FinalGrade);
+        if (sheet is null)
+        {
+            if (sheetResult.Result is NotFoundObjectResult notFoundResult)
+            {
+                return NotFound(notFoundResult.Value);
+            }
+
+            if (sheetResult.Result is ObjectResult objectResult && sheetResult.Result is not OkObjectResult)
+            {
+                return StatusCode(
+                    objectResult.StatusCode ?? StatusCodes.Status500InternalServerError,
+                    objectResult.Value
+                );
+            }
+
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                new { message = "Не удалось подготовить данные итоговой ведомости для экспорта" }
+            );
+        }
+
+        var fileBytes = BuildFinalSheetExcel(sheet);
+
+        if (fileBytes.Length == 0)
+        {
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                new { message = "Файл итоговой ведомости сформирован пустым" }
+            );
+        }
+
+        var fileName =
+            $"final-sheet-{SanitizeFileName(sheet.DisciplineName)}-{SanitizeFileName(sheet.GroupName)}.xlsx";
+
+        return File(
+            fileBytes,
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            fileName
+        );
     }
 
-    var usedRange = worksheet.Range(
-        firstStudentRow,
-        1,
-        Math.Max(firstStudentRow, firstStudentRow + sheet.Students.Count - 1),
-        finalColumn
-    );
-
-    usedRange.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
-    usedRange.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
-    usedRange.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
-
-    worksheet.Columns(1, finalColumn).AdjustToContents();
-}
-
-private static void SetGradeCell(IXLCell cell, decimal? value)
-{
-    if (!value.HasValue)
+    private static byte[] BuildFinalSheetExcel(OfficeFinalSheetDto sheet)
     {
-        cell.Value = string.Empty;
-        return;
+        var templatePath = Path.Combine(
+            AppContext.BaseDirectory,
+            "Templates",
+            "Рабочая ведомость шаблон.xlsx"
+        );
+
+        using var workbook = System.IO.File.Exists(templatePath)
+            ? new XLWorkbook(templatePath)
+            : new XLWorkbook();
+
+        var worksheet = workbook.Worksheets.FirstOrDefault()
+            ?? workbook.Worksheets.Add("Ведомость");
+
+        FillFinalSheetTemplate(worksheet, sheet);
+
+        using var stream = new MemoryStream();
+        workbook.SaveAs(stream);
+
+        return stream.ToArray();
     }
 
-    cell.Value = Math.Round(value.Value, 2);
-}
+    private static void FillFinalSheetTemplate(IXLWorksheet worksheet, OfficeFinalSheetDto sheet)
+    {
+        worksheet.Cell("A5").Value = $"Курс: Бакалавриат {sheet.CourseNo} курс";
+        worksheet.Cell("C5").Value = $"{sheet.AcademicYear} учебный год";
+        worksheet.Cell("A7").Value = $"Группа: {sheet.GroupName}";
+        worksheet.Cell("C7").Value = $"Дисциплина: {sheet.DisciplineName}";
 
-private static bool IsUnknownTeacher(string? teacherShortName)
-{
-    var normalized = (teacherShortName ?? string.Empty)
-        .Trim()
-        .ToLowerInvariant();
+        var teacherShortName = (sheet.TeacherShortName ?? string.Empty).Trim();
 
-    return string.IsNullOrWhiteSpace(normalized)
-        || normalized == "не указан н."
-        || normalized == "не указан"
-        || normalized.StartsWith("не указан");
-}
+        worksheet.Cell("A8").Value = IsUnknownTeacher(teacherShortName)
+            ? "Фамилия, имя, отчество преподавателя:"
+            : $"Фамилия, имя, отчество преподавателя: {teacherShortName}";
 
-private static string SanitizeFileName(string value)
-{
-    var invalidChars = Path.GetInvalidFileNameChars();
+        var orderedElements = sheet.Elements
+            .OrderBy(element => element.OrderNo)
+            .ThenBy(element => element.IdElement)
+            .ToList();
 
-    var sanitized = new string(
-        value
-            .Select(character => invalidChars.Contains(character) ? '-' : character)
-            .ToArray()
-    );
+        const int firstElementColumn = 3; // C
+        const int lastElementColumn = 26; // Z
+        const int accumulatedColumn = 27; // AA
+        const int examColumn = 28; // AB
+        const int finalColumn = 29; // AC
+        const int headerRow = 14;
+        const int firstStudentRow = 15;
 
-    return string.IsNullOrWhiteSpace(sanitized)
-        ? "sheet"
-        : sanitized.Trim();
-}
+        var exportElements = orderedElements
+            .Take(lastElementColumn - firstElementColumn + 1)
+            .ToList();
+
+        for (var index = 0; index < exportElements.Count; index++)
+        {
+            var column = firstElementColumn + index;
+
+            worksheet.Cell(headerRow, column).Value = exportElements[index].ElementName;
+            worksheet.Cell(headerRow, column).Style.Alignment.WrapText = true;
+            worksheet.Cell(headerRow, column).Style.Alignment.Horizontal =
+                XLAlignmentHorizontalValues.Center;
+            worksheet.Cell(headerRow, column).Style.Alignment.Vertical =
+                XLAlignmentVerticalValues.Center;
+        }
+
+        worksheet.Cell(headerRow, accumulatedColumn).Value = "накоп";
+        worksheet.Cell(headerRow, examColumn).Value = "экз";
+        worksheet.Cell(headerRow, finalColumn).Value = "итог";
+
+        for (var rowIndex = 0; rowIndex < sheet.Students.Count; rowIndex++)
+        {
+            var student = sheet.Students[rowIndex];
+            var row = firstStudentRow + rowIndex;
+
+            worksheet.Cell(row, 1).Value = rowIndex + 1;
+            worksheet.Cell(row, 2).Value = student.FullName;
+
+            for (var elementIndex = 0; elementIndex < exportElements.Count; elementIndex++)
+            {
+                var element = exportElements[elementIndex];
+                var column = firstElementColumn + elementIndex;
+
+                var grade = student.Grades
+                    .FirstOrDefault(item => item.IdElement == element.IdElement)
+                    ?.GradeValue;
+
+                SetGradeCell(worksheet.Cell(row, column), grade);
+            }
+
+            SetGradeCell(worksheet.Cell(row, accumulatedColumn), student.AccumulatedGrade);
+            SetGradeCell(worksheet.Cell(row, examColumn), student.ExamGrade);
+            SetGradeCell(worksheet.Cell(row, finalColumn), student.FinalGrade);
+        }
+
+        var lastStudentRow = Math.Max(firstStudentRow, firstStudentRow + sheet.Students.Count - 1);
+
+        var usedRange = worksheet.Range(
+            firstStudentRow,
+            1,
+            lastStudentRow,
+            finalColumn
+        );
+
+        usedRange.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+        usedRange.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+        usedRange.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+
+        worksheet.Columns(1, finalColumn).AdjustToContents();
+    }
+
+    private static void SetGradeCell(IXLCell cell, decimal? value)
+    {
+        if (!value.HasValue)
+        {
+            cell.Value = string.Empty;
+            return;
+        }
+
+        cell.Value = Math.Round(value.Value, 2);
+    }
+
+    private static bool IsUnknownTeacher(string? teacherShortName)
+    {
+        var normalized = (teacherShortName ?? string.Empty)
+            .Trim()
+            .ToLowerInvariant();
+
+        return string.IsNullOrWhiteSpace(normalized)
+            || normalized == "не указан н."
+            || normalized == "не указан"
+            || normalized.StartsWith("не указан");
+    }
+
+    private static string SanitizeFileName(string value)
+    {
+        var invalidChars = Path.GetInvalidFileNameChars();
+
+        var sanitized = new string(
+            value
+                .Select(character => invalidChars.Contains(character) ? '-' : character)
+                .ToArray()
+        );
+
+        return string.IsNullOrWhiteSpace(sanitized)
+            ? "sheet"
+            : sanitized.Trim();
+    }
 
     private static string NormalizeGroupKey(SupabaseOfficeFinalSheetGroupRow row)
-{
-    if (!string.IsNullOrWhiteSpace(row.GroupName))
     {
-        return row.GroupName.Trim().ToLowerInvariant();
-    }
+        if (!string.IsNullOrWhiteSpace(row.GroupName))
+        {
+            return row.GroupName.Trim().ToLowerInvariant();
+        }
 
-    return $"id:{row.IdGroup}";
-}
+        return $"id:{row.IdGroup}";
+    }
 
     private static string BuildFullName(string surname, string name, string? fathername)
     {
@@ -499,7 +508,9 @@ private static string SanitizeFileName(string value)
             : $"{surname} {name} {fathername}";
     }
 
-    private static decimal? CalculateAccumulatedGrade(List<OfficeFinalSheetStudentElementForCalc> elements)
+    private static decimal? CalculateAccumulatedGrade(
+        List<OfficeFinalSheetStudentElementForCalc> elements
+    )
     {
         var nonExamElements = elements
             .Where(item => !IsExamElement(item))
@@ -509,13 +520,17 @@ private static string SanitizeFileName(string value)
         return CalculateWeightedAverage(nonExamElements);
     }
 
-    private static decimal? CalculateExamGrade(List<OfficeFinalSheetStudentElementForCalc> elements)
+    private static decimal? CalculateExamGrade(
+        List<OfficeFinalSheetStudentElementForCalc> elements
+    )
     {
         var examElement = elements.FirstOrDefault(IsExamElement);
         return examElement?.GradeValue;
     }
 
-    private static decimal? CalculatePreliminaryFinalGrade(List<OfficeFinalSheetStudentElementForCalc> elements)
+    private static decimal? CalculatePreliminaryFinalGrade(
+        List<OfficeFinalSheetStudentElementForCalc> elements
+    )
     {
         var filledElements = elements
             .Where(item => item.GradeValue.HasValue)
@@ -524,7 +539,9 @@ private static string SanitizeFileName(string value)
         return CalculateWeightedAverage(filledElements);
     }
 
-    private static decimal? CalculateWeightedAverage(List<OfficeFinalSheetStudentElementForCalc> elements)
+    private static decimal? CalculateWeightedAverage(
+        List<OfficeFinalSheetStudentElementForCalc> elements
+    )
     {
         if (elements.Count == 0)
         {
