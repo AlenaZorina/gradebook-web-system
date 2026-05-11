@@ -22,10 +22,17 @@ public class OfficeResitsController : ControllerBase
         int idUser
     )
     {
+        /*
+         * Первый экран "Пересдачи / дисциплины" строим из той же view,
+         * что и следующий экран со списком групп.
+         *
+         * Это нужно, чтобы количество групп на карточке дисциплины
+         * совпадало с количеством групп, которые реально открываются после клика.
+         */
         var query =
-            "office_resit_disciplines_view"
-            + "?select=id_discipline,discipline_name,pud_url,id_program,program_name,course_no,start_module_no,end_module_no,id_group,group_name,id_assignment,students_count,retake_students_count"
-            + "&order=discipline_name.asc,program_name.asc,course_no.asc,start_module_no.asc";
+            "office_resit_groups_view"
+            + "?select=id_discipline,discipline_name,id_group,group_name,course_no,id_program,program_name,start_module_no,end_module_no,id_assignment,academic_year,teacher_short_name,id_sheet,sheet_status,students_count,retake_students_count"
+            + "&order=discipline_name.asc,program_name.asc,course_no.asc,start_module_no.asc,group_name.asc";
 
         var result = await _supabase.GetAsync(query);
 
@@ -46,23 +53,27 @@ public class OfficeResitsController : ControllerBase
             PropertyNameCaseInsensitive = true
         };
 
-        var rows = JsonSerializer.Deserialize<List<SupabaseOfficeResitDisciplineRow>>(
+        var rows = JsonSerializer.Deserialize<List<SupabaseOfficeResitGroupRow>>(
             result.Body,
             options
-        ) ?? new List<SupabaseOfficeResitDisciplineRow>();
+        ) ?? new List<SupabaseOfficeResitGroupRow>();
 
         var response = rows
             .GroupBy(row => new
             {
                 row.IdDiscipline,
-                row.DisciplineName,
-                row.PudUrl
+                row.DisciplineName
             })
             .Select(group =>
             {
-                var programs = group
-                    .Where(row => row.IdProgram.HasValue)
-                    .GroupBy(row => row.IdProgram!.Value)
+                var uniqueGroupRows = group
+                    .Where(row => row.IdGroup > 0)
+                    .GroupBy(row => row.IdGroup)
+                    .Select(groupRows => groupRows.First())
+                    .ToList();
+
+                var programs = uniqueGroupRows
+                    .GroupBy(row => row.IdProgram)
                     .Select(programGroup => new OfficeProgramOptionDto
                     {
                         IdProgram = programGroup.Key,
@@ -73,39 +84,27 @@ public class OfficeResitsController : ControllerBase
                     .OrderBy(program => program.ProgramName)
                     .ToList();
 
-                var courseNos = group
-                    .Where(row => row.CourseNo.HasValue)
-                    .Select(row => row.CourseNo!.Value)
+                var courseNos = uniqueGroupRows
+                    .Select(row => row.CourseNo)
                     .Distinct()
                     .OrderBy(value => value)
                     .ToList();
 
-                var moduleNos = group
+                var moduleNos = uniqueGroupRows
                     .SelectMany(row => ExpandModules(row.StartModuleNo, row.EndModuleNo))
                     .Distinct()
                     .OrderBy(value => value)
                     .ToList();
 
-                var uniqueGroupRows = group
-    .Where(row => row.IdGroup.HasValue || !string.IsNullOrWhiteSpace(row.GroupName))
-    .GroupBy(row =>
-        !string.IsNullOrWhiteSpace(row.GroupName)
-            ? row.GroupName.Trim().ToLowerInvariant()
-            : $"id:{row.IdGroup}"
-    )
-    .Select(groupRows => groupRows.First())
-    .ToList();
-
-var groupsCount = uniqueGroupRows.Count;
-
-var studentsCount = uniqueGroupRows.Sum(row => row.StudentsCount);
-var retakeStudentsCount = uniqueGroupRows.Sum(row => row.RetakeStudentsCount);
+                var groupsCount = uniqueGroupRows.Count;
+                var studentsCount = uniqueGroupRows.Sum(row => row.StudentsCount);
+                var retakeStudentsCount = uniqueGroupRows.Sum(row => row.RetakeStudentsCount);
 
                 return new OfficeResitDisciplineDto
                 {
                     IdDiscipline = group.Key.IdDiscipline,
                     DisciplineName = group.Key.DisciplineName,
-                    PudUrl = group.Key.PudUrl,
+                    PudUrl = null,
                     Programs = programs,
                     CourseNos = courseNos,
                     ModuleNos = moduleNos,
@@ -138,7 +137,7 @@ var retakeStudentsCount = uniqueGroupRows.Sum(row => row.RetakeStudentsCount);
         return Enumerable.Range(start, end - start + 1);
     }
 
-    private class SupabaseOfficeResitDisciplineRow
+    private class SupabaseOfficeResitGroupRow
     {
         [JsonPropertyName("id_discipline")]
         public int IdDiscipline { get; set; }
@@ -146,17 +145,20 @@ var retakeStudentsCount = uniqueGroupRows.Sum(row => row.RetakeStudentsCount);
         [JsonPropertyName("discipline_name")]
         public string DisciplineName { get; set; } = string.Empty;
 
-        [JsonPropertyName("pud_url")]
-        public string? PudUrl { get; set; }
+        [JsonPropertyName("id_group")]
+        public int IdGroup { get; set; }
 
-        [JsonPropertyName("id_program")]
-        public int? IdProgram { get; set; }
-
-        [JsonPropertyName("program_name")]
-        public string? ProgramName { get; set; }
+        [JsonPropertyName("group_name")]
+        public string GroupName { get; set; } = string.Empty;
 
         [JsonPropertyName("course_no")]
-        public int? CourseNo { get; set; }
+        public int CourseNo { get; set; }
+
+        [JsonPropertyName("id_program")]
+        public int IdProgram { get; set; }
+
+        [JsonPropertyName("program_name")]
+        public string ProgramName { get; set; } = string.Empty;
 
         [JsonPropertyName("start_module_no")]
         public int? StartModuleNo { get; set; }
@@ -164,14 +166,20 @@ var retakeStudentsCount = uniqueGroupRows.Sum(row => row.RetakeStudentsCount);
         [JsonPropertyName("end_module_no")]
         public int? EndModuleNo { get; set; }
 
-        [JsonPropertyName("id_group")]
-        public int? IdGroup { get; set; }
-
-        [JsonPropertyName("group_name")]
-        public string? GroupName { get; set; }
-
         [JsonPropertyName("id_assignment")]
-        public int? IdAssignment { get; set; }
+        public int IdAssignment { get; set; }
+
+        [JsonPropertyName("academic_year")]
+        public string AcademicYear { get; set; } = string.Empty;
+
+        [JsonPropertyName("teacher_short_name")]
+        public string TeacherShortName { get; set; } = string.Empty;
+
+        [JsonPropertyName("id_sheet")]
+        public int? IdSheet { get; set; }
+
+        [JsonPropertyName("sheet_status")]
+        public string? SheetStatus { get; set; }
 
         [JsonPropertyName("students_count")]
         public int StudentsCount { get; set; }

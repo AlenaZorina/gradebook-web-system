@@ -22,10 +22,17 @@ public class OfficeAttendanceController : ControllerBase
         int idUser
     )
     {
+        /*
+         * Важно:
+         * экран "Посещаемость / дисциплины" строим из office_attendance_groups_view,
+         * то есть из того же источника, из которого открывается следующий экран групп.
+         * Это устраняет баг, когда на карточке написано 5 групп,
+         * а после клика открывается другое количество.
+         */
         var query =
-            "office_attendance_disciplines_view"
-            + "?select=id_discipline,discipline_name,pud_url,id_program,program_name,course_no,start_module_no,end_module_no,id_group,group_name,id_assignment,students_count,sessions_count,marked_attendance_count,present_attendance_count,absent_attendance_count"
-            + "&order=discipline_name.asc,program_name.asc,course_no.asc,start_module_no.asc";
+            "office_attendance_groups_view"
+            + "?select=id_discipline,discipline_name,pud_url,id_program,program_name,course_no,start_module_no,end_module_no,id_group,group_name,id_assignment,academic_year,teacher_short_name,students_count,sessions_count,marked_attendance_count,present_attendance_count,absent_attendance_count"
+            + "&order=discipline_name.asc,program_name.asc,course_no.asc,start_module_no.asc,group_name.asc";
 
         var result = await _supabase.GetAsync(query);
 
@@ -46,10 +53,10 @@ public class OfficeAttendanceController : ControllerBase
             PropertyNameCaseInsensitive = true
         };
 
-        var rows = JsonSerializer.Deserialize<List<SupabaseOfficeAttendanceDisciplineRow>>(
+        var rows = JsonSerializer.Deserialize<List<SupabaseOfficeAttendanceGroupRow>>(
             result.Body,
             options
-        ) ?? new List<SupabaseOfficeAttendanceDisciplineRow>();
+        ) ?? new List<SupabaseOfficeAttendanceGroupRow>();
 
         var response = rows
             .GroupBy(row => new
@@ -60,9 +67,14 @@ public class OfficeAttendanceController : ControllerBase
             })
             .Select(group =>
             {
-                var programs = group
-                    .Where(row => row.IdProgram.HasValue)
-                    .GroupBy(row => row.IdProgram!.Value)
+                var uniqueGroupRows = group
+                    .Where(row => row.IdGroup > 0)
+                    .GroupBy(row => row.IdGroup)
+                    .Select(groupRows => groupRows.First())
+                    .ToList();
+
+                var programs = uniqueGroupRows
+                    .GroupBy(row => row.IdProgram)
                     .Select(programGroup => new OfficeAttendanceProgramOptionDto
                     {
                         IdProgram = programGroup.Key,
@@ -73,36 +85,25 @@ public class OfficeAttendanceController : ControllerBase
                     .OrderBy(program => program.ProgramName)
                     .ToList();
 
-                var courseNos = group
-                    .Where(row => row.CourseNo.HasValue)
-                    .Select(row => row.CourseNo!.Value)
+                var courseNos = uniqueGroupRows
+                    .Select(row => row.CourseNo)
                     .Distinct()
                     .OrderBy(value => value)
                     .ToList();
 
-                var moduleNos = group
+                var moduleNos = uniqueGroupRows
                     .SelectMany(row => ExpandModules(row.StartModuleNo, row.EndModuleNo))
                     .Distinct()
                     .OrderBy(value => value)
                     .ToList();
 
-                var uniqueGroupRows = group
-    .Where(row => row.IdGroup.HasValue || !string.IsNullOrWhiteSpace(row.GroupName))
-    .GroupBy(row =>
-        !string.IsNullOrWhiteSpace(row.GroupName)
-            ? row.GroupName.Trim().ToLowerInvariant()
-            : $"id:{row.IdGroup}"
-    )
-    .Select(groupRows => groupRows.First())
-    .ToList();
+                var groupsCount = uniqueGroupRows.Count;
 
-var groupsCount = uniqueGroupRows.Count;
-
-var studentsCount = uniqueGroupRows.Sum(row => row.StudentsCount);
-var sessionsCount = uniqueGroupRows.Sum(row => row.SessionsCount);
-var markedAttendanceCount = uniqueGroupRows.Sum(row => row.MarkedAttendanceCount);
-var presentAttendanceCount = uniqueGroupRows.Sum(row => row.PresentAttendanceCount);
-var absentAttendanceCount = uniqueGroupRows.Sum(row => row.AbsentAttendanceCount);
+                var studentsCount = uniqueGroupRows.Sum(row => row.StudentsCount);
+                var sessionsCount = uniqueGroupRows.Sum(row => row.SessionsCount);
+                var markedAttendanceCount = uniqueGroupRows.Sum(row => row.MarkedAttendanceCount);
+                var presentAttendanceCount = uniqueGroupRows.Sum(row => row.PresentAttendanceCount);
+                var absentAttendanceCount = uniqueGroupRows.Sum(row => row.AbsentAttendanceCount);
 
                 decimal? attendancePercent = markedAttendanceCount == 0
                     ? null
@@ -149,7 +150,7 @@ var absentAttendanceCount = uniqueGroupRows.Sum(row => row.AbsentAttendanceCount
         return Enumerable.Range(start, end - start + 1);
     }
 
-    private class SupabaseOfficeAttendanceDisciplineRow
+    private class SupabaseOfficeAttendanceGroupRow
     {
         [JsonPropertyName("id_discipline")]
         public int IdDiscipline { get; set; }
@@ -161,13 +162,13 @@ var absentAttendanceCount = uniqueGroupRows.Sum(row => row.AbsentAttendanceCount
         public string? PudUrl { get; set; }
 
         [JsonPropertyName("id_program")]
-        public int? IdProgram { get; set; }
+        public int IdProgram { get; set; }
 
         [JsonPropertyName("program_name")]
-        public string? ProgramName { get; set; }
+        public string ProgramName { get; set; } = string.Empty;
 
         [JsonPropertyName("course_no")]
-        public int? CourseNo { get; set; }
+        public int CourseNo { get; set; }
 
         [JsonPropertyName("start_module_no")]
         public int? StartModuleNo { get; set; }
@@ -176,13 +177,19 @@ var absentAttendanceCount = uniqueGroupRows.Sum(row => row.AbsentAttendanceCount
         public int? EndModuleNo { get; set; }
 
         [JsonPropertyName("id_group")]
-        public int? IdGroup { get; set; }
+        public int IdGroup { get; set; }
 
         [JsonPropertyName("group_name")]
-        public string? GroupName { get; set; }
+        public string GroupName { get; set; } = string.Empty;
 
         [JsonPropertyName("id_assignment")]
-        public int? IdAssignment { get; set; }
+        public int IdAssignment { get; set; }
+
+        [JsonPropertyName("academic_year")]
+        public string AcademicYear { get; set; } = string.Empty;
+
+        [JsonPropertyName("teacher_short_name")]
+        public string TeacherShortName { get; set; } = string.Empty;
 
         [JsonPropertyName("students_count")]
         public int StudentsCount { get; set; }
