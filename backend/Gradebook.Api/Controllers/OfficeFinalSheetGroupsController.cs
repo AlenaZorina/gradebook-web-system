@@ -18,95 +18,86 @@ public class OfficeFinalSheetGroupsController : ControllerBase
     }
 
     [HttpGet("{idUser:int}/office/final-sheet-disciplines/{disciplineId:int}/groups")]
-    public async Task<ActionResult<List<OfficeFinalSheetGroupDto>>> GetFinalSheetGroups(
-        int idUser,
-        int disciplineId
-    )
+public async Task<ActionResult<List<OfficeFinalSheetGroupDto>>> GetFinalSheetGroups(
+    int idUser,
+    int disciplineId
+)
+{
+    var query =
+        "office_final_sheet_groups_view"
+        + "?select=id_discipline,discipline_name,id_group,group_name,course_no,id_program,program_name,start_module_no,end_module_no,id_assignment,academic_year,teacher_short_name,id_sheet,sheet_status,students_count,filled_final_grades_count,failed_students_count"
+        + $"&id_discipline=eq.{disciplineId}"
+        + "&order=group_name.asc";
+
+    var result = await _supabase.GetAsync(query);
+
+    if (!result.Success)
     {
-        var query =
-            "office_final_sheet_groups_view"
-            + "?select=id_discipline,discipline_name,id_group,group_name,course_no,id_program,program_name,start_module_no,end_module_no,id_assignment,academic_year,teacher_short_name,id_sheet,sheet_status,students_count,filled_final_grades_count,failed_students_count"
-            + $"&id_discipline=eq.{disciplineId}"
-            + "&order=group_name.asc";
-
-        var result = await _supabase.GetAsync(query);
-
-        if (!result.Success)
-        {
-            return StatusCode(
-                result.StatusCode,
-                new
-                {
-                    message = "Ошибка получения групп для итоговых ведомостей из Supabase",
-                    details = result.Body
-                }
-            );
-        }
-
-        var options = new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        };
-
-        var rows = JsonSerializer.Deserialize<List<SupabaseOfficeFinalSheetGroupRow>>(
-            result.Body,
-            options
-        ) ?? new List<SupabaseOfficeFinalSheetGroupRow>();
-
-        var response = rows
-            .GroupBy(row => new
+        return StatusCode(
+            result.StatusCode,
+            new
             {
-                row.IdDiscipline,
-                row.DisciplineName,
-                row.IdGroup,
-                row.GroupName,
-                row.CourseNo,
-                row.IdProgram,
-                row.ProgramName,
-                row.StartModuleNo,
-                row.EndModuleNo,
-                row.IdAssignment,
-                row.AcademicYear,
-                row.TeacherShortName,
-                row.IdSheet,
-                row.SheetStatus
-            })
-            .Select(group =>
-            {
-                var studentsCount = group.Sum(item => item.StudentsCount);
-                var filledFinalGradesCount = group.Sum(item => item.FilledFinalGradesCount);
-
-                decimal? filledPercent = studentsCount == 0
-                    ? null
-                    : Math.Round((decimal)filledFinalGradesCount / studentsCount * 100m, 1);
-
-                return new OfficeFinalSheetGroupDto
-                {
-                    IdDiscipline = group.Key.IdDiscipline,
-                    DisciplineName = group.Key.DisciplineName,
-                    IdGroup = group.Key.IdGroup,
-                    GroupName = group.Key.GroupName,
-                    CourseNo = group.Key.CourseNo,
-                    IdProgram = group.Key.IdProgram,
-                    ProgramName = group.Key.ProgramName,
-                    StartModuleNo = group.Key.StartModuleNo,
-                    EndModuleNo = group.Key.EndModuleNo,
-                    IdAssignment = group.Key.IdAssignment,
-                    AcademicYear = group.Key.AcademicYear,
-                    TeacherShortName = group.Key.TeacherShortName,
-                    IdSheet = group.Key.IdSheet,
-                    SheetStatus = group.Key.SheetStatus ?? string.Empty,
-                    StudentsCount = studentsCount,
-                    FilledFinalGradesCount = filledFinalGradesCount,
-                    FailedStudentsCount = group.Sum(item => item.FailedStudentsCount),
-                    FilledPercent = filledPercent
-                };
-            })
-            .OrderBy(item => item.GroupName)
-            .ToList();
-
-        return Ok(response);
+                message = "Ошибка получения групп для итоговых ведомостей из Supabase",
+                details = result.Body
+            }
+        );
     }
+
+    var options = new JsonSerializerOptions
+    {
+        PropertyNameCaseInsensitive = true
+    };
+
+    var rows = JsonSerializer.Deserialize<List<SupabaseOfficeFinalSheetGroupRow>>(
+        result.Body,
+        options
+    ) ?? new List<SupabaseOfficeFinalSheetGroupRow>();
+
+    var response = rows
+        .Where(row => row.IdGroup > 0 || !string.IsNullOrWhiteSpace(row.GroupName))
+        .GroupBy(row => NormalizeGroupKey(row))
+        .Select(group =>
+        {
+            var first = group.First();
+
+            var startModuleNo = first.StartModuleNo;
+            var endModuleNo = first.EndModuleNo;
+
+            var studentsCount = group.Max(item => item.StudentsCount);
+            var filledFinalGradesCount = group.Max(item => item.FilledFinalGradesCount);
+            var failedStudentsCount = group.Max(item => item.FailedStudentsCount);
+
+            decimal? filledPercent = studentsCount == 0
+                ? null
+                : Math.Round((decimal)filledFinalGradesCount / studentsCount * 100m, 1);
+
+            return new OfficeFinalSheetGroupDto
+            {
+                IdDiscipline = first.IdDiscipline,
+                DisciplineName = first.DisciplineName,
+                IdGroup = first.IdGroup,
+                GroupName = first.GroupName,
+                CourseNo = first.CourseNo,
+                IdProgram = first.IdProgram,
+                ProgramName = first.ProgramName,
+                StartModuleNo = startModuleNo,
+                EndModuleNo = endModuleNo,
+                IdAssignment = first.IdAssignment,
+                AcademicYear = first.AcademicYear,
+                TeacherShortName = first.TeacherShortName,
+                IdSheet = first.IdSheet,
+                SheetStatus = first.SheetStatus ?? string.Empty,
+                StudentsCount = studentsCount,
+                FilledFinalGradesCount = filledFinalGradesCount,
+                FailedStudentsCount = failedStudentsCount,
+                FilledPercent = filledPercent
+            };
+        })
+        .OrderBy(item => item.GroupName)
+        .ToList();
+
+    return Ok(response);
+}
 
     [HttpGet("{idUser:int}/office/final-sheet-disciplines/{disciplineId:int}/groups/{groupId:int}/sheet")]
     public async Task<ActionResult<OfficeFinalSheetDto>> GetFinalSheet(
@@ -291,6 +282,16 @@ public class OfficeFinalSheetGroupsController : ControllerBase
 
         return Ok(response);
     }
+
+    private static string NormalizeGroupKey(SupabaseOfficeFinalSheetGroupRow row)
+{
+    if (!string.IsNullOrWhiteSpace(row.GroupName))
+    {
+        return row.GroupName.Trim().ToLowerInvariant();
+    }
+
+    return $"id:{row.IdGroup}";
+}
 
     private static string BuildFullName(string surname, string name, string? fathername)
     {

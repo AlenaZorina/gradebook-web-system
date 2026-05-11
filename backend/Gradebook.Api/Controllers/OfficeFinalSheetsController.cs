@@ -22,10 +22,19 @@ public class OfficeFinalSheetsController : ControllerBase
         int idUser
     )
     {
+        /*
+         * Первый экран "Итоговые ведомости / дисциплины" строим из той же view,
+         * что и следующий экран со списком групп.
+         *
+         * Это нужно, чтобы:
+         * 1) количество групп на карточке дисциплины совпадало со следующим экраном;
+         * 2) количество ведомостей было равно количеству групп;
+         * 3) дубли строк во view не раздували счетчики.
+         */
         var query =
-            "office_final_sheet_disciplines_view"
-            + "?select=id_discipline,discipline_name,pud_url,id_program,program_name,course_no,start_module_no,end_module_no,id_group,group_name,id_assignment,id_sheet,sheet_type,sheet_status,students_count,final_grades_count,filled_final_grades_count,failed_students_count,submitted_sheets_count,approved_sheets_count"
-            + "&order=discipline_name.asc,program_name.asc,course_no.asc,start_module_no.asc";
+            "office_final_sheet_groups_view"
+            + "?select=id_discipline,discipline_name,id_group,group_name,course_no,id_program,program_name,start_module_no,end_module_no,id_assignment,academic_year,teacher_short_name,id_sheet,sheet_status,students_count,filled_final_grades_count,failed_students_count"
+            + "&order=discipline_name.asc,program_name.asc,course_no.asc,start_module_no.asc,group_name.asc";
 
         var result = await _supabase.GetAsync(query);
 
@@ -46,23 +55,42 @@ public class OfficeFinalSheetsController : ControllerBase
             PropertyNameCaseInsensitive = true
         };
 
-        var rows = JsonSerializer.Deserialize<List<SupabaseOfficeFinalSheetDisciplineRow>>(
+        var rows = JsonSerializer.Deserialize<List<SupabaseOfficeFinalSheetGroupRow>>(
             result.Body,
             options
-        ) ?? new List<SupabaseOfficeFinalSheetDisciplineRow>();
+        ) ?? new List<SupabaseOfficeFinalSheetGroupRow>();
 
         var response = rows
             .GroupBy(row => new
             {
                 row.IdDiscipline,
-                row.DisciplineName,
-                row.PudUrl
+                row.DisciplineName
             })
-            .Select(group =>
+            .Select(disciplineGroup =>
             {
-                var programs = group
-                    .Where(row => row.IdProgram.HasValue)
-                    .GroupBy(row => row.IdProgram!.Value)
+                var groupSummaries = disciplineGroup
+                    .Where(row => row.IdGroup > 0 || !string.IsNullOrWhiteSpace(row.GroupName))
+                    .GroupBy(row => NormalizeGroupKey(row))
+                    .Select(groupRows =>
+                    {
+                        var first = groupRows.First();
+
+                        return new
+                        {
+                            Row = first,
+                            StudentsCount = groupRows.Max(row => row.StudentsCount),
+                            FilledFinalGradesCount = groupRows.Max(row => row.FilledFinalGradesCount),
+                            FailedStudentsCount = groupRows.Max(row => row.FailedStudentsCount),
+                            SheetStatus = groupRows
+                                .Select(row => row.SheetStatus)
+                                .FirstOrDefault(status => !string.IsNullOrWhiteSpace(status))
+                        };
+                    })
+                    .ToList();
+
+                var programs = groupSummaries
+                    .Select(summary => summary.Row)
+                    .GroupBy(row => row.IdProgram)
                     .Select(programGroup => new OfficeFinalSheetProgramOptionDto
                     {
                         IdProgram = programGroup.Key,
@@ -73,42 +101,36 @@ public class OfficeFinalSheetsController : ControllerBase
                     .OrderBy(program => program.ProgramName)
                     .ToList();
 
-                var courseNos = group
-                    .Where(row => row.CourseNo.HasValue)
-                    .Select(row => row.CourseNo!.Value)
+                var courseNos = groupSummaries
+                    .Select(summary => summary.Row.CourseNo)
                     .Distinct()
                     .OrderBy(value => value)
                     .ToList();
 
-                var moduleNos = group
-                    .SelectMany(row => ExpandModules(row.StartModuleNo, row.EndModuleNo))
+                var moduleNos = groupSummaries
+                    .SelectMany(summary =>
+                        ExpandModules(summary.Row.StartModuleNo, summary.Row.EndModuleNo)
+                    )
                     .Distinct()
                     .OrderBy(value => value)
                     .ToList();
 
-                var uniqueGroupRows = group
-    .Where(row => row.IdGroup.HasValue || !string.IsNullOrWhiteSpace(row.GroupName))
-    .GroupBy(row =>
-        !string.IsNullOrWhiteSpace(row.GroupName)
-            ? row.GroupName.Trim().ToLowerInvariant()
-            : $"id:{row.IdGroup}"
-    )
-    .Select(groupRows => groupRows.First())
-    .ToList();
+                var groupsCount = groupSummaries.Count;
 
-var groupsCount = uniqueGroupRows.Count;
+                // Для интерфейса УО: одна группа по дисциплине = одна итоговая ведомость.
+                var finalSheetsCount = groupsCount;
 
-// В интерфейсе УО одна группа по дисциплине соответствует одной итоговой ведомости.
-// Поэтому количество ведомостей на карточке считаем по уникальным группам,
-// а не по количеству строк/id_sheet во view.
-var finalSheetsCount = groupsCount;
+                var studentsCount = groupSummaries.Sum(summary => summary.StudentsCount);
+                var filledFinalGradesCount = groupSummaries.Sum(summary => summary.FilledFinalGradesCount);
+                var failedStudentsCount = groupSummaries.Sum(summary => summary.FailedStudentsCount);
 
-var studentsCount = uniqueGroupRows.Sum(row => row.StudentsCount);
-var submittedSheetsCount = uniqueGroupRows.Sum(row => row.SubmittedSheetsCount);
-var approvedSheetsCount = uniqueGroupRows.Sum(row => row.ApprovedSheetsCount);
-var filledFinalGradesCount = uniqueGroupRows.Sum(row => row.FilledFinalGradesCount);
-var failedStudentsCount = uniqueGroupRows.Sum(row => row.FailedStudentsCount);
+                var submittedSheetsCount = groupSummaries.Count(summary =>
+                    IsSubmittedSheetStatus(summary.SheetStatus)
+                );
 
+                var approvedSheetsCount = groupSummaries.Count(summary =>
+                    IsApprovedSheetStatus(summary.SheetStatus)
+                );
 
                 decimal? filledPercent = studentsCount == 0
                     ? null
@@ -116,9 +138,9 @@ var failedStudentsCount = uniqueGroupRows.Sum(row => row.FailedStudentsCount);
 
                 return new OfficeFinalSheetDisciplineDto
                 {
-                    IdDiscipline = group.Key.IdDiscipline,
-                    DisciplineName = group.Key.DisciplineName,
-                    PudUrl = group.Key.PudUrl,
+                    IdDiscipline = disciplineGroup.Key.IdDiscipline,
+                    DisciplineName = disciplineGroup.Key.DisciplineName,
+                    PudUrl = null,
                     Programs = programs,
                     CourseNos = courseNos,
                     ModuleNos = moduleNos,
@@ -136,6 +158,39 @@ var failedStudentsCount = uniqueGroupRows.Sum(row => row.FailedStudentsCount);
             .ToList();
 
         return Ok(response);
+    }
+
+    private static string NormalizeGroupKey(SupabaseOfficeFinalSheetGroupRow row)
+    {
+        if (!string.IsNullOrWhiteSpace(row.GroupName))
+        {
+            return row.GroupName.Trim().ToLowerInvariant();
+        }
+
+        return $"id:{row.IdGroup}";
+    }
+
+    private static bool IsSubmittedSheetStatus(string? status)
+    {
+        var normalizedStatus = (status ?? string.Empty).Trim().ToLowerInvariant();
+
+        return normalizedStatus == "submitted"
+            || normalizedStatus == "sent"
+            || normalizedStatus == "на утверждении"
+            || normalizedStatus.Contains("submitted")
+            || normalizedStatus.Contains("отправ")
+            || normalizedStatus.Contains("утвержд");
+    }
+
+    private static bool IsApprovedSheetStatus(string? status)
+    {
+        var normalizedStatus = (status ?? string.Empty).Trim().ToLowerInvariant();
+
+        return normalizedStatus == "approved"
+            || normalizedStatus == "утверждена"
+            || normalizedStatus == "утверждено"
+            || normalizedStatus.Contains("approved")
+            || normalizedStatus.Contains("утвержд");
     }
 
     private static IEnumerable<int> ExpandModules(int? startModuleNo, int? endModuleNo)
@@ -156,7 +211,7 @@ var failedStudentsCount = uniqueGroupRows.Sum(row => row.FailedStudentsCount);
         return Enumerable.Range(start, end - start + 1);
     }
 
-    private class SupabaseOfficeFinalSheetDisciplineRow
+    private class SupabaseOfficeFinalSheetGroupRow
     {
         [JsonPropertyName("id_discipline")]
         public int IdDiscipline { get; set; }
@@ -164,17 +219,20 @@ var failedStudentsCount = uniqueGroupRows.Sum(row => row.FailedStudentsCount);
         [JsonPropertyName("discipline_name")]
         public string DisciplineName { get; set; } = string.Empty;
 
-        [JsonPropertyName("pud_url")]
-        public string? PudUrl { get; set; }
+        [JsonPropertyName("id_group")]
+        public int IdGroup { get; set; }
 
-        [JsonPropertyName("id_program")]
-        public int? IdProgram { get; set; }
-
-        [JsonPropertyName("program_name")]
-        public string? ProgramName { get; set; }
+        [JsonPropertyName("group_name")]
+        public string GroupName { get; set; } = string.Empty;
 
         [JsonPropertyName("course_no")]
-        public int? CourseNo { get; set; }
+        public int CourseNo { get; set; }
+
+        [JsonPropertyName("id_program")]
+        public int IdProgram { get; set; }
+
+        [JsonPropertyName("program_name")]
+        public string ProgramName { get; set; } = string.Empty;
 
         [JsonPropertyName("start_module_no")]
         public int? StartModuleNo { get; set; }
@@ -182,20 +240,17 @@ var failedStudentsCount = uniqueGroupRows.Sum(row => row.FailedStudentsCount);
         [JsonPropertyName("end_module_no")]
         public int? EndModuleNo { get; set; }
 
-        [JsonPropertyName("id_group")]
-        public int? IdGroup { get; set; }
-
-        [JsonPropertyName("group_name")]
-        public string? GroupName { get; set; }
-
         [JsonPropertyName("id_assignment")]
-        public int? IdAssignment { get; set; }
+        public int IdAssignment { get; set; }
+
+        [JsonPropertyName("academic_year")]
+        public string AcademicYear { get; set; } = string.Empty;
+
+        [JsonPropertyName("teacher_short_name")]
+        public string TeacherShortName { get; set; } = string.Empty;
 
         [JsonPropertyName("id_sheet")]
         public int? IdSheet { get; set; }
-
-        [JsonPropertyName("sheet_type")]
-        public string? SheetType { get; set; }
 
         [JsonPropertyName("sheet_status")]
         public string? SheetStatus { get; set; }
@@ -203,19 +258,10 @@ var failedStudentsCount = uniqueGroupRows.Sum(row => row.FailedStudentsCount);
         [JsonPropertyName("students_count")]
         public int StudentsCount { get; set; }
 
-        [JsonPropertyName("final_grades_count")]
-        public int FinalGradesCount { get; set; }
-
         [JsonPropertyName("filled_final_grades_count")]
         public int FilledFinalGradesCount { get; set; }
 
         [JsonPropertyName("failed_students_count")]
         public int FailedStudentsCount { get; set; }
-
-        [JsonPropertyName("submitted_sheets_count")]
-        public int SubmittedSheetsCount { get; set; }
-
-        [JsonPropertyName("approved_sheets_count")]
-        public int ApprovedSheetsCount { get; set; }
     }
 }
