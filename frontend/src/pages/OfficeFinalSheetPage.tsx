@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { LoginResponse, OfficeFinalSheet } from "../api";
-import { getOfficeFinalSheet } from "../api";
+import { exportOfficeFinalSheet, getOfficeFinalSheet } from "../api";
 import "./TeacherSchedulePage.css";
 import "./OfficeFinalSheetPage.css";
 
@@ -41,12 +41,22 @@ function formatGrade(value?: number | null) {
   return Number(value).toFixed(2).replace(".", ",").replace(",00", "");
 }
 
-function escapeHtml(value: string | number) {
-  return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;");
+function isUnknownTeacher(value?: string | null) {
+  const normalized = (value ?? "").trim().toLowerCase();
+
+  return (
+    normalized === "" ||
+    normalized === "не указан н." ||
+    normalized === "не указан" ||
+    normalized.startsWith("не указан")
+  );
+}
+
+function makeSafeFileName(value: string) {
+  return value
+    .replace(/[<>:"/\\|?*]+/g, "-")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function ResitIcon() {
@@ -165,6 +175,7 @@ export function OfficeFinalSheetPage({
 }: OfficeFinalSheetPageProps) {
   const [sheet, setSheet] = useState<OfficeFinalSheet | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isExporting, setIsExporting] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -187,70 +198,43 @@ export function OfficeFinalSheetPage({
     loadSheet();
   }, [user.idUser, disciplineId, groupId]);
 
-  function handleExport() {
+  async function handleExport() {
     if (!sheet) {
       return;
     }
 
-    const headers = [
-      "ФИО",
-      ...sheet.elements.map((element) => element.elementName),
-      "Накопленная оценка",
-      "Экзамен",
-      "Итог"
-    ];
+    try {
+      setIsExporting(true);
 
-    const rows = sheet.students.map((student) => [
-      student.fullName,
-      ...sheet.elements.map((element) => {
-        const grade = student.grades.find(
-          (item) => item.idElement === element.idElement
-        );
+      const blob = await exportOfficeFinalSheet(
+        user.idUser,
+        disciplineId,
+        groupId
+      );
 
-        return formatGrade(grade?.gradeValue);
-      }),
-      formatGrade(student.accumulatedGrade),
-      formatGrade(student.examGrade),
-      formatGrade(student.finalGrade)
-    ]);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
 
-    const tableRows = [headers, ...rows]
-      .map(
-        (row) =>
-          `<tr>${row
-            .map((cell) => `<td>${escapeHtml(cell)}</td>`)
-            .join("")}</tr>`
-      )
-      .join("");
+      const disciplineName = makeSafeFileName(sheet.disciplineName);
+      const groupName = makeSafeFileName(sheet.groupName);
 
-    const html = `
-      <html>
-        <head>
-          <meta charset="UTF-8" />
-        </head>
-        <body>
-          <h2>${escapeHtml(sheet.disciplineName)}</h2>
-          <p>Группа: ${escapeHtml(sheet.groupName)}</p>
-          <table border="1">
-            ${tableRows}
-          </table>
-        </body>
-      </html>
-    `;
+      link.href = url;
+      link.download = `final-sheet-${disciplineName}-${groupName}.xlsx`;
+      link.click();
 
-    const blob = new Blob([html], {
-      type: "application/vnd.ms-excel;charset=utf-8;"
-    });
-
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-
-    link.href = url;
-    link.download = `final-sheet-${sheet.disciplineName}-${sheet.groupName}.xls`;
-    link.click();
-
-    URL.revokeObjectURL(url);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Не удалось экспортировать итоговую ведомость"
+      );
+    } finally {
+      setIsExporting(false);
+    }
   }
+
+  const showTeacherName = sheet ? !isUnknownTeacher(sheet.teacherShortName) : false;
 
   return (
     <div className="schedule-layout">
@@ -284,7 +268,11 @@ export function OfficeFinalSheetPage({
               Посещаемость
             </button>
 
-            <button className="nav-item active" type="button" onClick={onOpenFinalSheets}>
+            <button
+              className="nav-item active"
+              type="button"
+              onClick={onOpenFinalSheets}
+            >
               <span className="nav-icon">
                 <FinalSheetsIcon />
               </span>
@@ -322,23 +310,43 @@ export function OfficeFinalSheetPage({
       </aside>
 
       <main className="office-final-sheet-content">
-        <button className="details-back-button" type="button" onClick={onBack}>
-          ← Назад к группам
-        </button>
-
         <section className="office-final-sheet-hero">
-          <h1>Итоговая ведомость</h1>
+          <div className="office-final-sheet-hero-main">
+            <button
+              className="office-final-sheet-back-button"
+              type="button"
+              onClick={onBack}
+            >
+              ← Назад к группам
+            </button>
+
+            <h1>Итоговая ведомость</h1>
+
+            {sheet && (
+              <div className="office-final-sheet-heading">
+                <div className="office-final-sheet-title-row">
+                  <h2>{sheet.disciplineName}</h2>
+
+                  <div className="office-final-sheet-badges">
+                    <span>{sheet.courseNo} курс</span>
+                    <span>{sheet.groupName}</span>
+                  </div>
+                </div>
+
+                {showTeacherName && <p>{sheet.teacherShortName}</p>}
+              </div>
+            )}
+          </div>
 
           {sheet && (
-            <div className="office-final-sheet-heading">
-              <div>
-                <h2>{sheet.disciplineName}</h2>
-                <p>{sheet.teacherShortName}</p>
-              </div>
-
-              <span>{sheet.courseNo} курс</span>
-              <span>{sheet.groupName}</span>
-            </div>
+            <button
+              className="office-final-export-button"
+              type="button"
+              onClick={handleExport}
+              disabled={sheet.students.length === 0 || isExporting}
+            >
+              {isExporting ? "Экспорт..." : "Экспорт"}
+            </button>
           )}
         </section>
 
@@ -349,87 +357,81 @@ export function OfficeFinalSheetPage({
         {error && <div className="schedule-error">{error}</div>}
 
         {!isLoading && !error && sheet && (
-          <>
-            <section className="office-final-table-card">
-              <div className="office-final-table-scroll">
-                <table className="office-final-table">
-                  <thead>
+          <section className="office-final-table-card">
+            <div className="office-final-table-header">
+              <h2>Итоговая ведомость</h2>
+              <p>Оценки по элементам контроля и итоговый результат</p>
+            </div>
+
+            <div className="office-final-table-scroll">
+              <table className="office-final-table">
+                <thead>
+                  <tr>
+                    <th>ФИО</th>
+
+                    {sheet.elements.map((element) => (
+                      <th key={element.idElement}>{element.elementName}</th>
+                    ))}
+
+                    <th>Накоп</th>
+                    <th>Экз</th>
+                    <th>Итог</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {sheet.students.length === 0 ? (
                     <tr>
-                      <th>ФИО</th>
-
-                      {sheet.elements.map((element) => (
-                        <th key={element.idElement}>{element.elementName}</th>
-                      ))}
-
-                      <th>накоп</th>
-                      <th>экз</th>
-                      <th>итог</th>
+                      <td
+                        className="office-final-empty-cell"
+                        colSpan={sheet.elements.length + 4}
+                      >
+                        Для выбранной группы пока нет данных итоговой ведомости
+                      </td>
                     </tr>
-                  </thead>
+                  ) : (
+                    sheet.students.map((student) => (
+                      <tr key={student.idStudent}>
+                        <td>{student.fullName}</td>
 
-                  <tbody>
-                    {sheet.students.length === 0 ? (
-                      <tr>
-                        <td
-                          className="office-final-empty-cell"
-                          colSpan={sheet.elements.length + 4}
-                        >
-                          Для выбранной группы пока нет данных итоговой ведомости
+                        {sheet.elements.map((element) => {
+                          const grade = student.grades.find(
+                            (item) => item.idElement === element.idElement
+                          );
+
+                          return (
+                            <td key={`${student.idStudent}-${element.idElement}`}>
+                              <span className="office-final-grade-cell">
+                                {formatGrade(grade?.gradeValue)}
+                              </span>
+                            </td>
+                          );
+                        })}
+
+                        <td>
+                          <span className="office-final-grade-cell">
+                            {formatGrade(student.accumulatedGrade)}
+                          </span>
+                        </td>
+
+                        <td>
+                          <span className="office-final-grade-cell">
+                            {formatGrade(student.examGrade)}
+                          </span>
+                        </td>
+
+                        <td>
+                          <span className="office-final-grade-cell result">
+                            {formatGrade(student.finalGrade)}
+                          </span>
                         </td>
                       </tr>
-                    ) : (
-                      sheet.students.map((student) => (
-                        <tr key={student.idStudent}>
-                          <td>{student.fullName}</td>
-
-                          {sheet.elements.map((element) => {
-                            const grade = student.grades.find(
-                              (item) => item.idElement === element.idElement
-                            );
-
-                            return (
-                              <td key={`${student.idStudent}-${element.idElement}`}>
-                                <span className="office-final-grade-cell">
-                                  {formatGrade(grade?.gradeValue)}
-                                </span>
-                              </td>
-                            );
-                          })}
-
-                          <td>
-                            <span className="office-final-grade-cell">
-                              {formatGrade(student.accumulatedGrade)}
-                            </span>
-                          </td>
-
-                          <td>
-                            <span className="office-final-grade-cell">
-                              {formatGrade(student.examGrade)}
-                            </span>
-                          </td>
-
-                          <td>
-                            <span className="office-final-grade-cell result">
-                              {formatGrade(student.finalGrade)}
-                            </span>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </section>
-
-            <button
-              className="office-final-export-button"
-              type="button"
-              onClick={handleExport}
-              disabled={sheet.students.length === 0}
-            >
-              Экспорт
-            </button>
-          </>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
         )}
       </main>
     </div>

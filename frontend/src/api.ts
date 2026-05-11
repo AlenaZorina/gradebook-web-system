@@ -1096,6 +1096,30 @@ export type LoginRequest = {
   
     return response.json();
   }
+  export async function exportOfficeFinalSheet(
+    idUser: number,
+    disciplineId: number,
+    groupId: number
+  ): Promise<Blob> {
+    const response = await fetch(
+      `${API_URL}/api/users/${idUser}/office/final-sheet-disciplines/${disciplineId}/groups/${groupId}/sheet/export`
+    );
+  
+    if (!response.ok) {
+      let message = "Не удалось экспортировать итоговую ведомость";
+  
+      try {
+        const error = await response.json();
+        message = error.message ?? message;
+      } catch {
+        // оставляем стандартное сообщение
+      }
+  
+      throw new Error(message);
+    }
+  
+    return response.blob();
+  }
   export type OfficeStudent = {
     idStudent: number;
     idUser: number;
