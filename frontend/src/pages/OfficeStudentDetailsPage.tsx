@@ -22,6 +22,7 @@ type OfficeStudentDetailsPageProps = {
 function getOfficeInitials(user: LoginResponse) {
   const surnameInitial = user.surname?.trim()?.[0] ?? "";
   const nameInitial = user.name?.trim()?.[0] ?? "";
+
   return `${surnameInitial}${nameInitial}`.toUpperCase();
 }
 
@@ -32,6 +33,18 @@ function getOfficeShortName(user: LoginResponse) {
     : "";
 
   return `${user.surname} ${nameInitial}${fathernameInitial}`;
+}
+
+function getStudentInitials(fullName?: string | null) {
+  const parts = (fullName ?? "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+
+  const surnameInitial = parts[0]?.[0] ?? "";
+  const nameInitial = parts[1]?.[0] ?? "";
+
+  return `${surnameInitial}${nameInitial}`.toUpperCase() || "СТ";
 }
 
 function ResitIcon() {
@@ -131,6 +144,80 @@ function LogoutIcon() {
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function ChevronIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="m9 6 6 6-6 6"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function AttendanceActionIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M8 12.5 10.5 15 16 9"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <rect
+        x="4"
+        y="4"
+        width="16"
+        height="16"
+        rx="4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+    </svg>
+  );
+}
+
+function GradebookActionIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M7 4.5h10A1.5 1.5 0 0 1 18.5 6v12A1.5 1.5 0 0 1 17 19.5H7A1.5 1.5 0 0 1 5.5 18V6A1.5 1.5 0 0 1 7 4.5Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+      <path
+        d="M8.5 9h7M8.5 12h7M8.5 15h4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function PersonalDataActionIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M12 12a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7ZM5 20c.9-4 3.2-6 7-6s6.1 2 7 6"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
       />
     </svg>
   );
@@ -244,7 +331,11 @@ export function OfficeStudentDetailsPage({
       </aside>
 
       <main className="office-student-details-content">
-        <button className="details-back-button" type="button" onClick={onBack}>
+        <button
+          className="office-student-details-back-button"
+          type="button"
+          onClick={onBack}
+        >
           ← Назад к студентам
         </button>
 
@@ -256,28 +347,72 @@ export function OfficeStudentDetailsPage({
 
         {!isLoading && !error && student && (
           <>
-            <section className="office-student-profile-main">
-              <div className="office-student-profile-avatar" />
+            <section className="office-student-profile-card">
+              <div className="office-student-profile-avatar">
+                {getStudentInitials(student.fullName)}
+              </div>
 
-              <h2>{student.fullName}</h2>
-              <p>{student.groupName}</p>
-              <span>{student.email || "email не указан"}</span>
+              <div className="office-student-profile-info">
+                <h2>{student.fullName}</h2>
+
+                <div className="office-student-profile-badges">
+                  <span>{student.groupName}</span>
+                </div>
+
+                <p>{student.email || "email не указан"}</p>
+              </div>
             </section>
 
             <section className="office-student-actions-list">
               <button type="button" onClick={onOpenStudentAttendance}>
-                <span>Посещаемость</span>
-                <strong>›</strong>
+                <span className="office-student-action-left">
+                  <span className="office-student-action-icon">
+                    <AttendanceActionIcon />
+                  </span>
+
+                  <span>
+                    <strong>Посещаемость</strong>
+                    <small>Просмотр посещаемости студента по дисциплинам</small>
+                  </span>
+                </span>
+
+                <span className="office-student-action-chevron">
+                  <ChevronIcon />
+                </span>
               </button>
 
               <button type="button" onClick={onOpenStudentGradebook}>
-                <span>Ведомость</span>
-                <strong>›</strong>
+                <span className="office-student-action-left">
+                  <span className="office-student-action-icon">
+                    <GradebookActionIcon />
+                  </span>
+
+                  <span>
+                    <strong>Ведомость</strong>
+                    <small>Просмотр оценок и итоговых результатов</small>
+                  </span>
+                </span>
+
+                <span className="office-student-action-chevron">
+                  <ChevronIcon />
+                </span>
               </button>
 
               <button type="button" onClick={onOpenStudentPersonalData}>
-                <span>Личные данные</span>
-                <strong>›</strong>
+                <span className="office-student-action-left">
+                  <span className="office-student-action-icon">
+                    <PersonalDataActionIcon />
+                  </span>
+
+                  <span>
+                    <strong>Личные данные</strong>
+                    <small>Основная информация о студенте</small>
+                  </span>
+                </span>
+
+                <span className="office-student-action-chevron">
+                  <ChevronIcon />
+                </span>
               </button>
             </section>
           </>
