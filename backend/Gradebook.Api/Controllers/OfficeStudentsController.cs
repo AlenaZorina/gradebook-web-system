@@ -41,27 +41,50 @@ public class OfficeStudentsController : ControllerBase
 
         var rows = Deserialize<List<SupabaseOfficeStudentRow>>(result.Body) ?? new();
 
+        /*
+         * office_students_view может возвращать одного и того же студента несколько раз,
+         * если он связан с несколькими учебными сущностями в тестовых данных.
+         * На первом экране "Студенты" нужна одна карточка на одного студента.
+         */
         var response = rows
-            .Select(row => new OfficeStudentDto
+            .Where(row => row.IdStudent > 0)
+            .GroupBy(GetStudentDuplicateKey)
+            .Select(group =>
             {
-                IdStudent = row.IdStudent,
-                IdUser = row.IdUser,
-                FullName = BuildFullName(
+                var row = ChoosePreferredStudentRow(group);
+
+                var normalizedSurname = NormalizeSurnameByGender(
                     row.StudentSurname,
                     row.StudentName,
                     row.StudentFathername
-                ),
-                Surname = row.StudentSurname,
-                Name = row.StudentName,
-                Fathername = row.StudentFathername,
-                RecordBookNo = row.RecordBookNo ?? string.Empty,
-                IdGroup = row.IdGroup,
-                GroupName = row.GroupName,
-                CourseNo = row.CourseNo,
-                IdProgram = row.IdProgram,
-                ProgramName = row.ProgramName,
-                IdStatus = row.IdStatus,
-                StudentStatus = row.StudentStatus
+                );
+
+                return new OfficeStudentDto
+                {
+                    IdStudent = row.IdStudent,
+                    IdUser = row.IdUser,
+                    FullName = BuildFullName(
+                        normalizedSurname,
+                        row.StudentName,
+                        row.StudentFathername
+                    ),
+                    Surname = normalizedSurname,
+                    Name = row.StudentName,
+                    Fathername = row.StudentFathername,
+                    RecordBookNo = NormalizeRecordBookNo(
+                        row.RecordBookNo,
+                        row.IdStudent,
+                        row.IdGroup,
+                        row.CourseNo
+                    ),
+                    IdGroup = row.IdGroup,
+                    GroupName = row.GroupName,
+                    CourseNo = row.CourseNo,
+                    IdProgram = row.IdProgram,
+                    ProgramName = row.ProgramName,
+                    IdStatus = row.IdStatus,
+                    StudentStatus = row.StudentStatus
+                };
             })
             .OrderBy(student => student.FullName)
             .ToList();
@@ -103,19 +126,30 @@ public class OfficeStudentsController : ControllerBase
             return NotFound(new { message = "Студент не найден" });
         }
 
+        var normalizedSurname = NormalizeSurnameByGender(
+            row.StudentSurname,
+            row.StudentName,
+            row.StudentFathername
+        );
+
         var response = new OfficeStudentDetailsDto
         {
             IdStudent = row.IdStudent,
             IdUser = row.IdUser,
             FullName = BuildFullName(
-                row.StudentSurname,
+                normalizedSurname,
                 row.StudentName,
                 row.StudentFathername
             ),
-            Surname = row.StudentSurname,
+            Surname = normalizedSurname,
             Name = row.StudentName,
             Fathername = row.StudentFathername,
-            RecordBookNo = row.RecordBookNo ?? string.Empty,
+            RecordBookNo = NormalizeRecordBookNo(
+                row.RecordBookNo,
+                row.IdStudent,
+                row.IdGroup,
+                row.CourseNo
+            ),
             Email = row.Email,
             IdGroup = row.IdGroup,
             GroupName = row.GroupName,
@@ -251,11 +285,160 @@ public class OfficeStudentsController : ControllerBase
         return JsonSerializer.Deserialize<T>(body, options);
     }
 
+    private static string GetStudentDuplicateKey(SupabaseOfficeStudentRow row)
+    {
+        if (row.IdUser > 0)
+        {
+            return $"user:{row.IdUser}";
+        }
+
+        var normalizedFullName = NormalizeKeyPart(
+            BuildFullName(row.StudentSurname, row.StudentName, row.StudentFathername)
+        );
+
+        if (!string.IsNullOrWhiteSpace(normalizedFullName))
+        {
+            return $"name:{normalizedFullName}";
+        }
+
+        return $"student:{row.IdStudent}";
+    }
+
+    private static SupabaseOfficeStudentRow ChoosePreferredStudentRow(
+        IEnumerable<SupabaseOfficeStudentRow> rows
+    )
+    {
+        return rows
+            .OrderBy(row => IsInactiveStatus(row.StudentStatus) ? 1 : 0)
+            .ThenByDescending(row => row.CourseNo)
+            .ThenBy(row => row.GroupName)
+            .First();
+    }
+
+    private static bool IsInactiveStatus(string? status)
+    {
+        var normalized = NormalizeKeyPart(status);
+
+        return normalized.Contains("отчис")
+            || normalized.Contains("переведен")
+            || normalized.Contains("переведён")
+            || normalized.Contains("архив")
+            || normalized.Contains("inactive");
+    }
+
     private static string BuildFullName(string surname, string name, string? fathername)
     {
         return string.IsNullOrWhiteSpace(fathername)
             ? $"{surname} {name}"
             : $"{surname} {name} {fathername}";
+    }
+
+    private static string NormalizeSurnameByGender(
+        string surname,
+        string name,
+        string? fathername
+    )
+    {
+        var trimmedSurname = surname.Trim();
+        var normalizedName = NormalizeKeyPart(name);
+        var normalizedFathername = NormalizeKeyPart(fathername);
+
+        var isClearlyMale =
+            normalizedFathername.EndsWith("ич")
+            || MaleNames.Contains(normalizedName);
+
+        var isClearlyFemale =
+            normalizedFathername.EndsWith("на")
+            || FemaleNames.Contains(normalizedName);
+
+        if (isClearlyMale)
+        {
+            if (trimmedSurname.EndsWith("ова", StringComparison.OrdinalIgnoreCase)
+                || trimmedSurname.EndsWith("ева", StringComparison.OrdinalIgnoreCase)
+                || trimmedSurname.EndsWith("ина", StringComparison.OrdinalIgnoreCase)
+                || trimmedSurname.EndsWith("ына", StringComparison.OrdinalIgnoreCase))
+            {
+                return trimmedSurname[..^1];
+            }
+
+            if (trimmedSurname.EndsWith("ая", StringComparison.OrdinalIgnoreCase))
+            {
+                return trimmedSurname[..^2] + "ий";
+            }
+
+            if (trimmedSurname.EndsWith("яя", StringComparison.OrdinalIgnoreCase))
+            {
+                return trimmedSurname[..^2] + "ий";
+            }
+        }
+
+        if (isClearlyFemale)
+        {
+            if (trimmedSurname.EndsWith("ов", StringComparison.OrdinalIgnoreCase)
+                || trimmedSurname.EndsWith("ев", StringComparison.OrdinalIgnoreCase)
+                || trimmedSurname.EndsWith("ин", StringComparison.OrdinalIgnoreCase)
+                || trimmedSurname.EndsWith("ын", StringComparison.OrdinalIgnoreCase))
+            {
+                return trimmedSurname + "а";
+            }
+        }
+
+        return trimmedSurname;
+    }
+
+    private static string NormalizeRecordBookNo(
+        string? recordBookNo,
+        int idStudent,
+        int idGroup,
+        int courseNo
+    )
+    {
+        var rawValue = (recordBookNo ?? string.Empty).Trim();
+
+        if (IsValidRecordBookNo(rawValue))
+        {
+            return rawValue;
+        }
+
+        /*
+         * Для демонстрационной базы заменяем служебные номера AUTOHSE/AUTONSE
+         * на стабильный числовой номер, чтобы на всех экранах он выглядел нормально.
+         */
+        return $"{courseNo}{idGroup:D3}{idStudent:D4}";
+    }
+
+    private static bool IsValidRecordBookNo(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return false;
+        }
+
+        var normalized = value.Trim().ToUpperInvariant();
+
+        if (normalized.Contains("AUTOHSE") || normalized.Contains("AUTONSE"))
+        {
+            return false;
+        }
+
+        return value.Any(char.IsDigit) && !value.Any(char.IsLetter);
+    }
+
+    private static string NormalizeKeyPart(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
+        }
+
+        return string.Join(
+            " ",
+            value
+                .Trim()
+                .ToLowerInvariant()
+                .Replace('ё', 'е')
+                .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+        );
     }
 
     private static IEnumerable<int> ExpandModules(int? startModuleNo, int? endModuleNo)
@@ -275,6 +458,48 @@ public class OfficeStudentsController : ControllerBase
 
         return Enumerable.Range(start, end - start + 1);
     }
+
+    private static readonly HashSet<string> MaleNames = new()
+    {
+        "александр",
+        "алексей",
+        "артем",
+        "артемий",
+        "владимир",
+        "глеб",
+        "даниил",
+        "денис",
+        "дмитрий",
+        "егор",
+        "иван",
+        "илья",
+        "кирилл",
+        "максим",
+        "михаил",
+        "никита",
+        "павел",
+        "роман",
+        "сергей",
+        "федор",
+        "юрий",
+        "ярослав"
+    };
+
+    private static readonly HashSet<string> FemaleNames = new()
+    {
+        "алина",
+        "анна",
+        "арина",
+        "вероника",
+        "виктория",
+        "дарья",
+        "елизавета",
+        "мария",
+        "полина",
+        "софья",
+        "софия",
+        "яна"
+    };
 
     private class SupabaseOfficeStudentRow
     {
