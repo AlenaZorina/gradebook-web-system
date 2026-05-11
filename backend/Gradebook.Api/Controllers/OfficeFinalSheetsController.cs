@@ -18,119 +18,194 @@ public class OfficeFinalSheetsController : ControllerBase
     }
 
     [HttpGet("{idUser:int}/office/final-sheet-disciplines")]
-    public async Task<ActionResult<List<OfficeFinalSheetDisciplineDto>>> GetFinalSheetDisciplines(
-        int idUser
-    )
+public async Task<ActionResult<List<OfficeFinalSheetDisciplineDto>>> GetFinalSheetDisciplines(
+    int idUser
+)
+{
+    var options = new JsonSerializerOptions
     {
-        var query =
-            "office_final_sheet_disciplines_view"
-            + "?select=id_discipline,discipline_name,pud_url,id_program,program_name,course_no,start_module_no,end_module_no,id_group,group_name,id_assignment,id_sheet,sheet_type,sheet_status,students_count,final_grades_count,filled_final_grades_count,failed_students_count,submitted_sheets_count,approved_sheets_count"
-            + "&order=discipline_name.asc,program_name.asc,course_no.asc,start_module_no.asc";
+        PropertyNameCaseInsensitive = true
+    };
 
-        var result = await _supabase.GetAsync(query);
+    const int pageSize = 100;
+    var offset = 0;
+    var disciplineIds = new HashSet<int>();
 
-        if (!result.Success)
+    while (true)
+    {
+        var idsQuery =
+            "office_final_sheet_groups_view"
+            + "?select=id_discipline"
+            + $"&limit={pageSize}"
+            + $"&offset={offset}";
+
+        var idsResult = await _supabase.GetAsync(idsQuery);
+
+        if (!idsResult.Success)
         {
             return StatusCode(
-                result.StatusCode,
+                idsResult.StatusCode,
                 new
                 {
-                    message = "Ошибка получения списка дисциплин для итоговых ведомостей из Supabase",
-                    details = result.Body
+                    message = "Ошибка получения идентификаторов дисциплин для итоговых ведомостей из Supabase",
+                    details = idsResult.Body
                 }
             );
         }
 
-        var options = new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        };
+        var idRows = JsonSerializer.Deserialize<List<SupabaseOfficeFinalSheetDisciplineIdRow>>(
+            idsResult.Body,
+            options
+        ) ?? new List<SupabaseOfficeFinalSheetDisciplineIdRow>();
 
-        var rows = JsonSerializer.Deserialize<List<SupabaseOfficeFinalSheetDisciplineRow>>(
-            result.Body,
+        foreach (var row in idRows)
+        {
+            disciplineIds.Add(row.IdDiscipline);
+        }
+
+        if (idRows.Count < pageSize)
+        {
+            break;
+        }
+
+        offset += pageSize;
+    }
+
+    var response = new List<OfficeFinalSheetDisciplineDto>();
+
+    foreach (var disciplineId in disciplineIds.OrderBy(value => value))
+    {
+        var groupsQuery =
+            "office_final_sheet_groups_view"
+            + "?select=id_discipline,discipline_name,id_program,program_name,course_no,start_module_no,end_module_no,id_group,group_name,id_assignment,id_sheet,sheet_status,students_count,filled_final_grades_count,failed_students_count"
+            + $"&id_discipline=eq.{disciplineId}"
+            + "&order=group_name.asc";
+
+        var groupsResult = await _supabase.GetAsync(groupsQuery);
+
+        if (!groupsResult.Success)
+        {
+            return StatusCode(
+                groupsResult.StatusCode,
+                new
+                {
+                    message = "Ошибка получения групп для итоговых ведомостей из Supabase",
+                    details = groupsResult.Body
+                }
+            );
+        }
+
+        var groupRows = JsonSerializer.Deserialize<List<SupabaseOfficeFinalSheetDisciplineRow>>(
+            groupsResult.Body,
             options
         ) ?? new List<SupabaseOfficeFinalSheetDisciplineRow>();
 
-        var response = rows
-            .GroupBy(row => new
-            {
-                row.IdDiscipline,
-                row.DisciplineName,
-                row.PudUrl
-            })
-            .Select(group =>
-            {
-                var programs = group
-                    .Where(row => row.IdProgram.HasValue)
-                    .GroupBy(row => row.IdProgram!.Value)
-                    .Select(programGroup => new OfficeFinalSheetProgramOptionDto
-                    {
-                        IdProgram = programGroup.Key,
-                        ProgramName = programGroup
-                            .Select(item => item.ProgramName)
-                            .FirstOrDefault(name => !string.IsNullOrWhiteSpace(name)) ?? "ОП"
-                    })
-                    .OrderBy(program => program.ProgramName)
-                    .ToList();
+        if (groupRows.Count == 0)
+        {
+            continue;
+        }
 
-                var courseNos = group
-                    .Where(row => row.CourseNo.HasValue)
-                    .Select(row => row.CourseNo!.Value)
-                    .Distinct()
-                    .OrderBy(value => value)
-                    .ToList();
+        var firstRow = groupRows.First();
 
-                var moduleNos = group
-                    .SelectMany(row => ExpandModules(row.StartModuleNo, row.EndModuleNo))
-                    .Distinct()
-                    .OrderBy(value => value)
-                    .ToList();
-
-                var groupsCount = group
-                    .Where(row => row.IdGroup.HasValue)
-                    .Select(row => row.IdGroup!.Value)
-                    .Distinct()
-                    .Count();
-
-                var studentsCount = group.Sum(row => row.StudentsCount);
-
-                var finalSheetsCount = group
-                    .Where(row => row.IdSheet.HasValue)
-                    .Select(row => row.IdSheet!.Value)
-                    .Distinct()
-                    .Count();
-
-                var submittedSheetsCount = group.Sum(row => row.SubmittedSheetsCount);
-                var approvedSheetsCount = group.Sum(row => row.ApprovedSheetsCount);
-                var filledFinalGradesCount = group.Sum(row => row.FilledFinalGradesCount);
-                var failedStudentsCount = group.Sum(row => row.FailedStudentsCount);
-
-                decimal? filledPercent = studentsCount == 0
-                    ? null
-                    : Math.Round((decimal)filledFinalGradesCount / studentsCount * 100m, 1);
-
-                return new OfficeFinalSheetDisciplineDto
-                {
-                    IdDiscipline = group.Key.IdDiscipline,
-                    DisciplineName = group.Key.DisciplineName,
-                    PudUrl = group.Key.PudUrl,
-                    Programs = programs,
-                    CourseNos = courseNos,
-                    ModuleNos = moduleNos,
-                    GroupsCount = groupsCount,
-                    StudentsCount = studentsCount,
-                    FinalSheetsCount = finalSheetsCount,
-                    SubmittedSheetsCount = submittedSheetsCount,
-                    ApprovedSheetsCount = approvedSheetsCount,
-                    FilledFinalGradesCount = filledFinalGradesCount,
-                    FailedStudentsCount = failedStudentsCount,
-                    FilledPercent = filledPercent
-                };
-            })
-            .OrderBy(item => item.DisciplineName)
+        var uniqueGroupRows = groupRows
+            .Where(row => row.IdGroup.HasValue)
+            .GroupBy(row => row.IdAssignment ?? row.IdGroup!.Value)
+            .Select(groupRows => groupRows.First())
             .ToList();
 
-        return Ok(response);
+        var programs = uniqueGroupRows
+            .Where(row => row.IdProgram.HasValue)
+            .GroupBy(row => row.IdProgram!.Value)
+            .Select(programGroup => new OfficeFinalSheetProgramOptionDto
+            {
+                IdProgram = programGroup.Key,
+                ProgramName = programGroup
+                    .Select(item => item.ProgramName)
+                    .FirstOrDefault(name => !string.IsNullOrWhiteSpace(name)) ?? "ОП"
+            })
+            .OrderBy(program => program.ProgramName)
+            .ToList();
+
+        var courseNos = uniqueGroupRows
+            .Where(row => row.CourseNo.HasValue)
+            .Select(row => row.CourseNo!.Value)
+            .Distinct()
+            .OrderBy(value => value)
+            .ToList();
+
+        var moduleNos = uniqueGroupRows
+            .SelectMany(row => ExpandModules(row.StartModuleNo, row.EndModuleNo))
+            .Distinct()
+            .OrderBy(value => value)
+            .ToList();
+
+        var groupsCount = uniqueGroupRows
+            .Where(row => row.IdGroup.HasValue)
+            .Select(row => row.IdGroup!.Value)
+            .Distinct()
+            .Count();
+
+        var finalSheetsCount = groupsCount;
+
+        var studentsCount = uniqueGroupRows.Sum(row => row.StudentsCount);
+        var filledFinalGradesCount = uniqueGroupRows.Sum(row => row.FilledFinalGradesCount);
+        var failedStudentsCount = uniqueGroupRows.Sum(row => row.FailedStudentsCount);
+
+        var submittedSheetsCount = uniqueGroupRows.Count(row =>
+            IsSubmittedSheetStatus(row.SheetStatus)
+        );
+
+        var approvedSheetsCount = uniqueGroupRows.Count(row =>
+            IsApprovedSheetStatus(row.SheetStatus)
+        );
+
+        decimal? filledPercent = studentsCount == 0
+            ? null
+            : Math.Round((decimal)filledFinalGradesCount / studentsCount * 100m, 1);
+
+        response.Add(new OfficeFinalSheetDisciplineDto
+        {
+            IdDiscipline = firstRow.IdDiscipline,
+            DisciplineName = firstRow.DisciplineName,
+            PudUrl = firstRow.PudUrl,
+            Programs = programs,
+            CourseNos = courseNos,
+            ModuleNos = moduleNos,
+            GroupsCount = groupsCount,
+            StudentsCount = studentsCount,
+            FinalSheetsCount = finalSheetsCount,
+            SubmittedSheetsCount = submittedSheetsCount,
+            ApprovedSheetsCount = approvedSheetsCount,
+            FilledFinalGradesCount = filledFinalGradesCount,
+            FailedStudentsCount = failedStudentsCount,
+            FilledPercent = filledPercent
+        });
+    }
+
+    return Ok(response.OrderBy(item => item.DisciplineName).ToList());
+}
+
+    private static bool IsSubmittedSheetStatus(string? status)
+    {
+        var normalizedStatus = (status ?? string.Empty).Trim().ToLowerInvariant();
+
+        return normalizedStatus == "submitted"
+            || normalizedStatus == "sent"
+            || normalizedStatus == "на утверждении"
+            || normalizedStatus.Contains("submitted")
+            || normalizedStatus.Contains("отправ")
+            || normalizedStatus.Contains("утвержд");
+    }
+
+    private static bool IsApprovedSheetStatus(string? status)
+    {
+        var normalizedStatus = (status ?? string.Empty).Trim().ToLowerInvariant();
+
+        return normalizedStatus == "approved"
+            || normalizedStatus == "утверждена"
+            || normalizedStatus == "утверждено"
+            || normalizedStatus.Contains("approved")
+            || normalizedStatus.Contains("утвержд");
     }
 
     private static IEnumerable<int> ExpandModules(int? startModuleNo, int? endModuleNo)
@@ -150,6 +225,12 @@ public class OfficeFinalSheetsController : ControllerBase
 
         return Enumerable.Range(start, end - start + 1);
     }
+
+    private class SupabaseOfficeFinalSheetDisciplineIdRow
+{
+    [JsonPropertyName("id_discipline")]
+    public int IdDiscipline { get; set; }
+}
 
     private class SupabaseOfficeFinalSheetDisciplineRow
     {
