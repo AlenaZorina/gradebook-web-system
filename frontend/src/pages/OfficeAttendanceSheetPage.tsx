@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { LoginResponse, OfficeAttendanceSheet } from "../api";
 import { getOfficeAttendanceSheet } from "../api";
 import "./TeacherSchedulePage.css";
@@ -16,6 +16,14 @@ type OfficeAttendanceSheetPageProps = {
   onOpenStudents: () => void;
   onOpenAnalytics: () => void;
 };
+
+type OfficeAttendanceDisplaySession =
+  OfficeAttendanceSheet["sessions"][number] & {
+    sessionIds: number[];
+  };
+
+type OfficeAttendanceStatus =
+  OfficeAttendanceSheet["students"][number]["attendance"][number]["status"];
 
 function getOfficeInitials(user: LoginResponse) {
   const surnameInitial = user.surname?.trim()?.[0] ?? "";
@@ -163,6 +171,64 @@ function escapeCsvCell(value: string | number) {
   return `"${String(value).replace(/"/g, '""')}"`;
 }
 
+function getSessionDateKey(session: OfficeAttendanceSheet["sessions"][number]) {
+  if (session.lessonDate) {
+    return session.lessonDate.slice(0, 10);
+  }
+
+  return session.dateLabel.trim();
+}
+
+function mergeSessionsByDate(
+  sessions: OfficeAttendanceSheet["sessions"]
+): OfficeAttendanceDisplaySession[] {
+  const map = new Map<string, OfficeAttendanceDisplaySession>();
+
+  sessions.forEach((session) => {
+    const key = getSessionDateKey(session);
+    const existing = map.get(key);
+
+    if (!existing) {
+      map.set(key, {
+        ...session,
+        sessionIds: [session.idSession]
+      });
+
+      return;
+    }
+
+    existing.sessionIds.push(session.idSession);
+  });
+
+  return Array.from(map.values()).sort((first, second) => {
+    const firstDate = first.lessonDate || first.dateLabel;
+    const secondDate = second.lessonDate || second.dateLabel;
+
+    return firstDate.localeCompare(secondDate);
+  });
+}
+
+function getMergedAttendanceStatus(
+  student: OfficeAttendanceSheet["students"][number],
+  sessionIds: number[]
+): OfficeAttendanceStatus {
+  const statuses = sessionIds.map(
+    (idSession) =>
+      student.attendance.find((item) => item.idSession === idSession)?.status ??
+      "unknown"
+  );
+
+  if (statuses.includes("absent")) {
+    return "absent";
+  }
+
+  if (statuses.includes("present")) {
+    return "present";
+  }
+
+  return "unknown";
+}
+
 export function OfficeAttendanceSheetPage({
   user,
   disciplineId,
@@ -206,6 +272,14 @@ export function OfficeAttendanceSheetPage({
     loadSheet();
   }, [user.idUser, disciplineId, groupId]);
 
+  const displaySessions = useMemo(() => {
+    if (!sheet) {
+      return [];
+    }
+
+    return mergeSessionsByDate(sheet.sessions);
+  }, [sheet]);
+
   function handleExport() {
     if (!sheet) {
       return;
@@ -215,18 +289,15 @@ export function OfficeAttendanceSheetPage({
       "ФИО",
       "Группа",
       "Образовательная программа",
-      ...sheet.sessions.map((session) => session.dateLabel)
+      ...displaySessions.map((session) => session.dateLabel)
     ];
 
     const rows = sheet.students.map((student) => [
       student.fullName,
       sheet.groupName,
       sheet.programName,
-      ...sheet.sessions.map((session) => {
-        const status =
-          student.attendance.find(
-            (item) => item.idSession === session.idSession
-          )?.status ?? "unknown";
+      ...displaySessions.map((session) => {
+        const status = getMergedAttendanceStatus(student, session.sessionIds);
 
         return getStatusText(status);
       })
@@ -369,7 +440,7 @@ export function OfficeAttendanceSheetPage({
               className="office-attendance-export-button"
               type="button"
               onClick={handleExport}
-              disabled={sheet.students.length === 0 || sheet.sessions.length === 0}
+              disabled={sheet.students.length === 0 || displaySessions.length === 0}
             >
               Экспорт
             </button>
@@ -388,18 +459,21 @@ export function OfficeAttendanceSheetPage({
                     <tr>
                       <th>ФИО</th>
 
-                      {sheet.sessions.map((session) => (
-                        <th key={session.idSession}>{session.dateLabel}</th>
+                      {displaySessions.map((session) => (
+                        <th key={getSessionDateKey(session)}>
+                          {session.dateLabel}
+                        </th>
                       ))}
                     </tr>
                   </thead>
 
                   <tbody>
-                    {sheet.students.length === 0 || sheet.sessions.length === 0 ? (
+                    {sheet.students.length === 0 ||
+                    displaySessions.length === 0 ? (
                       <tr>
                         <td
                           className="office-attendance-empty-cell"
-                          colSpan={Math.max(sheet.sessions.length + 1, 2)}
+                          colSpan={Math.max(displaySessions.length + 1, 2)}
                         >
                           Для выбранной группы пока нет данных посещаемости
                         </td>
@@ -409,14 +483,18 @@ export function OfficeAttendanceSheetPage({
                         <tr key={student.idStudent}>
                           <td>{student.fullName}</td>
 
-                          {sheet.sessions.map((session) => {
-                            const status =
-                              student.attendance.find(
-                                (item) => item.idSession === session.idSession
-                              )?.status ?? "unknown";
+                          {displaySessions.map((session) => {
+                            const status = getMergedAttendanceStatus(
+                              student,
+                              session.sessionIds
+                            );
 
                             return (
-                              <td key={`${student.idStudent}-${session.idSession}`}>
+                              <td
+                                key={`${student.idStudent}-${getSessionDateKey(
+                                  session
+                                )}`}
+                              >
                                 <span
                                   className={`office-attendance-status ${status}`}
                                   title={getStatusText(status)}
