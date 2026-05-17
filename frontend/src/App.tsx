@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { LoginPage } from "./pages/LoginPage";
 import { TeacherSchedulePage } from "./pages/TeacherSchedulePage";
 import { TeacherDisciplinesPage } from "./pages/TeacherDisciplinesPage";
@@ -62,8 +62,22 @@ type StudentPage =
   | "studentPersonalData"
   | "analytics";
 
+  const INACTIVITY_TIMEOUT_MS = 15 * 60 * 1000;
+
+  const ACTIVITY_EVENTS = [
+    "mousemove",
+    "mousedown",
+    "keydown",
+    "scroll",
+    "touchstart",
+    "click"
+  ] as const;
+
 function App() {
   const [currentUser, setCurrentUser] = useState<LoginResponse | null>(null);
+  const inactivityTimerRef = useRef<ReturnType<typeof window.setTimeout> | null>(
+    null
+  );
 
   const [teacherPage, setTeacherPage] = useState<TeacherPage>("schedule");
   const [studentPage, setStudentPage] = useState<StudentPage>("schedule");
@@ -91,21 +105,79 @@ function App() {
   const [selectedOfficeFinalSheetGroupId, setSelectedOfficeFinalSheetGroupId] =
     useState<number | null>(null);
 
-  function handleLogout() {
-    setCurrentUser(null);
-    setTeacherPage("schedule");
-    setStudentPage("schedule");
-    setOfficePage("resits");
-    setSelectedDisciplineId(null);
-    setSelectedGroupId(null);
-    setSelectedOfficeDisciplineId(null);
-    setSelectedOfficeGroupId(null);
-    setSelectedOfficeAttendanceDisciplineId(null);
-    setSelectedOfficeAttendanceGroupId(null);
-    setSelectedOfficeFinalSheetDisciplineId(null);
-    setSelectedOfficeFinalSheetGroupId(null);
-    setSelectedOfficeStudentId(null);
-  }
+    const clearInactivityTimer = useCallback(() => {
+      if (inactivityTimerRef.current) {
+        window.clearTimeout(inactivityTimerRef.current);
+        inactivityTimerRef.current = null;
+      }
+    }, []);
+
+    const handleLogout = useCallback(() => {
+      clearInactivityTimer();
+    
+      setCurrentUser(null);
+      setTeacherPage("schedule");
+      setStudentPage("schedule");
+      setOfficePage("resits");
+    
+      setSelectedDisciplineId(null);
+      setSelectedGroupId(null);
+    
+      setSelectedOfficeDisciplineId(null);
+      setSelectedOfficeGroupId(null);
+    
+      setSelectedOfficeAttendanceDisciplineId(null);
+      setSelectedOfficeAttendanceGroupId(null);
+    
+      setSelectedOfficeFinalSheetDisciplineId(null);
+      setSelectedOfficeFinalSheetGroupId(null);
+    
+      setSelectedOfficeStudentId(null);
+    }, [clearInactivityTimer]);
+  
+    useEffect(() => {
+      if (!currentUser) {
+        clearInactivityTimer();
+        return;
+      }
+    
+      function logoutByInactivity() {
+        clearInactivityTimer();
+    
+        handleLogout();
+    
+        window.setTimeout(() => {
+          window.alert(
+            "Сессия завершена из-за отсутствия активности в течение 15 минут. Войдите в систему повторно."
+          );
+        }, 0);
+      }
+    
+      function resetInactivityTimer() {
+        clearInactivityTimer();
+    
+        inactivityTimerRef.current = window.setTimeout(
+          logoutByInactivity,
+          INACTIVITY_TIMEOUT_MS
+        );
+      }
+    
+      resetInactivityTimer();
+    
+      ACTIVITY_EVENTS.forEach((eventName) => {
+        window.addEventListener(eventName, resetInactivityTimer, {
+          passive: true
+        });
+      });
+    
+      return () => {
+        clearInactivityTimer();
+    
+        ACTIVITY_EVENTS.forEach((eventName) => {
+          window.removeEventListener(eventName, resetInactivityTimer);
+        });
+      };
+    }, [currentUser?.idUser, clearInactivityTimer, handleLogout]);
 
   function openTeacherDisciplineDetails(disciplineId: number) {
     setSelectedDisciplineId(disciplineId);

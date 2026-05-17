@@ -10,6 +10,8 @@ namespace Gradebook.Api.Controllers;
 [Route("api/auth")]
 public class AuthController : ControllerBase
 {
+    private const int BcryptWorkFactor = 12;
+
     private readonly SupabaseRestClient _supabase;
 
     public AuthController(SupabaseRestClient supabase)
@@ -28,9 +30,9 @@ public class AuthController : ControllerBase
         var login = Uri.EscapeDataString(request.Login.Trim());
 
         var query = "user_auth"
-    + "?select=id_user,login,password_hash,users(id_user,name,surname,fathername,role(role_name),teachers(id_teacher,department,position))"
-    + $"&login=eq.{login}"
-    + "&limit=1";
+            + "?select=id_user,login,password_hash,users(id_user,name,surname,fathername,role(role_name),teachers(id_teacher,department,position))"
+            + $"&login=eq.{login}"
+            + "&limit=1";
 
         var result = await _supabase.GetAsync(query);
 
@@ -58,11 +60,19 @@ public class AuthController : ControllerBase
             return Unauthorized(new { message = "Неверный логин или пароль" });
         }
 
-        // Для MVP пока сравниваем тестовый пароль напрямую.
-        // Позже можно заменить на нормальное хеширование.
-        if (record.PasswordHash != request.Password)
+        var isPasswordValid = VerifyPassword(request.Password, record.PasswordHash);
+
+        if (!isPasswordValid)
         {
             return Unauthorized(new { message = "Неверный логин или пароль" });
+        }
+
+        // Временная совместимость:
+        // если в БД еще лежал старый открытый пароль, то после успешного входа
+        // сразу заменяем его на BCrypt-хэш.
+        if (!IsBcryptHash(record.PasswordHash))
+        {
+            await UpgradePlainPasswordToHash(record.IdUser, request.Password);
         }
 
         if (record.User == null || record.User.Role == null)
@@ -73,18 +83,73 @@ public class AuthController : ControllerBase
         var teacherProfile = record.User.Teacher;
 
         var response = new AuthLoginResponseDto
-       {
-    IdUser = record.User.IdUser,
-    Login = record.Login,
-    Role = record.User.Role.RoleName,
-    Name = record.User.Name,
-    Surname = record.User.Surname,
-    Fathername = record.User.Fathername,
-    Department = teacherProfile?.Department,
-    Position = teacherProfile?.Position
-};
+        {
+            IdUser = record.User.IdUser,
+            Login = record.Login,
+            Role = record.User.Role.RoleName,
+            Name = record.User.Name,
+            Surname = record.User.Surname,
+            Fathername = record.User.Fathername,
+            Department = teacherProfile?.Department,
+            Position = teacherProfile?.Position
+        };
 
         return Ok(response);
+    }
+
+    private static bool VerifyPassword(string inputPassword, string storedPasswordHash)
+    {
+        if (string.IsNullOrWhiteSpace(storedPasswordHash))
+        {
+            return false;
+        }
+
+        if (IsBcryptHash(storedPasswordHash))
+        {
+            try
+            {
+                return BCrypt.Net.BCrypt.Verify(inputPassword, storedPasswordHash);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        // Временный режим для старых данных:
+        // пока вы не захэшировали все пароли в Supabase, старые пользователи смогут войти.
+        // После входа их пароль автоматически заменится на BCrypt-хэш.
+        return storedPasswordHash == inputPassword;
+    }
+
+    private static bool IsBcryptHash(string value)
+    {
+        return value.StartsWith("$2a$")
+            || value.StartsWith("$2b$")
+            || value.StartsWith("$2y$");
+    }
+
+    private async Task UpgradePlainPasswordToHash(int idUser, string plainPassword)
+    {
+        var newHash = BCrypt.Net.BCrypt.HashPassword(plainPassword, BcryptWorkFactor);
+
+        var updateResult = await _supabase.PatchAsync(
+            $"user_auth?id_user=eq.{idUser}",
+            new
+            {
+                password_hash = newHash
+            }
+        );
+
+        // Вход пользователя не блокируем, если автообновление хэша не удалось.
+        // Но в консоль backend будет полезно вывести сообщение для отладки.
+        if (!updateResult.Success)
+        {
+            Console.WriteLine(
+                $"Не удалось обновить пароль пользователя id_user={idUser}. " +
+                $"Status={updateResult.StatusCode}. Body={updateResult.Body}"
+            );
+        }
     }
 
     private class SupabaseAuthRecord
@@ -130,14 +195,14 @@ public class AuthController : ControllerBase
     }
 
     private class SupabaseTeacher
-{
-    [JsonPropertyName("id_teacher")]
-    public int IdTeacher { get; set; }
+    {
+        [JsonPropertyName("id_teacher")]
+        public int IdTeacher { get; set; }
 
-    [JsonPropertyName("department")]
-    public string? Department { get; set; }
+        [JsonPropertyName("department")]
+        public string? Department { get; set; }
 
-    [JsonPropertyName("position")]
-    public string? Position { get; set; }
-}
+        [JsonPropertyName("position")]
+        public string? Position { get; set; }
+    }
 }
